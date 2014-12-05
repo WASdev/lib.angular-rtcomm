@@ -27,9 +27,9 @@ var rtcommModule = angular.module('angular-rtcomm', ['angularModalService','ui.b
 /**
  * Set debugEnaled to true to enable the debug messages in this rtcomm angule module.
  */
-rtcommModule.config(function($logProvider){
+rtcommModule.config(["$logProvider", function($logProvider){
 	  $logProvider.debugEnabled(true);
-	});
+	}]);
 
 /**
  *
@@ -86,7 +86,7 @@ rtcommModule.factory('RtcommConfig', function rtcommConfigFactory(){
 	};
 });
 
-rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) {
+rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", function ($rootScope, RtcommConfig, $log) {
 
 	  /** Setup the endpoint provider first **/
 	  var myEndpointProvider = new ibm.rtcomm.RtcommEndpointProvider();
@@ -450,7 +450,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 				myEndpointProvider.setUserID(aliasID); 
 		}
 	  };
-});
+}]);
 
 
 /************* Endpoint Provider Directives *******************************/
@@ -464,7 +464,7 @@ rtcommModule.directive('rtcommSessionmgr', ['RtcommService', '$log', function(Rt
     return {
       restrict: 'E',
       templateUrl: 'templates/rtcomm/rtcomm-sessionmgr.html',
-      controller: function ($scope, $rootScope) {
+      controller: ["$scope", "$rootScope", function ($scope, $rootScope) {
 
 		$scope.sessions = [];
 		$scope.sessMgrActiveEndpointUUID = null;
@@ -580,7 +580,7 @@ rtcommModule.directive('rtcommSessionmgr', ['RtcommService', '$log', function(Rt
 			}
 		};
         
-      },
+      }],
       controllerAs: 'sessionmgr'
     };
 }]);
@@ -594,7 +594,7 @@ rtcommModule.directive('rtcommRegister', ['RtcommService', '$log', function(Rtco
     return {
       restrict: 'E',
       templateUrl: 'templates/rtcomm/rtcomm-register.html',
-      controller: function ($scope) {
+      controller: ["$scope", function ($scope) {
 
     	$scope.nextAction = 'Register';
 
@@ -624,7 +624,7 @@ rtcommModule.directive('rtcommRegister', ['RtcommService', '$log', function(Rtco
 					$scope.reguserid = 'Init failed:' +  details;
 			}
         });
-      },
+      }],
       controllerAs: 'register'
     };
 }]);
@@ -638,7 +638,7 @@ rtcommModule.directive('rtcommQueues', ['RtcommService', '$log', function(Rtcomm
 	return {
 		restrict : 'E',
 		templateUrl : 'templates/rtcomm/rtcomm-queues.html',
-		controller : function($scope) {
+		controller : ["$scope", function($scope) {
 			$scope.rQueues = [];
 			$scope.autoJoinQueues = false;
 			$scope.queuePresenceData = [];
@@ -718,7 +718,7 @@ rtcommModule.directive('rtcommQueues', ['RtcommService', '$log', function(Rtcomm
 					RtcommService.addToPresenceRecord ($scope.queuePresenceData);
 				}
 			};
-		},
+		}],
 		controllerAs : 'queues'
 	};
 }]);
@@ -757,7 +757,7 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
     return {
       restrict: 'E',
       templateUrl: "templates/rtcomm/rtcomm-presence.html",
-      controller: function ($scope, $rootScope) {
+      controller: ["$scope", "$rootScope", function ($scope, $rootScope) {
     	  
     	  $scope.monitorTopics = [];
     	  $scope.presenceData = [];
@@ -799,7 +799,7 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 		      }
 	      });
 
-      },
+      }],
 	  controllerAs: 'presence'
     };
 }]);
@@ -816,7 +816,7 @@ rtcommModule.directive('rtcommEndpoint', ['RtcommService', '$log', function(Rtco
         restrict: 'E',
         templateUrl: 'templates/rtcomm/rtcomm-endpoint.html',
         transclude: 'true', // Allows other directives to be contained by this one.
-        controller: function ($scope) {
+        controller: ["$scope", function ($scope) {
 
         	$scope.epActiveEndpointUUID = null; // Only define endpoint ID at the parent container. All other directives share this one.
         	$scope.displayEndpoint = true;
@@ -849,7 +849,7 @@ rtcommModule.directive('rtcommEndpoint', ['RtcommService', '$log', function(Rtco
 					$scope.displayEndpoint = false;
 				}
 	        });
-        },
+        }],
         controllerAs: 'endpoint'
       };
 }]);
@@ -876,7 +876,7 @@ rtcommModule.directive('rtcommEndpointctrl', ['RtcommService', '$log', function(
     return {
         restrict: 'E',
         templateUrl: 'templates/rtcomm/rtcomm-endpointctrl.html',
-        controller: function ($scope) {
+        controller: ["$scope", function ($scope) {
         	
         	//	Session states.
         	$scope.epCtrlActiveEndpointUUID = null;
@@ -990,7 +990,7 @@ rtcommModule.directive('rtcommEndpointctrl', ['RtcommService', '$log', function(
 				$scope.sessionState = $scope.DISCONNECTED;
 	       	});
 	       	
-        },
+        }],
         controllerAs: 'endpointctrl'
       };
 }]);
@@ -1004,7 +1004,7 @@ rtcommModule.directive('rtcommVideo', ['RtcommService', '$log', function(RtcommS
       restrict: 'E',
       templateUrl: 'templates/rtcomm/rtcomm-video.html',
 
-  		controller: function ($scope) {
+  		controller: ["$scope", function ($scope) {
 
        	  $scope.videoActiveEndpointUUID = null;
           
@@ -1021,7 +1021,7 @@ rtcommModule.directive('rtcommVideo', ['RtcommService', '$log', function(RtcommS
 		  	              mediaIn: document.querySelector('#remoteView')});
               }
           });
-      },
+      }],
       controllerAs: 'video'
     };
 }]);
@@ -1035,7 +1035,7 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
     return {
       restrict: 'E',
       templateUrl: "templates/rtcomm/rtcomm-chat.html",
-      controller: function ($scope) {
+      controller: ["$scope", function ($scope) {
 		  $scope.chats = [];
 		  $scope.chatActiveEndpointUUID = null;
 		  
@@ -1068,7 +1068,7 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 	  		  $scope.message = '';
 	  		};
 
-      },
+      }],
 	  controllerAs: 'chat'
     };
 }]);
@@ -1092,7 +1092,7 @@ rtcommModule.controller('ModalController', ['$scope', 'close', '$log', function(
 rtcommModule.directive('rtcommAlert', ['RtcommService', 'ModalService', '$log', function(RtcommService, ModalService, $log) {
     return {
       restrict: 'E',
-      controller: function($scope, ModalService) {
+      controller: ["$scope", "ModalService", function($scope, ModalService) {
 		    $log.debug('RtcommAlertController starting');
 
 		    $scope.alertingEndpointObject = null;
@@ -1144,7 +1144,7 @@ rtcommModule.directive('rtcommAlert', ['RtcommService', 'ModalService', '$log', 
 	   		            eventObject.endpoint.accept();
 	       			}
 		        });
-		},
+		}],
 
 		controllerAs : alert
     };
@@ -1203,7 +1203,7 @@ rtcommModule.controller('CallModalResultController', ['$scope', 'close', '$log',
 rtcommModule.directive('rtcommCallModal', ['RtcommService', 'ModalService', '$log', function(RtcommService, ModalService, $log) {
     return {
       restrict: 'E',
-      controller: function($scope, $rootScope, RtcommService, ModalService) {
+      controller: ["$scope", "$rootScope", "RtcommService", "ModalService", function($scope, $rootScope, RtcommService, ModalService) {
 		    $scope.calleeID = null;
 		    $scope.callerID = null;
 
@@ -1245,7 +1245,7 @@ rtcommModule.directive('rtcommCallModal', ['RtcommService', 'ModalService', '$lo
                   }
              });
               
-		}
+		}]
    };
 }]);
 

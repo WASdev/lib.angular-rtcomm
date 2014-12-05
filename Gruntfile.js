@@ -65,6 +65,14 @@ module.exports = function(grunt) {
     	    }]
     	  }
     },
+    
+    ngAnnotate: {
+        dist: {
+          files: {
+            '<%= dirs.dest %>/<%= pkg.name %>.js': ['<%= dirs.dest %>/<%= pkg.name %>.js']
+          }
+        }
+      },
 
     uglify: {
       options: {
@@ -124,7 +132,7 @@ module.exports = function(grunt) {
   });
 
   // Build task.
-  grunt.registerTask('build', ['jshint', 'concat', 'ngtemplates', 'uglify', 'copy', 'cssmin']);
+  grunt.registerTask('build', ['jshint', 'concat', 'ngtemplates', 'ngAnnotate', 'uglify', 'copy', 'cssmin']);
 
   // Default task.
   //grunt.registerTask('default', ['build', 'watch']);
