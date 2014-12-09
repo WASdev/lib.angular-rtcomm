@@ -74,9 +74,10 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 	  var queueList = null;
 	  var sessions = [];
 	  var presenceRecord = null;
+	  var karmaTesting = false;
 	  
-	  myEndpointProvider.setLogLevel('DEBUG');
 	  /*
+	  myEndpointProvider.setLogLevel('DEBUG');
 	  myEndpointProvider.setLogLevel('MESSAGE');
 	  */
 
@@ -132,7 +133,12 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 		 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 	 				}
 	            );
-		 	};
+	 		
+	 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+	 		if (karmaTesting == true)
+	 			 $rootScope.$digest();
+
+	 	};
 	 
 	 //	Setup all the callbacks here because they are all static.
 	 myEndpointProvider.setRtcommEndpointConfig ({
@@ -146,7 +152,12 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 			 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		            );
-			 	},
+		 		
+		 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+		 		if (karmaTesting == true)
+		 			 $rootScope.$digest();
+
+			 },
 
 		  'session:alerting' : callback,
 		  'session:trying' : callback,
@@ -165,6 +176,10 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 				  	 		$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		 			);
+		 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+		 		if (karmaTesting == true)
+		 			 $rootScope.$digest();
+
 			  },
 		  
 		  // These are all the WebRTC related events.
@@ -177,6 +192,9 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 			 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		            );
+			 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+			 		if (karmaTesting == true)
+			 			 $rootScope.$digest();
 			 	},
 			 	
 		  'webrtc:disconnected' : function(eventObject) {
@@ -188,6 +206,10 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 			 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		            );
+		 		
+			 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+			 		if (karmaTesting == true)
+			 			 $rootScope.$digest();
 			 	},
 	
 		  // These are all the chat related events.
@@ -208,6 +230,10 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 					 		$rootScope.$broadcast(eventObject.eventName, eventObject);
 	 				}
 	 			);
+	 		
+	 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+	 		if (karmaTesting == true)
+	 			 $rootScope.$digest();
 		  },
 	
 		  // Endpoint destroyed
@@ -231,9 +257,14 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 						  'userid' : RtcommConfig.getProviderConfig().userid
 						  };
 			
+					$log.debug('broadcast init succeeded on $rootScope:',$rootScope);
 					$rootScope.$broadcast('rtcomm::init', true, broadcastEvent);
  				}
 			);
+ 		 
+ 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+ 		if (karmaTesting == true)
+ 			 $rootScope.$digest();
 	  };
 
 	  var initFailure = function(error) {
@@ -243,6 +274,9 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 			        $rootScope.$broadcast('rtcomm::init', false, error);
 			}
 		);
+ 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+ 		if (karmaTesting == true)
+ 			 $rootScope.$digest();
      };
      
      var getSession = function(endpointUUID){
@@ -261,6 +295,14 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
      };
 
 	  return {
+			setKarmaTesting : function(){
+				karmaTesting = true;
+			},
+
+			isInitialized : function(){
+				return(endpointProviderInitialized);
+			},
+
 			setConfig : function(config){
 				$log.debug('rtcomm-services: setConfig: config: ', config);
 				
