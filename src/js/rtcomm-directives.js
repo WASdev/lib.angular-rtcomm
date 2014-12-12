@@ -632,7 +632,7 @@ rtcommModule.controller('ModalController', ['$scope', 'close', '$log', function(
 }]);
 
 /**
- * This model is displayed on receiving an inbound call. It handles the alerting event.
+ * This modal is displayed on receiving an inbound call. It handles the alerting event.
  * Note that it can also auto accept requests for enabling A/V.
  */
 rtcommModule.directive('rtcommAlert', ['RtcommService', 'ModalService', '$log', function(RtcommService, ModalService, $log) {

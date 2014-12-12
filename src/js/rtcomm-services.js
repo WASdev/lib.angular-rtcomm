@@ -257,7 +257,6 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 						  'userid' : RtcommConfig.getProviderConfig().userid
 						  };
 			
-					$log.debug('broadcast init succeeded on $rootScope:',$rootScope);
 					$rootScope.$broadcast('rtcomm::init', true, broadcastEvent);
  				}
 			);

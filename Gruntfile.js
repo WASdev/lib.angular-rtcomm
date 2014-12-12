@@ -118,7 +118,7 @@ module.exports = function(grunt) {
     ngtemplates:  {
     	  app:        {
     	    cwd:      '<%= dirs.src %>',
-    	    src:      'templates/**.html',
+    	    src:      'templates/rtcomm/**.html',
     	    dest:     '<%= dirs.dest %>/<%= pkg.name %>.js',
 	        options:    {
 	            htmlmin:  { collapseWhitespace: true, collapseBooleanAttributes: true },

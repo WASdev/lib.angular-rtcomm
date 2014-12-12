@@ -59,7 +59,7 @@ describe('Unit testing angular-rtcomm service', function() {
   	  it('initialize with user ID', function (done) {
 	 	  $log.debug('Karma: initialize with user ID: top: $rootScope: ',$rootScope);
 	 	 
-	 	 spyOn($rootScope, '$broadcast').and.callThrough();
+//	 	 spyOn($rootScope, '$broadcast').and.callThrough();
 	 	
     	  $rootScope.$on('rtcomm::init', function (event, success, details) {
 	    	  $log.debug('Karma: initialize with user ID: rtcomm::init received');
@@ -94,6 +94,5 @@ describe('Unit testing angular-rtcomm service', function() {
     	  
     	  presenceMonitor.add("presenceTest");
       });
-      
   }); 
 });

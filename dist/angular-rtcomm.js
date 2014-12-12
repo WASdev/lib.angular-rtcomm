@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.1 - 2014-12-05
+ * @version v0.0.1 - 2014-12-12
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -94,9 +94,10 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 	  var queueList = null;
 	  var sessions = [];
 	  var presenceRecord = null;
+	  var karmaTesting = false;
 	  
-	  myEndpointProvider.setLogLevel('DEBUG');
 	  /*
+	  myEndpointProvider.setLogLevel('DEBUG');
 	  myEndpointProvider.setLogLevel('MESSAGE');
 	  */
 
@@ -152,7 +153,12 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 		 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 	 				}
 	            );
-		 	};
+	 		
+	 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+	 		if (karmaTesting == true)
+	 			 $rootScope.$digest();
+
+	 	};
 	 
 	 //	Setup all the callbacks here because they are all static.
 	 myEndpointProvider.setRtcommEndpointConfig ({
@@ -166,7 +172,12 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 			 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		            );
-			 	},
+		 		
+		 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+		 		if (karmaTesting == true)
+		 			 $rootScope.$digest();
+
+			 },
 
 		  'session:alerting' : callback,
 		  'session:trying' : callback,
@@ -185,6 +196,10 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 				  	 		$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		 			);
+		 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+		 		if (karmaTesting == true)
+		 			 $rootScope.$digest();
+
 			  },
 		  
 		  // These are all the WebRTC related events.
@@ -197,6 +212,9 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 			 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		            );
+			 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+			 		if (karmaTesting == true)
+			 			 $rootScope.$digest();
 			 	},
 			 	
 		  'webrtc:disconnected' : function(eventObject) {
@@ -208,6 +226,10 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 			 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		            );
+		 		
+			 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+			 		if (karmaTesting == true)
+			 			 $rootScope.$digest();
 			 	},
 	
 		  // These are all the chat related events.
@@ -228,6 +250,10 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 					 		$rootScope.$broadcast(eventObject.eventName, eventObject);
 	 				}
 	 			);
+	 		
+	 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+	 		if (karmaTesting == true)
+	 			 $rootScope.$digest();
 		  },
 	
 		  // Endpoint destroyed
@@ -254,6 +280,10 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 					$rootScope.$broadcast('rtcomm::init', true, broadcastEvent);
  				}
 			);
+ 		 
+ 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+ 		if (karmaTesting == true)
+ 			 $rootScope.$digest();
 	  };
 
 	  var initFailure = function(error) {
@@ -263,6 +293,9 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 			        $rootScope.$broadcast('rtcomm::init', false, error);
 			}
 		);
+ 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+ 		if (karmaTesting == true)
+ 			 $rootScope.$digest();
      };
      
      var getSession = function(endpointUUID){
@@ -281,6 +314,14 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
      };
 
 	  return {
+			setKarmaTesting : function(){
+				karmaTesting = true;
+			},
+
+			isInitialized : function(){
+				return(endpointProviderInitialized);
+			},
+
 			setConfig : function(config){
 				$log.debug('rtcomm-services: setConfig: config: ', config);
 				
@@ -1086,7 +1127,7 @@ rtcommModule.controller('ModalController', ['$scope', 'close', '$log', function(
 }]);
 
 /**
- * This model is displayed on receiving an inbound call. It handles the alerting event.
+ * This modal is displayed on receiving an inbound call. It handles the alerting event.
  * Note that it can also auto accept requests for enabling A/V.
  */
 rtcommModule.directive('rtcommAlert', ['RtcommService', 'ModalService', '$log', function(RtcommService, ModalService, $log) {
@@ -1297,52 +1338,52 @@ rtcommModule.controller('RtcommConfigController', ['$scope','$http', 'RtcommServ
 angular.module('angular-rtcomm').run(['$templateCache', function($templateCache) {
   'use strict';
 
-  $templateCache.put('templates/rtcomm-chat.html',
+  $templateCache.put('templates/rtcomm/rtcomm-chat.html',
     "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-comment\"></span> Chat</div><div class=\"panel-body\"><ul class=\"chat\"><li class=\"right clearfix\" ng-repeat=\"chat in chats\"><div class=\"header\"><strong class=\"primary-font\">{{chat.name}}</strong> <small class=\"pull-right text-muted\"><span class=\"glyphicon glyphicon-time\"></span>{{chat.time | date:'HH:mm:ss MM-dd-yyyy'}}</small></div><p>{{chat.message}}</p></li></ul></div><div class=\"panel-footer\"><div class=\"input-group\"><input id=\"chat-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Type your message here...\" type=\"text\" ng-model=\"message\" ng-keypress=\"keySendMessage($event)\"> <span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-chat\" ng-click=\"sendMessage()\" focusinput=\"true\" ng-disabled=\"(chatActiveEndpointUUID == null)\">Send</button></span></div></div></div></div><!-- chat list ng-controller div -->"
   );
 
 
-  $templateCache.put('templates/rtcomm-endpoint.html',
+  $templateCache.put('templates/rtcomm/rtcomm-endpoint.html',
     "<div id=\"endpointContainer\" class=\"panel panel-primary\"><div ng-transclude></div></div>"
   );
 
 
-  $templateCache.put('templates/rtcomm-endpointctrl.html',
+  $templateCache.put('templates/rtcomm/rtcomm-endpointctrl.html',
     "<div class=\"endpoint-controls\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><button id=\"btnDisconnectEndpoint\" class=\"btn btn-primary\" ng-click=\"disconnect()\" ng-disabled=\"(sessionState != 'session:started')\"><span class=\"glyphicon glyphicon glyphicon-resize-full\" aria-hidden=\"true\" aria-label=\"Disconnect\"></span> Disconnect</button> <button id=\"btnEnableAV\" class=\"btn btn-primary\" ng-click=\"toggleAV()\" focusinput=\"true\" ng-disabled=\"(sessionState != 'session:started')\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"Enable A/V\"></span> {{epCtrlAVConnected ? 'Disable A/V' : 'Enable A/V'}}</button></div><p class=\"endpoint-controls-title navbar-text pull-right\" ng-switch on=\"sessionState\"><span ng-switch-when=\"session:started\">Connected to {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:stopped\">Disconnected</span> <span ng-switch-when=\"session:alerting\">Inbound call from {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:trying\">Attempting to call {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:ringing\">Call to {{epCtrlRemoteEndpointID}} is ringing</span> <span ng-switch-when=\"session:queued\">Waiting in queue at: {{queueCount}}</span> <span ng-switch-when=\"session:failed\">Call failed with reason: {{failureReason}}</span></p></div>"
   );
 
 
-  $templateCache.put('templates/rtcomm-modal-alert.html',
+  $templateCache.put('templates/rtcomm/rtcomm-modal-alert.html',
     "<div class=\"modal fade\"><div class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" class=\"close\" ng-click=\"close(false)\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button><h4 class=\"modal-title\">New call alert</h4></div><div class=\"modal-body\"><p>Do you want to accept a call from {{caller}}.</p></div><div class=\"modal-footer\"><button type=\"button\" ng-click=\"close(false)\" class=\"btn btn-default\" data-dismiss=\"modal\">No</button> <button type=\"button\" ng-click=\"close(true)\" class=\"btn btn-primary\" data-dismiss=\"modal\">Yes</button></div></div></div></div>"
   );
 
 
-  $templateCache.put('templates/rtcomm-modal-call.html',
+  $templateCache.put('templates/rtcomm/rtcomm-modal-call.html',
     "<div class=\"modal fade\"><div class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><button type=\"button\" class=\"close\" ng-click=\"close(false)\" data-dismiss=\"modal\" aria-hidden=\"true\">&times;</button><h4 class=\"modal-title\">Get Help</h4></div><div class=\"modal-body\"><p>To help us serve you better, please provide some information before we begin.</p><form class=\"form-horizontal\" role=\"form\"><div class=\"form-group\"><label for=\"name\" class=\"col-sm-2 control-label\">Name</label><div class=\"col-sm-10\"><input type=\"text\" class=\"form-control\" id=\"name\" placeholder=\"Your Name\" ng-model=\"name\"></div></div></form></div><div class=\"modal-footer\"><button type=\"button\" ng-click=\"close(true)\" class=\"btn btn-default\" data-dismiss=\"modal\">Connect</button> <button type=\"button\" ng-click=\"close(false)\" class=\"btn btn-default\" data-dismiss=\"modal\">Cancel</button></div></div></div></div>"
   );
 
 
-  $templateCache.put('templates/rtcomm-presence.html',
+  $templateCache.put('templates/rtcomm/rtcomm-presence.html',
     "<!-- as an attribute --><div><div class=\"panel-presence panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-user\"></span> Presence</div><div class=\"panel-presence-body\"><div treecontrol class=\"tree-light\" tree-model=\"presenceData\" options=\"treeOptions\" on-selection=\"showSelected(node)\" selected-node=\"node1\"><button type=\"button\" class=\"btn btn-primary btn-xs\" aria-label=\"Left Align\" ng-show=\"(node.record && !node.self)\" ng-click=\"onCallClick(node.name)\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"expand record\"></span></button> {{node.name}} {{node.value ? ': ' + node.value : ''}}</div></div></div></div>"
   );
 
 
-  $templateCache.put('templates/rtcomm-queues.html',
+  $templateCache.put('templates/rtcomm/rtcomm-queues.html',
     "<div><div class=\"panel panel-primary\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-sort-by-attributes-alt\"></span> Queues</div><div class=\"queueContainer\"><button type=\"button\" ng-class=\"{'btn btn-primary btn-default btn-block': queue.active, 'btn btn-default btn-default btn-block': !queue.active}\" ng-repeat=\"queue in rQueues\" ng-click=\"onQueueClick(queue)\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"{{queue.description}}\">{{queue.active ? 'Leave' : 'Join'}} {{queue.endpointID}}</button></div></div></div>"
   );
 
 
-  $templateCache.put('templates/rtcomm-register.html',
-    "<div><div class=\"panel panel-primary\"><div class=\"input-group\"><input id=\"register-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Enter your ID here...\" type=\"text\" ng-model=\"reguserid\"> <span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-register\" ng-click=\"onRegClick(reguserid)\" focusinput=\"true\">{{nextAction}}</button></span></div></div></div>"
+  $templateCache.put('templates/rtcomm/rtcomm-register.html',
+    "<div><div class=\"panel panel-primary\"><div class=\"input-group\"><input id=\"register-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Enter your ID here...\" type=\"text\" ng-model=\"reguserid\"><span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-register\" ng-click=\"onRegClick(reguserid)\" focusinput=\"true\">{{nextAction}}</button></span></div></div></div>"
   );
 
 
-  $templateCache.put('templates/rtcomm-sessionmgr.html',
+  $templateCache.put('templates/rtcomm/rtcomm-sessionmgr.html',
     "<div class=\"session-manager\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><div><button type=\"button\" ng-switch on=\"session.activated\" ng-class=\"{'btn btn-primary': session.activated, 'btn btn-default': !session.activated}\" ng-repeat=\"session in sessions\" ng-click=\"activateSession(session.endpointUUID)\"><span class=\"glyphicon glyphicon-eye-open\" aria-hidden=\"true\" ng-switch-when=\"true\"></span> <span class=\"glyphicon glyphicon-eye-close\" aria-hidden=\"true\" ng-switch-when=\"false\"></span> Session with {{session.remoteEndpointID}}</button></div></div><p class=\"session-manager-title navbar-text pull-right\">Sessions</p></div>"
   );
 
 
-  $templateCache.put('templates/rtcomm-video.html',
+  $templateCache.put('templates/rtcomm/rtcomm-video.html',
     "<div id=\"videoContainer\"><div id=\"selfViewContainer\"><video title=\"selfView\" id=\"selfView\" class=\"selfView\" autoplay muted></video></div><video title=\"remoteView\" id=\"remoteView\" class=\"remoteView\" autoplay></video><!--  video title=\"remoteView\" id=\"remoteView\" class=\"remoteView\" autoplay=\"true\" poster=\"../views/rtcomm/images/video_camera_big.png\"></video --></div>"
   );
 
