@@ -622,177 +622,153 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 /******************************** Rtcomm Modals ************************************************/
 
 /**
- * This is the controller for all Rtcomm modals.
- */
-rtcommModule.controller('ModalController', ['$scope', 'close', '$log', function($scope, close, $log) {
-
-	$scope.close = function(result) {
-	 	close(result, 500); // close, but give 500ms for bootstrap to animate
-	 };
-}]);
-
-/**
  * This modal is displayed on receiving an inbound call. It handles the alerting event.
  * Note that it can also auto accept requests for enabling A/V.
  */
-rtcommModule.directive('rtcommAlert', ['RtcommService', 'ModalService', '$log', function(RtcommService, ModalService, $log) {
-    return {
-      restrict: 'E',
-      controller: function($scope, ModalService) {
-		    $log.debug('RtcommAlertController starting');
+rtcommModule.controller('RtcommAlertController', ['$scope', 'RtcommService', '$modal', '$log', function ($scope,  RtcommService, $modal, $log) {
 
-		    $scope.alertingEndpointObject = null;
-		    $scope.autoAnswerNewMedia = false;
-		    $scope.alertActiveEndpointUUID = null;
+    $scope.alertingEndpointObject = null;
+    $scope.autoAnswerNewMedia = false;
+    $scope.alertActiveEndpointUUID = null;
+    $scope.caller = null;
 
-			$scope.init = function(autoAnswerNewMedia) {
-			      $log.debug('rtcommAlert: autoAnswerNewMedia = ' + autoAnswerNewMedia);
-			      $scope.autoAnswerNewMedia = autoAnswerNewMedia;
-    	  	};
-
-    	  	$scope.showAlerting = function() {
-				ModalService.showModal({
-		    		      templateUrl: "templates/rtcomm/rtcomm-modal-alert.html",
-		    		      controller: "ModalController"
-		    		    }).then(function(modal) {
-		    		      modal.element.modal();
-		    		      modal.close.then(function(result) {
-		   		            if (result === true) {
-			   		            $log.debug('Accepting call from: ' + $scope.caller + ' for endpoint: ' + $scope.alertingEndpointObject.id);
-			   		            $scope.alertingEndpointObject.accept();
-		   		            }
-		   		            else {
-			   		            $log.debug('Rejecting call from: ' + $scope.caller + ' for endpoint: ' + $scope.alertingEndpointObject.id);
-			   		            $scope.alertingEndpointObject.reject();
-		   		            }
-	   		            	$scope.alertingEndpointObject = null;
-		    		      });
-		   	    });
-
-		   };
-
-	       $scope.$on('endpointActivated', function (event, endpointUUID) {
-                $scope.alertActiveEndpointUUID = endpointUUID;
-	        });
-
-	       	$scope.$on('session:alerting', function (event, eventObject) {
-		    		
-	       			if (($scope.alertActiveEndpointUUID == eventObject.endpoint.id && $scope.autoAnswerNewMedia == false) ||
-	       					($scope.alertActiveEndpointUUID != eventObject.endpoint.id))
-	       			{
-	       				$log.debug('rtcommAlert: display alterting model: alertActiveEndpointUUID = ' + $scope.alertActiveEndpointUUID + 'autoAnswerNewMedia = ' + $scope.autoAnswerNewMedia);
-			            $scope.caller = eventObject.endpoint.getRemoteEndpointID();
-			            $scope.alertingEndpointObject = eventObject.endpoint;
-			            $scope.showAlerting();
-	       			}
-	       			else{
-	   		            $log.debug('Accepting call from: ' + eventObject.endpoint.getRemoteEndpointID() + ' for endpoint: ' + eventObject.endpoint.id);
-	   		            eventObject.endpoint.accept();
-	       			}
-		        });
-		},
-
-		controllerAs : alert
-    };
-}]);
-
-/**
- * This is the controller that displays the call modal from a menu or button click. Its designed to 
- * be used in situations where the callee is known during initialization. This would be the case where
- * a call is made to a queue instead of a person. Note that the call modal is currently disabled if there 
- * is an active session.
- */
-rtcommModule.controller('RtcommCallModalController', ['$scope', '$log', function($scope, $log){
-
-    $scope.displayCallModal = false;
-    $scope.enableCallModel = false;
-    $scope.name = null;
-
-    $scope.onDisplayCallModal = function () {
-		$log.debug('RtcommCallModalController: onDisplayCallModal');
-        $scope.displayCallModal = true;
-    };
-
-    $scope.$on('rtcomm::init', function (event, success, details) {
-		$log.debug('RtcommCallModalController: rtcomm::init: success = ' + success);
-	   	 if (success == true)
-	   		 $scope.enableCallModel = true;
-	   	 else
-	   		 $scope.enableCallModel = false;
-   });
-    
-	$scope.$on('session:started', function (event, eventObject) {
-	    $scope.enableCallModel = false;
+	$scope.init = function(autoAnswerNewMedia) {
+	      $log.debug('rtcommAlert: autoAnswerNewMedia = ' + autoAnswerNewMedia);
+	      $scope.autoAnswerNewMedia = autoAnswerNewMedia;
+  	};
+  	
+    $scope.$on('endpointActivated', function (event, endpointUUID) {
+        $scope.alertActiveEndpointUUID = endpointUUID;
     });
 
-	$scope.$on('session:stopped', function (event, eventObject) {
-	    $scope.enableCallModel = true;
-    });
-}]);
-
-/**
- * This controller takes care of collecting the result and alias for the call modal.
- */
-rtcommModule.controller('CallModalResultController', ['$scope', 'close', '$log', function($scope, close, $log){
-
-    $scope.name = null;
-	
-	$scope.close = function(result) {
-	 	close({name: $scope.name, result: result}, 500); // close, but give 500ms for bootstrap to animate
-	 };
-
-}]);
-
-/**
- * This modal can be used to initiate a call to a static callID such as a call queue.
- */
-rtcommModule.directive('rtcommCallModal', ['RtcommService', 'ModalService', '$log', function(RtcommService, ModalService, $log) {
-    return {
-      restrict: 'E',
-      controller: function($scope, $rootScope, RtcommService, ModalService) {
-		    $scope.calleeID = null;
-		    $scope.callerID = null;
-
-		    $scope.init = function(calleeID) {
-			    $scope.calleeID = calleeID;
-		    };
-
-		    $scope.showCallModal = function() {
-				ModalService.showModal({
-		    		      templateUrl: "templates/rtcomm/rtcomm-modal-call.html",
-		    		      controller: "CallModalResultController"
-		    		    }).then(function(modal) {
-		    		      modal.element.modal();
-		    		      modal.close.then(function(result) {
-		   		            if (result.result === true) {
-			   		            $log.debug('rtcommCallModal: Calling calleeID: ' + $scope.calleeID);
-			   		            $log.debug('rtcommCallModal: CallerID: ' + result.name);
-			   		            
-			   		            //	This is used to set an alias when the endoint is not defined.
-			   		            if ($scope.callerID == null && (typeof result.name !== "undefined") && result.name != ''){
-			   		            	$scope.callerID = result.name;
-				   		            RtcommService.setAlias(result.name);
-			   		            }
-
-			   		            var endpoint = RtcommService.getEndpoint();
-			   		            $rootScope.$broadcast('endpointActivated', endpoint.id);
-			   		            endpoint.chat.enable();
-		   		            	endpoint.connect($scope.calleeID);
-		   		            }
-	   		            	$scope.displayCallModal = false;
-		    		      });
-	    		    });
-    		  };
-
-              $scope.$watch('displayCallModal', function() {
-          		$log.debug('watch: displayCallModal = ' + $scope.displayCallModal);
-                  if ($scope.displayCallModal == true) {
-                	  $scope.showCallModal();
-                  }
-             });
-              
+   	$scope.$on('session:alerting', function (event, eventObject) {
+    		
+		if (($scope.alertActiveEndpointUUID == eventObject.endpoint.id && $scope.autoAnswerNewMedia == false) ||
+				($scope.alertActiveEndpointUUID != eventObject.endpoint.id))
+		{
+			$log.debug('rtcommAlert: display alterting model: alertActiveEndpointUUID = ' + eventObject.endpoint + ' autoAnswerNewMedia = ' + $scope.autoAnswerNewMedia);
+            $scope.caller = eventObject.endpoint.getRemoteEndpointID();
+            $scope.alertingEndpointObject = eventObject.endpoint;
+            $scope.showAlerting();
 		}
-   };
+		else{
+	            $log.debug('Accepting media from: ' + eventObject.endpoint.getRemoteEndpointID() + ' for endpoint: ' + eventObject.endpoint.id);
+	            eventObject.endpoint.accept();
+		}
+    });
+
+    $scope.showAlerting = function (size) {
+
+	    var modalInstance = $modal.open({
+		  templateUrl: 'templates/rtcomm/rtcomm-modal-alert.html',
+		  controller: 'RtcommAlertModalInstanceCtrl',
+		  size: size,
+		  resolve: {
+		        caller: function () {
+		          return $scope.caller;
+		        }}
+	    	});
+
+	    modalInstance.result.then(
+  		    	function() {
+   		            $log.debug('Accepting call from: ' + $scope.caller + ' for endpoint: ' + $scope.alertingEndpointObject.id);
+   		            $scope.alertingEndpointObject.accept();
+	            	$scope.alertingEndpointObject = null;
+ 	    	     }, 
+		     	function () {
+		            $log.debug('Rejecting call from: ' + $scope.caller + ' for endpoint: ' + $scope.alertingEndpointObject.id);
+		            $scope.alertingEndpointObject.reject();
+		            $scope.alertingEndpointObject = null;
+ 	    });
+    };
+}]);
+
+rtcommModule.controller('RtcommAlertModalInstanceCtrl', function ($scope, $modalInstance, $log, caller) {
+  $scope.caller = caller;
+	  
+  $scope.ok = function () {
+    $log.debug('Accepting alerting call');
+    $modalInstance.close();
+  };
+
+  $scope.cancel = function () {
+	$log.debug('Rejecting alerting call');
+    $modalInstance.dismiss('cancel');
+  };
+});
+
+/**
+ * This is a modal controller for placing an outbound call to a static callee such as a queue.
+ */
+rtcommModule.controller('RtcommCallModalController', ['$scope',  '$rootScope', 'RtcommService', '$modal', '$log', function ($scope,  $rootScope, RtcommService, $modal, $log) {
+
+	    $scope.calleeID = null;
+	    $scope.callerID = null;
+	    
+	    $scope.enableCallModel = false;
+
+	    $scope.init = function(calleeID) {
+		    $scope.calleeID = calleeID;
+	    };
+	    
+	    $scope.$on('rtcomm::init', function (event, success, details) {
+			$log.debug('RtcommCallModalController: rtcomm::init: success = ' + success);
+		   	 if (success == true)
+		   		 $scope.enableCallModel = true;
+		   	 else
+		   		 $scope.enableCallModel = false;
+	   });
+	    
+		$scope.$on('session:started', function (event, eventObject) {
+		    $scope.enableCallModel = false;
+	    });
+
+		$scope.$on('session:stopped', function (event, eventObject) {
+		    $scope.enableCallModel = true;
+	    });	    
+	    
+	    $scope.placeCall = function (size) {
+
+		    var modalInstance = $modal.open({
+			  templateUrl: 'templates/rtcomm/rtcomm-modal-call.html',
+			  controller: 'RtcommCallModalInstanceCtrl',
+			  size: size,
+			  resolve: {}
+		    	});
+
+		    modalInstance.result.then(
+		    	function (resultName) {
+		            $log.debug('rtcommCallModal: Calling calleeID: ' + $scope.calleeID);
+		            $log.debug('rtcommCallModal: CallerID: ' + resultName);
+		            
+		            //	This is used to set an alias when the endoint is not defined.
+		            if ($scope.callerID == null && (typeof resultName !== "undefined") && resultName != ''){
+		            	$scope.callerID = resultName;
+		            	RtcommService.setAlias(resultName);
+		            }
+	
+		            var endpoint = RtcommService.getEndpoint();
+		            $rootScope.$broadcast('endpointActivated', endpoint.id);
+		            endpoint.chat.enable();
+	            	endpoint.connect($scope.calleeID);
+		     	}, 
+		     	function () {
+		     		$log.info('Modal dismissed at: ' + new Date());
+		    });
+	    };
+}]);
+
+rtcommModule.controller('RtcommCallModalInstanceCtrl', ['$scope',  '$modalInstance', 'RtcommService', function ($scope, $modalInstance) {
+
+	  $scope.endpointAlias = '';
+
+	  $scope.ok = function () {
+	    $modalInstance.close($scope.endpointAlias);
+	  };
+
+	  $scope.cancel = function () {
+	    $modalInstance.dismiss('cancel');
+	  };
 }]);
 
 /********************************************* Rtcomm Controllers ******************************************************/
@@ -839,4 +815,3 @@ rtcommModule.controller('RtcommConfigController', ['$scope','$http', 'RtcommServ
 		});
 	};
 }]);
-
