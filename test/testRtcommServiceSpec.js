@@ -4,7 +4,7 @@ describe('Unit testing angular-rtcomm service', function() {
   // Load the myApp module, which contains the directive
   var RtcommService;
   
-  var rtcommTopicPath = "/rtcomm-helpdesk-demo/";
+  var rtcommTopicPath = "/testTopic/";
   //var rtcommTopicPath = "/rtcomm-karma-test-" + Math.floor((Math.random() * 1000000) + 1) + "/";
 
   var testUserID = "TestID " + Math.floor((Math.random() * 1000000) + 1);

@@ -2,7 +2,7 @@
 /**
  * Definition for the rtcommModule
  */
-var rtcommModule = angular.module('angular-rtcomm', ['angularModalService','ui.bootstrap','treeControl']);
+var rtcommModule = angular.module('angular-rtcomm', ['ui.bootstrap','treeControl']);
 
 /**
  * Set debugEnaled to true to enable the debug messages in this rtcomm angule module.
@@ -21,7 +21,7 @@ rtcommModule.factory('RtcommConfig', function rtcommConfigFactory(){
 		    port : 1883,
 	    	rtcommTopicPath : "/rtcomm/",
 		    createEndpoint : false,
-            appContext: 'rtcommHelpdesk',
+            appContext: 'default',
             userid: "",
             presence : {topic : ""}
 		  };
@@ -35,7 +35,7 @@ rtcommModule.factory('RtcommConfig', function rtcommConfigFactory(){
 	  var broadcastVideo = false;
 
 	return {
-		setConfig : function(config){
+		setProviderConfig : function(config){
 			providerConfig.server = (typeof config.server !== "undefined")? config.server : providerConfig.server;
 			providerConfig.port = (typeof config.port !== "undefined")? config.port : providerConfig.port;
 			providerConfig.rtcommTopicPath = (typeof config.rtcommTopicPath !== "undefined")? config.rtcommTopicPath : providerConfig.rtcommTopicPath;
@@ -69,7 +69,7 @@ rtcommModule.factory('RtcommConfig', function rtcommConfigFactory(){
 rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) {
 
 	  /** Setup the endpoint provider first **/
-	  var myEndpointProvider = new ibm.rtcomm.RtcommEndpointProvider();
+	  var myEndpointProvider = new rtcomm.EndpointProvider();
 	  var endpointProviderInitialized = false;
 	  var queueList = null;
 	  var sessions = [];
@@ -134,7 +134,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 	 				}
 	            );
 	 		
-	 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+	 		//	This is required in karma to get the evalAsync to fire. Ugly but necessary...
 	 		if (karmaTesting == true)
 	 			 $rootScope.$digest();
 
@@ -153,7 +153,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 		 				}
 		            );
 		 		
-		 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+		 		//	This is required in karma to get the evalAsync to fire. Ugly but necessary...
 		 		if (karmaTesting == true)
 		 			 $rootScope.$digest();
 
@@ -176,7 +176,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 				  	 		$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		 			);
-		 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+		 		//	This is required in karma to get the evalAsync to fire. Ugly but necessary...
 		 		if (karmaTesting == true)
 		 			 $rootScope.$digest();
 
@@ -192,7 +192,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 			 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		            );
-			 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+			 		//	This is required in karma to get the evalAsync to fire. Ugly but necessary...
 			 		if (karmaTesting == true)
 			 			 $rootScope.$digest();
 			 	},
@@ -207,7 +207,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 		 				}
 		            );
 		 		
-			 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+			 		//	This is required in karma to get the evalAsync to fire. Ugly but necessary...
 			 		if (karmaTesting == true)
 			 			 $rootScope.$digest();
 			 	},
@@ -231,7 +231,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 	 				}
 	 			);
 	 		
-	 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+	 		//	This is required in karma to get the evalAsync to fire. Ugly but necessary...
 	 		if (karmaTesting == true)
 	 			 $rootScope.$digest();
 		  },
@@ -261,7 +261,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
  				}
 			);
  		 
- 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+ 		//	This is required in karma to get the evalAsync to fire. Ugly but necessary...
  		if (karmaTesting == true)
  			 $rootScope.$digest();
 	  };
@@ -273,7 +273,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 			        $rootScope.$broadcast('rtcomm::init', false, error);
 			}
 		);
- 		//	This is required in karma to get the evalAsync to fire. Ugly be necessary...
+ 		//	This is required in karma to get the evalAsync to fire. Ugly but necessary...
  		if (karmaTesting == true)
  			 $rootScope.$digest();
      };
@@ -305,7 +305,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 			setConfig : function(config){
 				$log.debug('rtcomm-services: setConfig: config: ', config);
 				
-				RtcommConfig.setConfig(config);
+				RtcommConfig.setProviderConfig(config);
 				myEndpointProvider.setRtcommEndpointConfig(getMediaConfig());
 
 				if (endpointProviderInitialized == false){
@@ -469,6 +469,20 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 		setAlias : function(aliasID) {
 			if ((typeof aliasID !== "undefined") && aliasID != '')
 				myEndpointProvider.setUserID(aliasID); 
-		}
+		},
+		
+		setUserID : function(userID) {
+			if ((typeof userID !== "undefined") && userID != ''){
+				RtcommConfig.setProviderConfig({userid: userID});
+				myEndpointProvider.init(RtcommConfig.getProviderConfig(), initSuccess, initFailure);
+			}
+		},
+		
+		setPresenceTopic : function(presenceTopic) {
+			if ((typeof presenceTopic !== "undefined") && presenceTopic != ''){
+				RtcommConfig.setProviderConfig({presence : {topic : presenceTopic}});
+				myEndpointProvider.init(RtcommConfig.getProviderConfig(), initSuccess, initFailure);
+			}
+		},
 	  };
 });

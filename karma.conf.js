@@ -21,7 +21,7 @@ module.exports = function(config) {
       'bower_components/angular-modal-service/dst/angular-modal-service.js',
       'bower_components/angular-tree-control/angular-tree-control.js',
       'bower_components/bower-mqttws/mqttws31.js',
-      'bower_components/rtcomm/rtcomm.js',
+      'bower_components/rtcomm/dist/rtcomm.js',
       'src/js/rtcomm-services.js',
       'src/js/rtcomm-directives.js',
       'test/*Spec.js'
