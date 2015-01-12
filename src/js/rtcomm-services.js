@@ -14,25 +14,29 @@ rtcommModule.config(function($logProvider){
 /**
  *
  */
-rtcommModule.factory('RtcommConfig', function rtcommConfigFactory(){
+rtcommModule.factory('RtcommConfig', function rtcommConfigFactory($location, $log){
 
 	var providerConfig = {
-		    server : 'svt-msd4.rtp.raleigh.ibm.com',
-		    port : 1883,
+		    server : $location.host(),
+		    port : $location.port(),
 	    	rtcommTopicPath : "/rtcomm/",
 		    createEndpoint : false,
             appContext: 'default',
             userid: "",
             presence : {topic : ""}
 		  };
+	
+	  $log.debug('providerConfig.server: ' + providerConfig.server);
+ 	  $log.debug('providerConfig.port: ' + providerConfig.port);
 
 	  var endpointConfig = {
 	          chat: true,
 	          webrtc: true
 	        };
 	  
-	  var broadcastAudio = false;
-	  var broadcastVideo = false;
+	  // Default to enabling audio and video. It must be disabled through config.
+	  var broadcastAudio = true;
+	  var broadcastVideo = true;
 
 	return {
 		setProviderConfig : function(config){
@@ -480,7 +484,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 		
 		setPresenceTopic : function(presenceTopic) {
 			if ((typeof presenceTopic !== "undefined") && presenceTopic != ''){
-				RtcommConfig.setProviderConfig({presence : {topic : presenceTopic}});
+				RtcommConfig.setProviderConfig({presenceTopic : presenceTopic});
 				myEndpointProvider.init(RtcommConfig.getProviderConfig(), initSuccess, initFailure);
 			}
 		},

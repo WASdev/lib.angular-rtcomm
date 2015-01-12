@@ -4,7 +4,7 @@
 			<span class="glyphicon glyphicon glyphicon-resize-full" aria-hidden="true" aria-label="Disconnect"></span>
 			Disconnect
 		</button>
-		<button id="btnEnableAV" class='btn  btn-primary' ng-click="toggleAV()" focusInput=true ng-disabled="(sessionState == 'session:stopped' || sessionState == 'session:failed')">
+		<button id="btnEnableAV" class='btn  btn-primary' ng-click="toggleAV()" focusInput=true ng-hide=!displayAVToggle ng-disabled="(sessionState == 'session:stopped' || sessionState == 'session:failed')">
 			<span class="glyphicon glyphicon-facetime-video" aria-hidden="true" aria-label="Enable A/V"></span>
 			{{epCtrlAVConnected ? 'Disable A/V' : 'Enable A/V'}}
 		</button>

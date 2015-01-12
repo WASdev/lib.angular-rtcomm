@@ -307,6 +307,12 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
     	  
     	  $scope.monitorTopics = [];
     	  $scope.presenceData = [];
+    	  $scope.expandedNodes = [];
+    	  
+    	  // Default protocol list initiated from presence. Start with chat only.
+    	  $scope.protocolList = {
+    			  			chat : true,
+    			  			webrtc : false};
     	  
     	  $scope.treeOptions = {
   			    nodeChildren: "nodes",
@@ -323,10 +329,25 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
   			    }
       	  };   	  
 
+    	  $scope.init = function(protocolList) {
+    		  $scope.protocolList = protocolList;
+		  };
+
     	  $scope.onCallClick = function(calleeEndpointID){
 			  var endpoint = RtcommService.getEndpoint();
 			  $rootScope.$broadcast('endpointActivated', endpoint.id);
-			  endpoint.chat.enable();
+			  
+			  if ($scope.protocolList.chat == true)
+				  endpoint.chat.enable();
+			  
+			  if ($scope.protocolList.webrtc == true){
+					endpoint.webrtc.enable(function(value, message) {
+		          		if (!value) {
+		          			alertMessage('Failed to get local Audio/Video - nothing to broadcast');
+		          		}
+		          	});				  
+			  }
+
 			  endpoint.connect(calleeEndpointID);
     	  };
     	  
@@ -334,11 +355,11 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 	    	  RtcommService.publishPresence();
 	    	  var presenceMonitor = RtcommService.getPresenceMonitor();
 	    	  
-	    	  presenceMonitor.on('updated', function(){
-	              $scope.$apply();
-	          });
-	    	  
 		      $scope.presenceData = presenceMonitor.getPresenceData();
+
+		      if ($scope.presenceData.length >= 1)
+		    	  $scope.expandedNodes.push($scope.presenceData[0]);
+		      
 		      for (var index = 0; index < $scope.monitorTopics.length; index++) {
 		    	  $log.debug('rtcommPresence: monitorTopic: ' + $scope.monitorTopics[index]);
 		    	  presenceMonitor.add($scope.monitorTopics[index]);
@@ -431,6 +452,11 @@ rtcommModule.directive('rtcommEndpointctrl', ['RtcommService', '$log', function(
         	$scope.epCtrlRemoteEndpointID = null;
         	$scope.failureReason = '';
         	$scope.queueCount = 0;
+        	$scope.displayAVToggle = true;
+        	
+			$scope.init = function(displayAVToggle) {
+				$scope.displayAVToggle = displayAVToggle;
+    	  	};
 
 			$scope.disconnect = function() {
 				$log.debug('Disconnecting call for endpoint: ' + $scope.epCtrlActiveEndpointUUID);

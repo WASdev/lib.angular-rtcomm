@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.1 - 2015-01-06
+ * @version v0.0.1 - 2015-01-11
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -34,25 +34,29 @@ rtcommModule.config(["$logProvider", function($logProvider){
 /**
  *
  */
-rtcommModule.factory('RtcommConfig', function rtcommConfigFactory(){
+rtcommModule.factory('RtcommConfig', ["$location", "$log", function rtcommConfigFactory($location, $log){
 
 	var providerConfig = {
-		    server : 'svt-msd4.rtp.raleigh.ibm.com',
-		    port : 1883,
+		    server : $location.host(),
+		    port : $location.port(),
 	    	rtcommTopicPath : "/rtcomm/",
 		    createEndpoint : false,
             appContext: 'default',
             userid: "",
             presence : {topic : ""}
 		  };
+	
+	  $log.debug('providerConfig.server: ' + providerConfig.server);
+ 	  $log.debug('providerConfig.port: ' + providerConfig.port);
 
 	  var endpointConfig = {
 	          chat: true,
 	          webrtc: true
 	        };
 	  
-	  var broadcastAudio = false;
-	  var broadcastVideo = false;
+	  // Default to enabling audio and video. It must be disabled through config.
+	  var broadcastAudio = true;
+	  var broadcastVideo = true;
 
 	return {
 		setProviderConfig : function(config){
@@ -84,7 +88,7 @@ rtcommModule.factory('RtcommConfig', function rtcommConfigFactory(){
 
 		getBroadcastVideo : function(){return broadcastVideo;}
 	};
-});
+}]);
 
 rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", function ($rootScope, RtcommConfig, $log) {
 
@@ -500,7 +504,7 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 		
 		setPresenceTopic : function(presenceTopic) {
 			if ((typeof presenceTopic !== "undefined") && presenceTopic != ''){
-				RtcommConfig.setProviderConfig({presence : {topic : presenceTopic}});
+				RtcommConfig.setProviderConfig({presenceTopic : presenceTopic});
 				myEndpointProvider.init(RtcommConfig.getProviderConfig(), initSuccess, initFailure);
 			}
 		},
@@ -816,6 +820,12 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
     	  
     	  $scope.monitorTopics = [];
     	  $scope.presenceData = [];
+    	  $scope.expandedNodes = [];
+    	  
+    	  // Default protocol list initiated from presence. Start with chat only.
+    	  $scope.protocolList = {
+    			  			chat : true,
+    			  			webrtc : false};
     	  
     	  $scope.treeOptions = {
   			    nodeChildren: "nodes",
@@ -832,10 +842,25 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
   			    }
       	  };   	  
 
+    	  $scope.init = function(protocolList) {
+    		  $scope.protocolList = protocolList;
+		  };
+
     	  $scope.onCallClick = function(calleeEndpointID){
 			  var endpoint = RtcommService.getEndpoint();
 			  $rootScope.$broadcast('endpointActivated', endpoint.id);
-			  endpoint.chat.enable();
+			  
+			  if ($scope.protocolList.chat == true)
+				  endpoint.chat.enable();
+			  
+			  if ($scope.protocolList.webrtc == true){
+					endpoint.webrtc.enable(function(value, message) {
+		          		if (!value) {
+		          			alertMessage('Failed to get local Audio/Video - nothing to broadcast');
+		          		}
+		          	});				  
+			  }
+
 			  endpoint.connect(calleeEndpointID);
     	  };
     	  
@@ -843,11 +868,11 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 	    	  RtcommService.publishPresence();
 	    	  var presenceMonitor = RtcommService.getPresenceMonitor();
 	    	  
-	    	  presenceMonitor.on('updated', function(){
-	              $scope.$apply();
-	          });
-	    	  
 		      $scope.presenceData = presenceMonitor.getPresenceData();
+
+		      if ($scope.presenceData.length >= 1)
+		    	  $scope.expandedNodes.push($scope.presenceData[0]);
+		      
 		      for (var index = 0; index < $scope.monitorTopics.length; index++) {
 		    	  $log.debug('rtcommPresence: monitorTopic: ' + $scope.monitorTopics[index]);
 		    	  presenceMonitor.add($scope.monitorTopics[index]);
@@ -940,6 +965,11 @@ rtcommModule.directive('rtcommEndpointctrl', ['RtcommService', '$log', function(
         	$scope.epCtrlRemoteEndpointID = null;
         	$scope.failureReason = '';
         	$scope.queueCount = 0;
+        	$scope.displayAVToggle = true;
+        	
+			$scope.init = function(displayAVToggle) {
+				$scope.displayAVToggle = displayAVToggle;
+    	  	};
 
 			$scope.disconnect = function() {
 				$log.debug('Disconnecting call for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
@@ -1338,7 +1368,7 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
 
 
   $templateCache.put('templates/rtcomm/rtcomm-endpointctrl.html',
-    "<div class=\"endpoint-controls\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><button id=\"btnDisconnectEndpoint\" class=\"btn btn-primary\" ng-click=\"disconnect()\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span class=\"glyphicon glyphicon glyphicon-resize-full\" aria-hidden=\"true\" aria-label=\"Disconnect\"></span> Disconnect</button> <button id=\"btnEnableAV\" class=\"btn btn-primary\" ng-click=\"toggleAV()\" focusinput=\"true\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"Enable A/V\"></span> {{epCtrlAVConnected ? 'Disable A/V' : 'Enable A/V'}}</button></div><p class=\"endpoint-controls-title navbar-text pull-right\" ng-switch on=\"sessionState\"><span ng-switch-when=\"session:started\">Connected to {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:stopped\">Disconnected</span> <span ng-switch-when=\"session:alerting\">Inbound call from {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:trying\">Attempting to call {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:ringing\">Call to {{epCtrlRemoteEndpointID}} is ringing</span> <span ng-switch-when=\"session:queued\">Waiting in queue at: {{queueCount}}</span> <span ng-switch-when=\"session:failed\">Call failed with reason: {{failureReason}}</span></p></div>"
+    "<div class=\"endpoint-controls\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><button id=\"btnDisconnectEndpoint\" class=\"btn btn-primary\" ng-click=\"disconnect()\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span class=\"glyphicon glyphicon glyphicon-resize-full\" aria-hidden=\"true\" aria-label=\"Disconnect\"></span> Disconnect</button> <button id=\"btnEnableAV\" class=\"btn btn-primary\" ng-click=\"toggleAV()\" focusinput=\"true\" ng-hide=\"!displayAVToggle\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"Enable A/V\"></span> {{epCtrlAVConnected ? 'Disable A/V' : 'Enable A/V'}}</button></div><p class=\"endpoint-controls-title navbar-text pull-right\" ng-switch on=\"sessionState\"><span ng-switch-when=\"session:started\">Connected to {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:stopped\">Disconnected</span> <span ng-switch-when=\"session:alerting\">Inbound call from {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:trying\">Attempting to call {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:ringing\">Call to {{epCtrlRemoteEndpointID}} is ringing</span> <span ng-switch-when=\"session:queued\">Waiting in queue at: {{queueCount}}</span> <span ng-switch-when=\"session:failed\">Call failed with reason: {{failureReason}}</span></p></div>"
   );
 
 
@@ -1353,7 +1383,7 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
 
 
   $templateCache.put('templates/rtcomm/rtcomm-presence.html',
-    "<!-- as an attribute --><div><div class=\"panel-presence panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-user\"></span> Presence</div><div class=\"panel-presence-body\"><div treecontrol class=\"tree-light\" tree-model=\"presenceData\" options=\"treeOptions\" on-selection=\"showSelected(node)\" selected-node=\"node1\"><button type=\"button\" class=\"btn btn-primary btn-xs\" aria-label=\"Left Align\" ng-show=\"(node.record && !node.self)\" ng-click=\"onCallClick(node.name)\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"expand record\"></span></button> {{node.name}} {{node.value ? ': ' + node.value : ''}}</div></div></div></div>"
+    "<!-- as an attribute --><div><div class=\"panel-presence panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-user\"></span> Presence</div><div class=\"panel-presence-body\"><div treecontrol class=\"tree-light\" tree-model=\"presenceData\" options=\"treeOptions\" on-selection=\"showSelected(node)\" expanded-nodes=\"expandedNodes\"><button type=\"button\" class=\"btn btn-primary btn-xs\" aria-label=\"Left Align\" ng-show=\"(node.record && !node.self)\" ng-click=\"onCallClick(node.name)\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"expand record\"></span></button> {{node.name}} {{node.value ? ': ' + node.value : ''}}</div></div></div></div>"
   );
 
 
@@ -1368,7 +1398,7 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
 
 
   $templateCache.put('templates/rtcomm/rtcomm-sessionmgr.html',
-    "<div class=\"session-manager\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><div><button type=\"button\" ng-switch on=\"session.activated\" ng-class=\"{'btn btn-primary': session.activated, 'btn btn-default': !session.activated}\" ng-repeat=\"session in sessions\" ng-click=\"activateSession(session.endpointUUID)\"><span class=\"glyphicon glyphicon-eye-open\" aria-hidden=\"true\" ng-switch-when=\"true\"></span> <span class=\"glyphicon glyphicon-eye-close\" aria-hidden=\"true\" ng-switch-when=\"false\"></span> Session with {{session.remoteEndpointID}}</button></div></div><p class=\"session-manager-title navbar-text pull-right\">Sessions</p></div>"
+    "<div class=\"session-manager\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><div><button type=\"button\" ng-switch on=\"session.activated\" ng-class=\"{'btn btn-primary btn-sm': session.activated, 'btn btn-default btn-sm': !session.activated}\" ng-repeat=\"session in sessions\" ng-click=\"activateSession(session.endpointUUID)\"><!-- span class=\"glyphicon glyphicon-eye-open\" aria-hidden=\"true\" ng-switch-when=true></span --><!-- span class=\"glyphicon glyphicon-eye-close\" aria-hidden=\"true\" ng-switch-when=false></span -->{{session.remoteEndpointID}}</button></div></div><p class=\"session-manager-title navbar-text pull-right\">Sessions</p></div>"
   );
 
 
