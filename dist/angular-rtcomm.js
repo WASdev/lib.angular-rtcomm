@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.1 - 2015-01-11
+ * @version v0.0.1 - 2015-01-12
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -1164,7 +1164,7 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
  * This modal is displayed on receiving an inbound call. It handles the alerting event.
  * Note that it can also auto accept requests for enabling A/V.
  */
-rtcommModule.controller('RtcommAlertController', ['$scope', 'RtcommService', '$modal', '$log', function ($scope,  RtcommService, $modal, $log) {
+rtcommModule.controller('RtcommAlertModalController', ['$scope', 'RtcommService', '$modal', '$log', function ($scope,  RtcommService, $modal, $log) {
 
     $scope.alertingEndpointObject = null;
     $scope.autoAnswerNewMedia = false;

@@ -651,7 +651,7 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
  * This modal is displayed on receiving an inbound call. It handles the alerting event.
  * Note that it can also auto accept requests for enabling A/V.
  */
-rtcommModule.controller('RtcommAlertController', ['$scope', 'RtcommService', '$modal', '$log', function ($scope,  RtcommService, $modal, $log) {
+rtcommModule.controller('RtcommAlertModalController', ['$scope', 'RtcommService', '$modal', '$log', function ($scope,  RtcommService, $modal, $log) {
 
     $scope.alertingEndpointObject = null;
     $scope.autoAnswerNewMedia = false;
