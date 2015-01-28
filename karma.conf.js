@@ -16,7 +16,6 @@ module.exports = function(config) {
       'node_modules/angular/angular.js',
       'node_modules/angular-mocks/angular-mocks.js',
       'bower_components/jquery/dist/jquery.js',
-      'bower_components/bootstrap/dist/bootstrap.js',
       'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
       'bower_components/angular-modal-service/dst/angular-modal-service.js',
       'bower_components/angular-tree-control/angular-tree-control.js',

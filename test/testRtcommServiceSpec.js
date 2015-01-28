@@ -36,9 +36,9 @@ describe('Unit testing angular-rtcomm service', function() {
       // When init'ing with no user ID, rtcomm.js should not be init'd
       it('initialize with no user ID', function () {
 		  var config = {
-				    "server" : "192.84.45.43",
-					"port" : 1883,
-					"rtcommTopicPath" : rtcommTopicPath,
+				    "server" : "localhost",
+					"port" : 9080,
+					"rtcommTopicPath" : "/rtcomm/",
 				    "userid" : "",
 					"broadcastAudio" : true,
 					"broadcastVideo" : true,
@@ -68,10 +68,10 @@ describe('Unit testing angular-rtcomm service', function() {
 	      });
 
     	  var config = {
-				    "server" : "192.84.45.43",
-					"port" : 1883,
-					"rtcommTopicPath" : rtcommTopicPath,
-				    "userid" : testUserID,
+				    "server" : "localhost",
+					"port" : 9080,
+					"rtcommTopicPath" : "/rtcomm/",
+				    "userid" : "testUserID",
 					"broadcastAudio" : true,
 					"broadcastVideo" : true,
 					"presenceTopic" : "karmaPresence"
@@ -82,17 +82,46 @@ describe('Unit testing angular-rtcomm service', function() {
   	  
 	  // Here we publish presence and wait for the result to come in through a notification.
       it('test pubishing presence', function (done) {
-		  RtcommService.publishPresence();
     	  
-		  var presenceMonitor = RtcommService.getPresenceMonitor();
-    	  
-    	  presenceMonitor.on('updated', function(){
-		      presenceData = presenceMonitor.getPresenceData();
-			  assert.lengthOf(presenceData, 2);
-              done();
-          });
-    	  
-    	  presenceMonitor.add("presenceTest");
+    	  $rootScope.$on('rtcomm::init', function (event, success, details) {
+	    	  $log.debug('Karma: test pubishing presence: rtcomm::init received');
+			  var presenceMonitor = RtcommService.getPresenceMonitor();
+	    	  
+	    	  presenceMonitor.on('updated', function(){
+
+			      presenceData = presenceMonitor.getPresenceData();
+	    	 	  
+			      $log.debug('Karma: test pubishing presence: presenceData: ',presenceData);
+
+	    	 	  assert.isArray(presenceData);
+	    	 	  assert.lengthOf(presenceData, 1);
+	    	 	  assert.deepProperty(presenceData[0], "name");
+	    	 	  assert.deepProperty(presenceData[0], "record");
+	    	 	  assert.deepProperty(presenceData[0], "nodes");
+	    	 	  assert.deepPropertyVal(presenceData[0], "name", "karmaPresence");
+
+	    	 	  assert.isArray(presenceData[0].nodes);
+	    	 	  assert.lengthOf(presenceData[0].nodes, 1);
+	    	 	  assert.deepProperty(presenceData[0].nodes[0], "name");
+	    	 	  assert.deepPropertyVal(presenceData[0].nodes[0], "name", "testUserID");
+	    	 	  done();
+	          });
+	    	  
+	    	  presenceMonitor.add("karmaPresence");
+			  RtcommService.publishPresence();
+	      });
+
+    	  var config = {
+				    "server" : "localhost",
+					"port" : 9080,
+					"rtcommTopicPath" : "/rtcomm/",
+				    "userid" : "testUserID",
+					"broadcastAudio" : true,
+					"broadcastVideo" : true,
+					"presenceTopic" : "karmaPresence"
+				};
+		  
+		  RtcommService.setConfig(config);    	  
       });
   }); 
 });
