@@ -4,7 +4,9 @@
   "description": "Angular module for Rtcomm",
   "main": [
     "dist/angular-rtcomm.js",
-    "dist/angular-rtcomm.css"
+    "dist/angular-rtcomm.min.js",
+    "dist/css/angular-rtcomm.css",
+    "dist/css/angular-rtcomm.min.css"
   ],
   "keywords": [
     "webrtc",
@@ -16,7 +18,7 @@
     "Scott Graham"
   ],
   "license": "Apache",
-  "homepage": "wasdev.github.io/lib.angular-rtcomm/index.html",
+  "homepage": "https://developer.ibm.com/wasdev/docs/webrtc/",
   "ignore": [
     "**/.*",
     "node_modules",
