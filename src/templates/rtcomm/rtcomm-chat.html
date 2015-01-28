@@ -1,0 +1,30 @@
+<div>
+	<div class="panel panel-primary vertical-stretch">
+		<div class="panel-heading">
+			<span class="glyphicon glyphicon-comment"></span> Chat
+		</div>
+
+		<div class="panel-body">
+			<ul class="chat">
+				<li class="right clearfix" ng-repeat="chat in chats">
+					<div class="header">
+						<strong class="primary-font">{{chat.name}}</strong> 
+						<small class="pull-right text-muted"> 
+							<span class="glyphicon glyphicon-time"></span>{{chat.time | date:'HH:mm:ss MM-dd-yyyy'}}
+						</small>
+					</div>
+					<p>{{chat.message}}</p>
+			    </li>
+			</ul>
+		</div>
+		<div class="panel-footer">
+			<div class="input-group">
+				<input id="chat-input" type="text" class="form-control input-sm"
+					placeholder="Type your message here..." type="text" ng-model="message" ng-keypress="keySendMessage($event)"> 
+				<span class="input-group-btn">
+					<button class="btn btn-primary btn-sm" id="btn-chat" ng-click="sendMessage()" focusInput=true ng-disabled="(chatActiveEndpointUUID == null)">Send</button>
+				</span>
+			</div>
+		</div>
+	</div>
+</div> <!-- chat list ng-controller div -->

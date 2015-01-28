@@ -1,0 +1,9 @@
+{
+    "server" : "localhost",
+	"port" : 9080,
+	"rtcommTopicPath" : "/rtcomm/",
+    "userid" : "",
+	"broadcastAudio" : true,
+	"broadcastVideo" : true,
+	"presenceTopic" : "sample"
+}

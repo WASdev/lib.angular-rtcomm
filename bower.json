@@ -1,0 +1,41 @@
+{
+  "name": "angular-rtcomm",
+  "version": "0.0.1-beta.1",
+  "description": "Angular module for Rtcomm",
+  "main": [
+    "dist/angular-rtcomm.js",
+    "dist/angular-rtcomm.min.js",
+    "dist/css/angular-rtcomm.css",
+    "dist/css/angular-rtcomm.min.css"
+  ],
+  "keywords": [
+    "webrtc",
+    "rtcomm",
+    "angularjs"
+  ],
+  "authors": [
+    "Brian Pulito",
+    "Scott Graham"
+  ],
+  "license": "Apache",
+  "homepage": "https://developer.ibm.com/wasdev/docs/webrtc/",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "src",
+    "Gruntfile.js",
+    "package.json"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.1",
+    "angular-tree-control": "~0.2.7",
+    "bootstrap": "~3.3.1",
+    "angular": "~1.3.8",
+    "bower-mqttws": "~1.0.0",
+    "angular-bootstrap": "~0.12.0",
+    "rtcomm": "~1.0.0-beta.9"
+  }
+}
