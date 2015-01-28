@@ -5,9 +5,7 @@ These directives are built on the [rtcomm.js](https://github.com/WASdev/lib.rtco
 signaling and a number of advanced real-time communications capabilities like presence and chat.
 
 ##Requirements
-Rtcomm utilizes MQTT for call signaling so at a minimum you will need an MQTT message broker that supports web sockets. There are many open source versions of MQTT message brokers
-available. Another option is to download the [WebSphere Liberty Server](https://developer.ibm.com/wasdev/downloads/liberty-profile-beta/) 
-which includes an embedded MQTT broker and a number of backend Rtcomm services such as call queueing. The WebSphere Liberty server is free for development.
+Rtcomm utilizes MQTT for call signaling so at a minimum you will need an MQTT message broker that supports web sockets. There are many open source and productized versions of MQTT message brokers available. The best option is to download the WebSphere Liberty Server which includes an embedded MQTT broker and a number of backend Rtcomm services such as call queueing. The WebSphere Liberty server is free for development and the beta version that includes support for MQTT can be downloaded from [here](https://developer.ibm.com/wasdev/downloads/liberty-profile-beta/).
 
 ##Install
 To install the angular-rtcomm module for use in an AngularJS application, you can use bower:
@@ -19,60 +17,79 @@ To modify build the angular-rtcomm module, you can use npm:
 
 This is useful if you want to modify the angular-rtcomm templates.
 
-##Use
+##Usage
+
+###Initialization
 To use the module, you will need to include the following js and css files with your project:
 
 	<script	src="bower_components/angular-rtcomm/dist/angular-rtcomm.js"></script>
 	<link href="bower_components/angular-rtcomm/dist/css/angular-rtcomm.css" rel="stylesheet">
 	
-Minified versions are also available.
+See the dist directory for minified versions.
 
-##List of AngularJS directives
-Here is a complete list of all the currently supported directives and controllers:
+###Module injection
+AngularJS applications inject the angular-rtcomm module as follows:
 
-Directives:
+var sampleModule = angular.module('sampleModule', ['angular-rtcomm']);
 
-Directive used to register an endpoint with a backend Rtcomm service (only needed when working with WebSphere): 
+###RtcommService
+The RtcommService is the singleton that controls all aspects of the Rtcomm module. Its the only service AngularJS applications need to inject when using the angular-rtcomm module. 
+
+The following methods 
+
+###List of AngularJS directives
+Here is a complete list of all the currently supported directives.
+
+####rtcomm-register:
+Directive used to register an endpoint. Registration implies creation of a user record as a retained message on the configured presence topic which can be accessed by any endpoint or service that has permissions to subscribe on the registration topic. This is registration is required after initialization. If the user name is specified in advance, for example via a cookie, the userid can be specified when initializing the RtcommService: 
 ```html
 <rtcomm-register></rtcomm-register>
 ```
+No init parameters.
 
+####rtcomm-queues:
 Directive used to view and join any available call queue. Can be used by helpdesk agents (only availble when working with WebSphere): 
 ```html
-<rtcomm-queues>
+<rtcomm-queues></rtcomm-queues>
 ```
 
+####rtcomm-presence:
 Directive used to view presence information: 
 ```html
-<rtcomm-presence>
+<rtcomm-presence></rtcomm-presence>
 ```
 
+####rtcomm-endpoint:
 Directive used to contain a single endpoint and all its related media sessions: 
 ```html
-<rtcomm-endpoint>
+<rtcomm-endpoint></rtcomm-endpoint>
 ```
 
+####rtcomm-chat:
 Directive used to display a chat window: 
 ```html
-<rtcomm-chat>
+<rtcomm-chat></rtcomm-chat>
 ```
 
+####rtcomm-video:
 Directive that contains a WebRTC video window (both self and remote views): 
 ```html
-<rtcomm-video>
+<rtcomm-video></rtcomm-video>
 ```
 
+####rtcomm-endpointctrl:
 Directive that contains all the controls for an endpoint (disconnect, enable A/V): 
 ```html
-<rtcomm-endpointctrl>
+<rtcomm-endpointctrl></rtcomm-endpointctrl>
 ```
 
+####rtcomm-sessionmgr:
 Directive that manages multiple endpoints and their associated sessions. For instance, used by a helpdesk agent to manage multiple sessions: 
 ```html
-<rtcomm-sessionmgr>
+<rtcomm-sessionmgr></rtcomm-sessionmgr>
 ```
 
-Controllers:
+###List of AngularJS Controllers
 
 This controller can read configuration from a specified JSON file:
 **RtcommConfigController**
