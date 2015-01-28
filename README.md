@@ -5,7 +5,7 @@ These directives are built on the [rtcomm.js](https://github.com/WASdev/lib.rtco
 signaling and a number of advanced real-time communications capabilities like presence and chat.
 
 ##Requirements
-Rtcomm utilizes MQTT for call signaling so at a minimum you will need an MQTT message broker that supports web sockets. There are many open source and productized versions of MQTT message brokers available. The best option is to download the WebSphere Liberty Server which includes an embedded MQTT broker and a number of backend Rtcomm services such as call queueing. The WebSphere Liberty server is free for development and the beta version that includes support for MQTT can be downloaded from [here](https://developer.ibm.com/wasdev/downloads/liberty-profile-beta/).
+Rtcomm utilizes MQTT for call signaling so at a minimum you will need an MQTT message broker that supports web sockets. There are many open source and productized versions of MQTT message brokers available. A great option is to download the WebSphere Liberty Server which includes an embedded MQTT broker and a number of backend Rtcomm services such as call queueing. The WebSphere Liberty server is free for development and the beta version that includes support for MQTT can be downloaded from [here](https://developer.ibm.com/wasdev/downloads/liberty-profile-beta/).
 
 ##Install
 To install the angular-rtcomm module for use in an AngularJS application, you can use bower:
@@ -16,6 +16,17 @@ To install the angular-rtcomm module for use in an AngularJS application, you ca
 To modify build the angular-rtcomm module, you can use npm:
 
 This is useful if you want to modify the angular-rtcomm templates.
+
+##Test
+This repository relies on Karma for testing. To run the test framework you can type the following in the root lib.angular-rtcomm directory:
+
+**karam start**
+
+Note that the test framework assumes the MQTT broker is running on localhost:9080. There is also currently a dependency on the WebSphere Liberty server (which includes an embedded MQTT broker) for some of the Rtcomm features. The link to download a version of WebSphere Liberty for development and testing can be found at the top of the page. 
+
+We are working on an npm install of the development environment so stay tuned.
+
+A sample page is also included in the test directory along with a sample config file that can be used to run the test. 
 
 ##Usage
 
@@ -100,3 +111,4 @@ This controller displays the alerting modal which allows the user to accept or r
 This controller displays an outbound call modal:
 **RtcommCallModalController** 
 
+This doc is a work in progress. Still need to document all the init parameteres for each directive, more details on testing, etc.
