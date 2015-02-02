@@ -355,6 +355,11 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 	    	  RtcommService.publishPresence();
 	    	  var presenceMonitor = RtcommService.getPresenceMonitor();
 	    	  
+	    	  presenceMonitor.on('updated', function(){
+					$log.debug('<<------rtcommPresence: updated------>>');
+	    		  	$scope.$apply();
+	    	  });
+	    	  
 		      $scope.presenceData = presenceMonitor.getPresenceData();
 
 		      if ($scope.presenceData.length >= 1)

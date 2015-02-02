@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.1 - 2015-01-12
+ * @version v0.0.1 - 2015-02-02
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -867,6 +867,11 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 	      $scope.$on('rtcomm::init', function (event, success, details) {
 	    	  RtcommService.publishPresence();
 	    	  var presenceMonitor = RtcommService.getPresenceMonitor();
+	    	  
+	    	  presenceMonitor.on('updated', function(){
+					$log.debug('<<------rtcommPresence: updated------>>');
+	    		  	$scope.$apply();
+	    	  });
 	    	  
 		      $scope.presenceData = presenceMonitor.getPresenceData();
 
