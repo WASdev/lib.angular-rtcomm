@@ -650,6 +650,84 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
     };
 }]);
 
+/**
+ * This directive manages the shared iFrame.
+ */
+rtcommModule.directive("rtcommIframe", ['RtcommService', '$log', '$sce', '$location', '$window', function(RtcommService, $log, $sce, $location, $window) {
+    return {
+      restrict: 'E',
+      templateUrl: "templates/rtcomm/rtcomm-iframe.html",
+      controller: ["$scope", function ($scope) {
+		  $scope.iframeURL = null;
+		  $scope.initiframeURL = null;
+		  $scope.iframeActiveEndpointUUID = null;
+		  $scope.syncSource = false;
+		  
+		  /*
+		   * syncSourcing means you a providing the URL source but no UI. Typically used in
+		   * customer/agent scenarios.
+		   */
+		  $scope.init = function(syncSource) {
+			  if (syncSource == true){
+				  $scope.syncSource = true;
+				  $scope.initiframeURL = $location.absUrl();	// init to current URL
+			  }
+    	  };
+
+	      $scope.$on('session:started', function (event, eventObject) {
+			    $log.debug('session:started received: endpointID = ' + eventObject.endpoint.id);
+			    
+			    if ($scope.syncSource == true){
+			    	RtcommService.putIframeURL(eventObject.endpoint.id,$scope.initiframeURL);	//Update on the current or next endpoint to be activated.
+			    }
+	      });
+
+    	  $scope.$on('endpointActivated', function (event, endpointUUID) {
+			  $log.debug('rtcommIframe: endpointActivated =' + endpointUUID);
+                
+		      if ($scope.syncSource == false){
+				  $scope.iframeURL = $sce.trustAsResourceUrl(RtcommService.getIframeURL(endpointUUID));
+				  $scope.iframeActiveEndpointUUID = endpointUUID;
+		      }
+	      });
+		  
+	      $scope.$on('noEndpointActivated', function (event) {
+		      if ($scope.syncSource == false){
+				  $scope.iframeURL = $sce.trustAsResourceUrl('about:blank');
+				  $scope.iframeActiveEndpointUUID = null;
+		      }
+	      });
+	       	
+	      $scope.$on('rtcomm::iframeUpdate', function (eventType, endpointUUID, url) {
+		      if ($scope.syncSource == false){
+				  $log.debug('rtcomm::iframeUpdate: ' + url);
+		    	  $scope.iframeURL = $sce.trustAsResourceUrl(url);
+		      }
+		      else{
+				  $log.debug('rtcomm::iframeUpdate: load this url in a new tab: ' + url);
+		    	  // In this case we'll open the pushed URL in a new tab.
+		    	  $window.open($sce.trustAsResourceUrl(url), '_blank');
+		      }
+	      });
+		  
+	      $scope.setURL = function(newURL){
+			  $log.debug('rtcommIframe: setURL: newURL: ' + newURL);
+	    	  RtcommService.putIframeURL($scope.iframeActiveEndpointUUID, newURL);
+	    	  $scope.iframeURL = $sce.trustAsResourceUrl(newURL);
+	      };
+	      
+		  $scope.forward = function() {
+	  		};
+
+	  	  $scope.backward = function() {
+	  		};
+      }],
+	  controllerAs: 'rtcommiframe'
+    };
+}]);
+
+
+
 /******************************** Rtcomm Modals ************************************************/
 
 /**

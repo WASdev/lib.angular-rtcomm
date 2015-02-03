@@ -123,6 +123,21 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 
 	  myEndpointProvider.on('newendpoint', function(endpoint) {
 	 	  $log.debug('<<------rtcomm-service------>> - Event: newendpoint remoteEndpointID: ' + endpoint.getRemoteEndpointID());
+	 	  
+	 	 endpoint.on('onetimemessage',function(event){
+		 	  $log.debug('<<------rtcomm-onetimemessage------>> - Event: ', event);
+		 	  if (event.onetimemessage.type != "undefined" && event.onetimemessage.type == 'iFrameURL'){
+		 		  var session = getSession(event.endpoint.id);
+		 		  session.iFrameURL = event.onetimemessage.iFrameURL;
+		 		  
+			 	  $rootScope.$evalAsync(
+			 				function () {
+							  $rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);
+			 				}
+			 		);
+		 	  }
+	 	 });
+	 	  
 	 	  $rootScope.$evalAsync(
 	 				function () {
 					  $rootScope.$broadcast('newendpoint', endpoint);
@@ -290,7 +305,8 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
     		 var session = {
     			chats : [],
     			webrtcConnected : false,
-    			sessionStarted : false
+    			sessionStarted : false,
+    			iFrameURL : 'about:blank'
     		 };
     		 sessions[endpointUUID] = session;
     		 return (session);
@@ -392,8 +408,23 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 	      getEndpoint : function(uuid) {
 			  var endpoint = null;
 
-			  if ((typeof uuid === "undefined") || uuid == null)
+			  if ((typeof uuid === "undefined") || uuid == null){
+			 	  $log.debug('getEndpoint: create new endpoint and setup onetimemessage event');
 				  endpoint = myEndpointProvider.createRtcommEndpoint();
+				  endpoint.on('onetimemessage',function(event){
+				 	  $log.debug('<<------rtcomm-onetimemessage------>> - Event: ', event);
+				 	  if (event.onetimemessage.type != "undefined" && event.onetimemessage.type == 'iFrameURL'){
+				 		  var session = getSession(event.endpoint.id);
+				 		  session.iFrameURL = event.onetimemessage.iFrameURL;
+				 		  
+					 	  $rootScope.$evalAsync(
+					 				function () {
+									  $rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);
+					 				}
+					 		);
+				 	  }
+				  });				  
+			  }
 			  else
 				  endpoint = myEndpointProvider.getRtcommEndpoint(uuid);
 				  
@@ -488,5 +519,27 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log) 
 				myEndpointProvider.init(RtcommConfig.getProviderConfig(), initSuccess, initFailure);
 			}
 		},
+		
+		getIframeURL : function(endpointUUID){
+			var session = getSession(endpointUUID);
+			return (session.iFrameURL);
+		},
+		
+  	  	putIframeURL : function(endpointUUID, newUrl){
+            $log.debug('RtcommService: putIframeURL: endpointUUID: ' + endpointUUID + ' newURL: ' + newUrl);
+  	  		var endpoint = myEndpointProvider.getRtcommEndpoint(endpointUUID);
+  	  		
+  	  		if (endpoint != null){
+  	  	  		var session = getSession(endpointUUID);
+  				session.iFrameURL = newUrl;
+  				
+  				var message = {	type : 'iFrameURL',
+  								iFrameURL : newUrl};
+  				
+	            $log.debug('RtcommService: putIframeURL: sending new iFrame URL');
+				endpoint.sendOneTimeMessage(message);
+  	  		}
+  	  	}
+		
 	  };
 });

@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.1 - 2015-02-02
+ * @version v0.0.1 - 2015-02-03
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -143,6 +143,21 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 
 	  myEndpointProvider.on('newendpoint', function(endpoint) {
 	 	  $log.debug('<<------rtcomm-service------>> - Event: newendpoint remoteEndpointID: ' + endpoint.getRemoteEndpointID());
+	 	  
+	 	 endpoint.on('onetimemessage',function(event){
+		 	  $log.debug('<<------rtcomm-onetimemessage------>> - Event: ', event);
+		 	  if (event.onetimemessage.type != "undefined" && event.onetimemessage.type == 'iFrameURL'){
+		 		  var session = getSession(event.endpoint.id);
+		 		  session.iFrameURL = event.onetimemessage.iFrameURL;
+		 		  
+			 	  $rootScope.$evalAsync(
+			 				function () {
+							  $rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);
+			 				}
+			 		);
+		 	  }
+	 	 });
+	 	  
 	 	  $rootScope.$evalAsync(
 	 				function () {
 					  $rootScope.$broadcast('newendpoint', endpoint);
@@ -310,7 +325,8 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
     		 var session = {
     			chats : [],
     			webrtcConnected : false,
-    			sessionStarted : false
+    			sessionStarted : false,
+    			iFrameURL : 'about:blank'
     		 };
     		 sessions[endpointUUID] = session;
     		 return (session);
@@ -412,8 +428,23 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 	      getEndpoint : function(uuid) {
 			  var endpoint = null;
 
-			  if ((typeof uuid === "undefined") || uuid == null)
+			  if ((typeof uuid === "undefined") || uuid == null){
+			 	  $log.debug('getEndpoint: create new endpoint and setup onetimemessage event');
 				  endpoint = myEndpointProvider.createRtcommEndpoint();
+				  endpoint.on('onetimemessage',function(event){
+				 	  $log.debug('<<------rtcomm-onetimemessage------>> - Event: ', event);
+				 	  if (event.onetimemessage.type != "undefined" && event.onetimemessage.type == 'iFrameURL'){
+				 		  var session = getSession(event.endpoint.id);
+				 		  session.iFrameURL = event.onetimemessage.iFrameURL;
+				 		  
+					 	  $rootScope.$evalAsync(
+					 				function () {
+									  $rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);
+					 				}
+					 		);
+				 	  }
+				  });				  
+			  }
 			  else
 				  endpoint = myEndpointProvider.getRtcommEndpoint(uuid);
 				  
@@ -508,6 +539,28 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 				myEndpointProvider.init(RtcommConfig.getProviderConfig(), initSuccess, initFailure);
 			}
 		},
+		
+		getIframeURL : function(endpointUUID){
+			var session = getSession(endpointUUID);
+			return (session.iFrameURL);
+		},
+		
+  	  	putIframeURL : function(endpointUUID, newUrl){
+            $log.debug('RtcommService: putIframeURL: endpointUUID: ' + endpointUUID + ' newURL: ' + newUrl);
+  	  		var endpoint = myEndpointProvider.getRtcommEndpoint(endpointUUID);
+  	  		
+  	  		if (endpoint != null){
+  	  	  		var session = getSession(endpointUUID);
+  				session.iFrameURL = newUrl;
+  				
+  				var message = {	type : 'iFrameURL',
+  								iFrameURL : newUrl};
+  				
+	            $log.debug('RtcommService: putIframeURL: sending new iFrame URL');
+				endpoint.sendOneTimeMessage(message);
+  	  		}
+  	  	}
+		
 	  };
 }]);
 
@@ -1163,6 +1216,84 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
     };
 }]);
 
+/**
+ * This directive manages the shared iFrame.
+ */
+rtcommModule.directive("rtcommIframe", ['RtcommService', '$log', '$sce', '$location', '$window', function(RtcommService, $log, $sce, $location, $window) {
+    return {
+      restrict: 'E',
+      templateUrl: "templates/rtcomm/rtcomm-iframe.html",
+      controller: ["$scope", function ($scope) {
+		  $scope.iframeURL = null;
+		  $scope.initiframeURL = null;
+		  $scope.iframeActiveEndpointUUID = null;
+		  $scope.syncSource = false;
+		  
+		  /*
+		   * syncSourcing means you a providing the URL source but no UI. Typically used in
+		   * customer/agent scenarios.
+		   */
+		  $scope.init = function(syncSource) {
+			  if (syncSource == true){
+				  $scope.syncSource = true;
+				  $scope.initiframeURL = $location.absUrl();	// init to current URL
+			  }
+    	  };
+
+	      $scope.$on('session:started', function (event, eventObject) {
+			    $log.debug('session:started received: endpointID = ' + eventObject.endpoint.id);
+			    
+			    if ($scope.syncSource == true){
+			    	RtcommService.putIframeURL(eventObject.endpoint.id,$scope.initiframeURL);	//Update on the current or next endpoint to be activated.
+			    }
+	      });
+
+    	  $scope.$on('endpointActivated', function (event, endpointUUID) {
+			  $log.debug('rtcommIframe: endpointActivated =' + endpointUUID);
+                
+		      if ($scope.syncSource == false){
+				  $scope.iframeURL = $sce.trustAsResourceUrl(RtcommService.getIframeURL(endpointUUID));
+				  $scope.iframeActiveEndpointUUID = endpointUUID;
+		      }
+	      });
+		  
+	      $scope.$on('noEndpointActivated', function (event) {
+		      if ($scope.syncSource == false){
+				  $scope.iframeURL = $sce.trustAsResourceUrl('about:blank');
+				  $scope.iframeActiveEndpointUUID = null;
+		      }
+	      });
+	       	
+	      $scope.$on('rtcomm::iframeUpdate', function (eventType, endpointUUID, url) {
+		      if ($scope.syncSource == false){
+				  $log.debug('rtcomm::iframeUpdate: ' + url);
+		    	  $scope.iframeURL = $sce.trustAsResourceUrl(url);
+		      }
+		      else{
+				  $log.debug('rtcomm::iframeUpdate: load this url in a new tab: ' + url);
+		    	  // In this case we'll open the pushed URL in a new tab.
+		    	  $window.open($sce.trustAsResourceUrl(url), '_blank');
+		      }
+	      });
+		  
+	      $scope.setURL = function(newURL){
+			  $log.debug('rtcommIframe: setURL: newURL: ' + newURL);
+	    	  RtcommService.putIframeURL($scope.iframeActiveEndpointUUID, newURL);
+	    	  $scope.iframeURL = $sce.trustAsResourceUrl(newURL);
+	      };
+	      
+		  $scope.forward = function() {
+	  		};
+
+	  	  $scope.backward = function() {
+	  		};
+      }],
+	  controllerAs: 'rtcommiframe'
+    };
+}]);
+
+
+
 /******************************** Rtcomm Modals ************************************************/
 
 /**
@@ -1368,12 +1499,17 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
 
 
   $templateCache.put('templates/rtcomm/rtcomm-endpoint.html',
-    "<div id=\"endpointContainer\" class=\"panel panel-primary\"><div ng-transclude></div></div>"
+    "<div class=\"panel panel-primary\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-facetime-video\"></span> Video</div><div id=\"endpointContainer\"><div ng-transclude></div></div></div>"
   );
 
 
   $templateCache.put('templates/rtcomm/rtcomm-endpointctrl.html',
-    "<div class=\"endpoint-controls\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><button id=\"btnDisconnectEndpoint\" class=\"btn btn-primary\" ng-click=\"disconnect()\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span class=\"glyphicon glyphicon glyphicon-resize-full\" aria-hidden=\"true\" aria-label=\"Disconnect\"></span> Disconnect</button> <button id=\"btnEnableAV\" class=\"btn btn-primary\" ng-click=\"toggleAV()\" focusinput=\"true\" ng-hide=\"!displayAVToggle\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"Enable A/V\"></span> {{epCtrlAVConnected ? 'Disable A/V' : 'Enable A/V'}}</button></div><p class=\"endpoint-controls-title navbar-text pull-right\" ng-switch on=\"sessionState\"><span ng-switch-when=\"session:started\">Connected to {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:stopped\">Disconnected</span> <span ng-switch-when=\"session:alerting\">Inbound call from {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:trying\">Attempting to call {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:ringing\">Call to {{epCtrlRemoteEndpointID}} is ringing</span> <span ng-switch-when=\"session:queued\">Waiting in queue at: {{queueCount}}</span> <span ng-switch-when=\"session:failed\">Call failed with reason: {{failureReason}}</span></p></div>"
+    "<div class=\"endpoint-controls\"><div class=\"btn-group-sm pull-left\" style=\"padding: 10px\"><button id=\"btnDisconnectEndpoint\" class=\"btn btn-primary\" ng-click=\"disconnect()\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span aria-hidden=\"true\" aria-label=\"Disconnect\"></span> Disconnect</button> <button id=\"btnEnableAV\" class=\"btn btn-primary\" ng-click=\"toggleAV()\" focusinput=\"true\" ng-hide=\"!displayAVToggle\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span aria-hidden=\"true\" aria-label=\"Enable A/V\"></span> {{epCtrlAVConnected ? 'Disable A/V' : 'Enable A/V'}}</button></div><p class=\"endpoint-controls-title navbar-text pull-right\" ng-switch on=\"sessionState\"><span ng-switch-when=\"session:started\">Connected to {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:stopped\">Disconnected</span> <span ng-switch-when=\"session:alerting\">Inbound call from {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:trying\">Attempting to call {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:ringing\">Call to {{epCtrlRemoteEndpointID}} is ringing</span> <span ng-switch-when=\"session:queued\">Waiting in queue at: {{queueCount}}</span> <span ng-switch-when=\"session:failed\">Call failed with reason: {{failureReason}}</span></p></div>"
+  );
+
+
+  $templateCache.put('templates/rtcomm/rtcomm-iframe.html',
+    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-link\"></span> URL Sharing</div><div class=\"rtcomm-iframe\"><iframe width=\"100%\" height=\"100%\" ng-src=\"{{iframeURL}}\"></iframe></div><div class=\"row\"><div class=\"col-lg-2\"><button id=\"btnBackward\" class=\"btn btn-primary\" ng-click=\"backward()\" focusinput=\"true\" ng-disabled=\"(iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-left\" aria-hidden=\"true\" aria-label=\"Backward\"></span> Backward</button></div><div class=\"col-lg-2\"><button id=\"btnForward\" class=\"btn btn-primary\" ng-click=\"forward()\" ng-disabled=\"(iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-right\" aria-hidden=\"true\" aria-label=\"Forward\"></span> Forward</button></div><div class=\"col-lg-8\"><div class=\"input-group\"><input id=\"setUrl\" type=\"text\" class=\"form-control\" type=\"text\" ng-model=\"newUrl\"><span class=\"input-group-btn\"><button class=\"btn btn-primary\" id=\"btn-send-url\" ng-click=\"setURL(newUrl)\" focusinput=\"true\">Set URL</button></span></div><!-- /input-group --></div></div></div></div>"
   );
 
 
