@@ -59,38 +59,33 @@
 
  	<div class="container-fluid">
 		<div class="row">
-			<div class="col-md-2">
-			
-		        <rtcomm-register></rtcomm-register>
-				<rtcomm-presence ng-init="monitorTopics=['sample']"></rtcomm-presence>
-
+			<div class="col-md-6">
+				<!-- init'ing to true means active session count will be reported to presence if presence is active. -->	
+				<rtcomm-sessionmgr ng-init="init(true)"></rtcomm-sessionmgr>
 			</div>
-
-			<div class="col-md-9">
-				<rtcomm-endpoint ng-init="init(true)">
-					<div class="row">
-						<div>
-							<div class="col-md-4 nopaddng-right vertical-stretch">
-								<rtcomm-chat></rtcomm-chat>
-							</div>
-								
-							<div class="col-md-8 nopadding-left">
-								<rtcomm-video></rtcomm-video>
-							</div>
-						</div>
-					</div> <!-- row -->
-	
-					<div class="row">
-						<div class="col-md-12">
-							<rtcomm-endpointctrl></rtcomm-endpointctrl>
-						</div>
-					</div> <!-- row -->
-				</rtcomm-endpoint> 
+			<div class="col-md-6">
+				<rtcomm-endpointctrl ng-init="init(true)"></rtcomm-endpointctrl>
 			</div>
 		</div>
+		<br>
 		<div class="row">
-			<!-- init'ing to true means active session count will be reported to presence if presence is active. -->	
-			<rtcomm-sessionmgr ng-init="init(true)"></rtcomm-sessionmgr>
+			<div class="col-md-3">
+		        <rtcomm-register></rtcomm-register>
+				<rtcomm-chat></rtcomm-chat>
+
+			</div>
+
+			<div class="col-md-6">
+				<rtcomm-iframe></rtcomm-iframe>
+			</div>
+
+			<div class="col-md-3">
+				<rtcomm-endpoint ng-init="init(true)">
+					<rtcomm-video></rtcomm-video>
+				</rtcomm-endpoint> 
+
+				<rtcomm-presence ng-init="monitorTopics=['sampleRoom']"></rtcomm-presence>
+			</div>
 		</div>
 	</div>
 </body>

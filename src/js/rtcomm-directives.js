@@ -815,9 +815,13 @@ rtcommModule.controller('RtcommCallModalController', ['$scope',  '$rootScope', '
 	    $scope.callerID = null;
 	    
 	    $scope.enableCallModel = false;
+	    $scope.mediaToEnable = ['chat'];
 
-	    $scope.init = function(calleeID) {
+	    $scope.init = function(calleeID, mediaToEnable) {
 		    $scope.calleeID = calleeID;
+		    
+		    if (typeof mediaToEnable !== "undefined")
+		    	$scope.mediaToEnable = mediaToEnable;
 	    };
 	    
 	    $scope.$on('rtcomm::init', function (event, success, details) {
@@ -855,11 +859,8 @@ rtcommModule.controller('RtcommCallModalController', ['$scope',  '$rootScope', '
 		            	$scope.callerID = resultName;
 		            	RtcommService.setAlias(resultName);
 		            }
-	
-		            var endpoint = RtcommService.getEndpoint();
-		            $rootScope.$broadcast('endpointActivated', endpoint.id);
-		            endpoint.chat.enable();
-	            	endpoint.connect($scope.calleeID);
+		            
+		            RtcommService.placeCall($scope.calleeID, $scope.mediaToEnable);
 		     	}, 
 		     	function () {
 		     		$log.info('Modal dismissed at: ' + new Date());

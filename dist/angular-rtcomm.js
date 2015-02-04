@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.1 - 2015-02-03
+ * @version v0.0.1 - 2015-02-04
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -34,7 +34,7 @@ rtcommModule.config(["$logProvider", function($logProvider){
 /**
  *
  */
-rtcommModule.factory('RtcommConfig', ["$location", "$log", function rtcommConfigFactory($location, $log){
+rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function rtcommConfigFactory($location, $log, $window){
 
 	var providerConfig = {
 		    server : $location.host(),
@@ -57,9 +57,8 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", function rtcommConfig
 	  // Default to enabling audio and video. It must be disabled through config.
 	  var broadcastAudio = true;
 	  var broadcastVideo = true;
-
-	return {
-		setProviderConfig : function(config){
+	  
+	  var setConfig = function(config){
 			providerConfig.server = (typeof config.server !== "undefined")? config.server : providerConfig.server;
 			providerConfig.port = (typeof config.port !== "undefined")? config.port : providerConfig.port;
 			providerConfig.rtcommTopicPath = (typeof config.rtcommTopicPath !== "undefined")? config.rtcommTopicPath : providerConfig.rtcommTopicPath;
@@ -76,7 +75,28 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", function rtcommConfig
 
 			if (typeof config.userid !== "undefined")
 				providerConfig.userid = config.userid;
-		},
+		};
+
+		// Now that the defaults are set up we need to check session storage to see if anyone has
+		// enabled config.
+		providerConfig.server = ($window.sessionStorage.rtcomm_server != null)? $window.sessionStorage.rtcomm_server : providerConfig.server;
+		providerConfig.port = ($window.sessionStorage.rtcomm_port != null)? $window.sessionStorage.rtcomm_port : providerConfig.port;
+		providerConfig.rtcommTopicPath = ($window.sessionStorage.rtcomm_topic != null)? $window.sessionStorage.rtcomm_topic : providerConfig.rtcommTopicPath;
+		providerConfig.createEndpoint = ($window.sessionStorage.rtcomm_createEndpoint != null)? $window.sessionStorage.rtcomm_createEndpoint : providerConfig.createEndpoint;
+		providerConfig.appContext = ($window.sessionStorage.rtcomm_appContext != null)? $window.sessionStorage.rtcomm_appContext : providerConfig.appContext;
+		providerConfig.presence.topic = ($window.sessionStorage.rtcomm_presenceTopic != null)? $window.sessionStorage.rtcomm_presenceTopic : providerConfig.presence.topic;
+		
+		//	Protocol related booleans
+		endpointConfig.chat = ($window.sessionStorage.rtcomm_chat != null)? $window.sessionStorage.rtcomm_chat : endpointConfig.chat;
+		endpointConfig.webrtc = ($window.sessionStorage.rtcomm_webrtc != null)? $window.sessionStorage.rtcomm_webrtc : endpointConfig.webrtc;
+		
+		broadcastAudio = ($window.sessionStorage.rtcomm_broadcastAudio != null)? $window.sessionStorage.rtcomm_broadcastAudio : broadcastAudio;
+		broadcastVideo = ($window.sessionStorage.rtcomm_broadcastVideo != null)? $window.sessionStorage.rtcomm_broadcastVideo : broadcastVideo;
+		
+		providerConfig.userid = ($window.sessionStorage.rtcomm_userid != null)? $window.sessionStorage.rtcomm_userid : providerConfig.userid;
+
+	return {
+		setProviderConfig : function(config){setConfig(config);},
 
 		getProviderConfig : function(){return providerConfig;},
 
@@ -333,7 +353,41 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
     	 }
      };
 
-	  return {
+     var getRtcommEndpoint = function(uuid) {
+		  var endpoint = null;
+
+		  if ((typeof uuid === "undefined") || uuid == null){
+		 	  $log.debug('getEndpoint: create new endpoint and setup onetimemessage event');
+			  endpoint = myEndpointProvider.createRtcommEndpoint();
+			  endpoint.on('onetimemessage',function(event){
+			 	  $log.debug('<<------rtcomm-onetimemessage------>> - Event: ', event);
+			 	  if (event.onetimemessage.type != "undefined" && event.onetimemessage.type == 'iFrameURL'){
+			 		  var session = getSession(event.endpoint.id);
+			 		  session.iFrameURL = event.onetimemessage.iFrameURL;
+			 		  
+				 	  $rootScope.$evalAsync(
+				 				function () {
+								  $rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);
+				 				}
+				 		);
+			 	  }
+			  });				  
+		  }
+		  else
+			  endpoint = myEndpointProvider.getRtcommEndpoint(uuid);
+			  
+		  return (endpoint);
+	  };
+     
+    //	At this point we need to go ahead and initialize rtcomm.js if a user ID has been defined
+	if (typeof RtcommConfig.getProviderConfig().userid != "undefined" && RtcommConfig.getProviderConfig().userid != ''){
+		myEndpointProvider.setRtcommEndpointConfig(getMediaConfig());
+		myEndpointProvider.init(RtcommConfig.getProviderConfig(), initSuccess, initFailure);
+		endpointProviderInitialized = true;
+	}
+
+	return {
+			
 			setKarmaTesting : function(){
 				karmaTesting = true;
 			},
@@ -426,29 +480,7 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 	      
 	      // Endpoint related methods
 	      getEndpoint : function(uuid) {
-			  var endpoint = null;
-
-			  if ((typeof uuid === "undefined") || uuid == null){
-			 	  $log.debug('getEndpoint: create new endpoint and setup onetimemessage event');
-				  endpoint = myEndpointProvider.createRtcommEndpoint();
-				  endpoint.on('onetimemessage',function(event){
-				 	  $log.debug('<<------rtcomm-onetimemessage------>> - Event: ', event);
-				 	  if (event.onetimemessage.type != "undefined" && event.onetimemessage.type == 'iFrameURL'){
-				 		  var session = getSession(event.endpoint.id);
-				 		  session.iFrameURL = event.onetimemessage.iFrameURL;
-				 		  
-					 	  $rootScope.$evalAsync(
-					 				function () {
-									  $rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);
-					 				}
-					 		);
-				 	  }
-				  });				  
-			  }
-			  else
-				  endpoint = myEndpointProvider.getRtcommEndpoint(uuid);
-				  
-			  return (endpoint);
+	    	  return(getRtcommEndpoint(uuid));
 		  },
 
 		  destroyEndpoint : function(uuid) {
@@ -559,8 +591,20 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 	            $log.debug('RtcommService: putIframeURL: sending new iFrame URL');
 				endpoint.sendOneTimeMessage(message);
   	  		}
-  	  	}
-		
+  	  	},
+  	  	
+        placeCall : function(calleeID, mediaToEnable){
+            var endpoint = getRtcommEndpoint();
+            $rootScope.$broadcast('endpointActivated', endpoint.id);
+            
+            if (mediaToEnable.indexOf('chat') > -1)
+            	endpoint.chat.enable();
+        	
+            if (mediaToEnable.indexOf('webrtc') > -1)
+            	endpoint.webrtc.enable();
+
+            endpoint.connect(calleeID);
+        }
 	  };
 }]);
 
@@ -1381,9 +1425,13 @@ rtcommModule.controller('RtcommCallModalController', ['$scope',  '$rootScope', '
 	    $scope.callerID = null;
 	    
 	    $scope.enableCallModel = false;
+	    $scope.mediaToEnable = ['chat'];
 
-	    $scope.init = function(calleeID) {
+	    $scope.init = function(calleeID, mediaToEnable) {
 		    $scope.calleeID = calleeID;
+		    
+		    if (typeof mediaToEnable !== "undefined")
+		    	$scope.mediaToEnable = mediaToEnable;
 	    };
 	    
 	    $scope.$on('rtcomm::init', function (event, success, details) {
@@ -1421,11 +1469,8 @@ rtcommModule.controller('RtcommCallModalController', ['$scope',  '$rootScope', '
 		            	$scope.callerID = resultName;
 		            	RtcommService.setAlias(resultName);
 		            }
-	
-		            var endpoint = RtcommService.getEndpoint();
-		            $rootScope.$broadcast('endpointActivated', endpoint.id);
-		            endpoint.chat.enable();
-	            	endpoint.connect($scope.calleeID);
+		            
+		            RtcommService.placeCall($scope.calleeID, $scope.mediaToEnable);
 		     	}, 
 		     	function () {
 		     		$log.info('Modal dismissed at: ' + new Date());
