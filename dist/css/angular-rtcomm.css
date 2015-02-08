@@ -22,6 +22,7 @@
 
 /* Video window related css */
 #videoContainer {
+  position: relative;
   width: 90%;
   height:90%;
   margin-left: auto;
@@ -45,7 +46,6 @@
 }
 
 .remoteView {
-    position: relative;
     min-width: 160px; 
   	min-height: 120px;
 	max-height: 100%;

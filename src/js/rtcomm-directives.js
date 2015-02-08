@@ -420,10 +420,15 @@ rtcommModule.directive('rtcommEndpointctrl', ['RtcommService', '$log', function(
         	$scope.sessionState = RtcommService.getSessionState($scope.epCtrlActiveEndpointUUID);;
         	$scope.failureReason = '';
         	$scope.queueCount = 0;	// FIX: Currently not implemented!
-        	$scope.displayAVToggle = true;
+        	$scope.controlEnableAV = true;
+        	$scope.controlDisconnect = true;
         	
-			$scope.init = function(displayAVToggle) {
-				$scope.displayAVToggle = displayAVToggle;
+			$scope.init = function(controlEnableAV,controlDisconnect) {
+				if (typeof controlEnableAV !== "undefined")
+					$scope.controlEnableAV = controlEnableAV;
+				
+				if (typeof controlDisconnect !== "undefined")
+					$scope.controlDisconnect = controlDisconnect;
     	  	};
 
 			$scope.disconnect = function() {
@@ -546,11 +551,20 @@ rtcommModule.directive('rtcommVideo', ['RtcommService', '$log', function(RtcommS
 
   		controller: function ($scope) {
 
-       	  $scope.videoActiveEndpointUUID = null;
+       	  $scope.videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
+       	  
+       	  if (typeof $scope.videoActiveEndpointUUID !== "undefined" && $scope.videoActiveEndpointUUID != null){
+              $log.debug('rtcommVideo: setting local media');
+	          var endpoint = RtcommService.getEndpoint($scope.videoActiveEndpointUUID);
+	          
+	          endpoint.webrtc.setLocalMedia(
+	  	            { mediaOut: document.querySelector('#selfView'),
+	  	              mediaIn: document.querySelector('#remoteView')});
+       	  }
           
        	  $scope.$on('endpointActivated', function (event, endpointUUID) {
           	//	Not to do something here to show that this button is live.
-              $log.debug('rtcommEndpointmgr: endpointActivated =' + endpointUUID);
+              $log.debug('rtcommVideo: endpointActivated =' + endpointUUID);
 
               if ($scope.videoActiveEndpointUUID != endpointUUID){
             	  $scope.videoActiveEndpointUUID = endpointUUID;
@@ -701,7 +715,7 @@ rtcommModule.controller('RtcommAlertModalController', ['$scope', 'RtcommService'
 
     $scope.alertingEndpointObject = null;
     $scope.autoAnswerNewMedia = false;
-    $scope.alertActiveEndpointUUID = null;
+    $scope.alertActiveEndpointUUID = RtcommService.getActiveEndpoint();
     $scope.caller = null;
 
 	$scope.init = function(autoAnswerNewMedia) {
