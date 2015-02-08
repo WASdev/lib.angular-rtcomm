@@ -1284,7 +1284,7 @@ rtcommModule.directive('rtcommEndpointctrl', ['RtcommService', '$log', function(
 				$scope.epCtrlAVConnected = false; 
 				$scope.epCtrlRemoteEndpointID = null;
 
-				$scope.sessionState = $scope.DISCONNECTED;
+				$scope.sessionState = 'session:stopped';
 	       	});
 	       	
         }],
