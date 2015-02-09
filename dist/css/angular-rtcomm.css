@@ -16,13 +16,6 @@
  
 /* Video window related css */
 #videoContainer {
-  /*position: relative;
-  width: 90%;
-  height:90%;
-  margin-left: auto;
-  margin-right:auto; 
-  background-color: #fff;*/
-
   position: relative;
   left:0;
   right:0;
@@ -86,8 +79,7 @@
 .panel-body
 {
 	overflow-y: scroll;
-	height: 400px;
-/*	height: 80%; */
+	height: 350px;
     background-color: white;
     margin: 5px;
 }

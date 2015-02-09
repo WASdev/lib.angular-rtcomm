@@ -79,8 +79,7 @@
 .panel-body
 {
 	overflow-y: scroll;
-	height: 400px;
-/*	height: 80%; */
+	height: 350px;
     background-color: white;
     margin: 5px;
 }
