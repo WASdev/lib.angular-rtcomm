@@ -1,21 +1,11 @@
-<!-- as an attribute -->
-<div>
-	<div class="panel-presence panel-primary vertical-stretch">
-		<div class="panel-heading">
-			<span class="glyphicon glyphicon-user"></span> Presence
-		</div>
-
-		<div class="panel-presence-body">
-			<div treecontrol class="tree-light"
-			   tree-model="presenceData"
-			   options="treeOptions"
-			   on-selection="showSelected(node)"
-			   expanded-nodes="expandedNodes">
-				   	<button type="button" class="btn btn-primary btn-xs" aria-label="Left Align" ng-show="(node.record && !node.self)"  ng-click="onCallClick(node.name)">
-							  <span class="glyphicon glyphicon-facetime-video" aria-hidden="true" aria-label="expand record"></span>
-					</button>						
-				   {{node.name}} {{node.value ? ': ' + node.value : ''}}
-			</div>
-		</div>
-	</div>
+<div treecontrol class="tree-light"
+   tree-model="presenceData"
+   options="treeOptions"
+   on-selection="showSelected(node)"
+   expanded-nodes="expandedNodes">
+	   	<button type="button" class="btn btn-primary btn-xs" aria-label="Left Align" ng-show="(node.record && !node.self)"  ng-click="onCallClick(node.name)">
+				  <span class="glyphicon glyphicon-facetime-video" aria-hidden="true" aria-label="expand record"></span>
+		</button>						
+	   {{node.name}} {{node.value ? ': ' + node.value : ''}}
 </div>
+

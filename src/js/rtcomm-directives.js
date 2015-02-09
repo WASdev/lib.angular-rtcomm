@@ -342,54 +342,6 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 /********************** Endpoint Directives *******************************/
 
 /**
- * This directive is a container for all the endpoint related directives. It provides some
- * control over the display of the container if that is needed but for the most part it is
- * needed for containment and layout of all the directives related to a single endpoint session.
- */
-rtcommModule.directive('rtcommEndpoint', ['RtcommService', '$log', function(RtcommService, $log) {
-    return {
-        restrict: 'E',
-        templateUrl: 'templates/rtcomm/rtcomm-endpoint.html',
-        transclude: 'true', // Allows other directives to be contained by this one.
-        controller: function ($scope) {
-
-        	$scope.epActiveEndpointUUID = RtcommService.getActiveEndpoint();
-        	$scope.displayEndpoint = true;
-
-			$scope.init = function(displayEndpoint) {
-			      $log.debug('rtcommEndpoint: displayEndoint = ' + displayEndpoint);
-			      $scope.displayEndpoint = displayEndpoint;
-      	  	};
-
-			$scope.$on('endpointActivated', function (event, endpointUUID) {
-			    $log.debug('endointActivated received: endpointID = ' + endpointUUID);
-			    $scope.epActiveEndpointUUID = endpointUUID;
-				$scope.displayEndpoint = true;
-	        });
-
-			$scope.$on('session:failed', function (event, eventObject) {
-				if ($scope.epActiveEndpointUUID == eventObject.endpoint.id){
-					$scope.displayEndpoint = false;
-				}
-	        });
-
-			$scope.$on('session:rejected', function (event, eventObject) {
-				if ($scope.epActiveEndpointUUID == eventObject.endpoint.id){
-					$scope.displayEndpoint = false;
-				}
-	        });
-
-			$scope.$on('session:stopped', function (event, eventObject) {
-				if ($scope.epActiveEndpointUUID == eventObject.endpoint.id){
-					$scope.displayEndpoint = false;
-				}
-	        });
-        },
-        controllerAs: 'endpoint'
-      };
-}]);
-
-/**
  * This directive is used for all the controls related to a single endpoint session. This includes
  * the ability to disconnect the sesssion and the ability to enable A/V for sessions that don't start
  * with A/V. This directive also maintains the enabled and disabled states of all its related controls.

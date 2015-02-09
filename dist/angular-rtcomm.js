@@ -1094,54 +1094,6 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 /********************** Endpoint Directives *******************************/
 
 /**
- * This directive is a container for all the endpoint related directives. It provides some
- * control over the display of the container if that is needed but for the most part it is
- * needed for containment and layout of all the directives related to a single endpoint session.
- */
-rtcommModule.directive('rtcommEndpoint', ['RtcommService', '$log', function(RtcommService, $log) {
-    return {
-        restrict: 'E',
-        templateUrl: 'templates/rtcomm/rtcomm-endpoint.html',
-        transclude: 'true', // Allows other directives to be contained by this one.
-        controller: ["$scope", function ($scope) {
-
-        	$scope.epActiveEndpointUUID = RtcommService.getActiveEndpoint();
-        	$scope.displayEndpoint = true;
-
-			$scope.init = function(displayEndpoint) {
-			      $log.debug('rtcommEndpoint: displayEndoint = ' + displayEndpoint);
-			      $scope.displayEndpoint = displayEndpoint;
-      	  	};
-
-			$scope.$on('endpointActivated', function (event, endpointUUID) {
-			    $log.debug('endointActivated received: endpointID = ' + endpointUUID);
-			    $scope.epActiveEndpointUUID = endpointUUID;
-				$scope.displayEndpoint = true;
-	        });
-
-			$scope.$on('session:failed', function (event, eventObject) {
-				if ($scope.epActiveEndpointUUID == eventObject.endpoint.id){
-					$scope.displayEndpoint = false;
-				}
-	        });
-
-			$scope.$on('session:rejected', function (event, eventObject) {
-				if ($scope.epActiveEndpointUUID == eventObject.endpoint.id){
-					$scope.displayEndpoint = false;
-				}
-	        });
-
-			$scope.$on('session:stopped', function (event, eventObject) {
-				if ($scope.epActiveEndpointUUID == eventObject.endpoint.id){
-					$scope.displayEndpoint = false;
-				}
-	        });
-        }],
-        controllerAs: 'endpoint'
-      };
-}]);
-
-/**
  * This directive is used for all the controls related to a single endpoint session. This includes
  * the ability to disconnect the sesssion and the ability to enable A/V for sessions that don't start
  * with A/V. This directive also maintains the enabled and disabled states of all its related controls.
@@ -1677,11 +1629,6 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
   );
 
 
-  $templateCache.put('templates/rtcomm/rtcomm-endpoint.html',
-    "<div class=\"panel panel-primary\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-facetime-video\"></span> Video</div><div id=\"endpointContainer\"><div ng-transclude></div></div></div>"
-  );
-
-
   $templateCache.put('templates/rtcomm/rtcomm-endpointctrl.html',
     "<div class=\"endpoint-controls\"><div class=\"btn-group-sm pull-left\" style=\"padding: 10px\"><button id=\"btnDisconnectEndpoint\" class=\"btn btn-primary\" ng-click=\"disconnect()\" ng-hide=\"!controlDisconnect\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span aria-hidden=\"true\" aria-label=\"Disconnect\"></span> Disconnect</button> <button id=\"btnEnableAV\" class=\"btn btn-primary\" ng-click=\"toggleAV()\" focusinput=\"true\" ng-hide=\"!controlEnableAV\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span aria-hidden=\"true\" aria-label=\"Enable A/V\"></span> {{epCtrlAVConnected ? 'Disable A/V' : 'Enable A/V'}}</button></div><p class=\"endpoint-controls-title navbar-text pull-right\" ng-switch on=\"sessionState\"><span ng-switch-when=\"session:started\">Connected to {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:stopped\">Disconnected</span> <span ng-switch-when=\"session:alerting\">Inbound call from {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:trying\">Attempting to call {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:ringing\">Call to {{epCtrlRemoteEndpointID}} is ringing</span> <span ng-switch-when=\"session:queued\">Waiting in queue at: {{queueCount}}</span> <span ng-switch-when=\"session:failed\">Call failed with reason: {{failureReason}}</span></p></div>"
   );
@@ -1703,7 +1650,7 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
 
 
   $templateCache.put('templates/rtcomm/rtcomm-presence.html',
-    "<!-- as an attribute --><div><div class=\"panel-presence panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-user\"></span> Presence</div><div class=\"panel-presence-body\"><div treecontrol class=\"tree-light\" tree-model=\"presenceData\" options=\"treeOptions\" on-selection=\"showSelected(node)\" expanded-nodes=\"expandedNodes\"><button type=\"button\" class=\"btn btn-primary btn-xs\" aria-label=\"Left Align\" ng-show=\"(node.record && !node.self)\" ng-click=\"onCallClick(node.name)\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"expand record\"></span></button> {{node.name}} {{node.value ? ': ' + node.value : ''}}</div></div></div></div>"
+    "<div treecontrol class=\"tree-light\" tree-model=\"presenceData\" options=\"treeOptions\" on-selection=\"showSelected(node)\" expanded-nodes=\"expandedNodes\"><button type=\"button\" class=\"btn btn-primary btn-xs\" aria-label=\"Left Align\" ng-show=\"(node.record && !node.self)\" ng-click=\"onCallClick(node.name)\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"expand record\"></span></button> {{node.name}} {{node.value ? ': ' + node.value : ''}}</div>"
   );
 
 

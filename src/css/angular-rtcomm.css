@@ -14,19 +14,13 @@
  * limitations under the License.
  */ 
  
- #endpointContainer {
-  background-color: #fff;
-  border: 1px solid #428bca;
-  border-radius: 4px;
-}
-
 /* Video window related css */
 #videoContainer {
   position: relative;
-  width: 90%;
-  height:90%;
-  margin-left: auto;
-  margin-right:auto; 
+  left:0;
+  right:0;
+  top:0;
+  bottom:0;
   background-color: #fff;
 }
 
@@ -51,44 +45,6 @@
 	max-height: 100%;
  	width:100%;
     z-index: 1;
-}
-
-/* Chat related css */
-.presence
-{
-    list-style: none;
-    /* margin: 0;
-    padding: 0; */
-}
-
-.presence li
-{
-    margin-bottom: 10px;
-    /*padding-bottom: 5px;*/
-    /*border-bottom: 1px dotted #B3A9A9;*/
-}
-
-.presence li .presence-body p
-{
-    /*margin: 0;*/
-    color: #777777;
-}
-
-.panel-presence
-{
-    margin: 0;
-    height: 100%;
-    border: 1px solid #428bca;
-    border-radius: 4px;
-}
-
-.panel-presence-body
-{
-	overflow-y: scroll;
-	height: 300px;
-    background-color: white;
-    margin: 1;
-	border-radius: 4px;
 }
 
 /* Chat related css */
