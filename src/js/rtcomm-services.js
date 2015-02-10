@@ -81,6 +81,9 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 	  var sessions = [];
 	  var presenceRecord = null;
 	  var karmaTesting = false;
+	  var _selfView = "selfView";		//	Default self view
+	  var _remoteView = "remoteView";	//	Default remote view
+
 	  
 	  /*
 	  myEndpointProvider.setLogLevel('DEBUG');
@@ -239,11 +242,10 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 		 		
 		 		$rootScope.$evalAsync(
 		 				function () {
-		 					var session = _getSession(eventObject.endpoint.id).webrtcConnected = false;
-		 					if (session != null){
+		 					var session = _getSession(eventObject.endpoint.id);
+		 					if (session != null)
 			 					session.webrtcConnected = false;
-				 				$rootScope.$broadcast(eventObject.eventName, eventObject);
-		 					}
+				 			$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		            );
 		 		
@@ -419,7 +421,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
       var _setActiveEndpoint = function(endpointID){
 
       	// First get the old active endpoint
-      	var activeEndpoint = _getActiveEndpoint();
+      	var activeEndpoint = _getActiveEndpointUUID();
       	if ((activeEndpoint != null) && (activeEndpoint != endpointID)){
       		var session = _getSession(activeEndpoint);
       		if (session != null)
@@ -432,7 +434,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
      	$rootScope.$broadcast('endpointActivated', endpointID);
       };
       
-      var _getActiveEndpoint = function(){
+      var _getActiveEndpointUUID = function(){
       	var activeEndpoint = null;
       	
        	 for (var index = 0; index < sessions.length; index++) {
@@ -711,7 +713,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
         },
 
         getActiveEndpoint : function(){
-        	return(_getActiveEndpoint());
+        	return(_getActiveEndpointUUID());
         },
         
         getRemoteEndpoint : function(localEndpointID){
@@ -726,6 +728,35 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
         	}
 
 	       	return (remoteEndpointID);
-        }
+        },
+        
+    	setDefaultViewSelector : function() {
+      		_selfView = "selfView";
+      		_remoteView = "remoteView";
+      	},
+      	
+    	setViewSelector : function(selfView, remoteView) {
+      		_selfView = selfView;
+      		_remoteView = remoteView;
+      	},
+
+      	setVideoView : function(endpointUUID){
+              $log.debug('rtcommVideo: setting local media');
+              var endpoint = null;
+              
+              if (typeof endpointUUID != "undefined" &&  endpointUUID != null)
+            	  endpoint = _getEndpoint(endpointUUID);
+              else if (_getActiveEndpointUUID() != null)
+            	  endpoint = _getEndpoint(_getActiveEndpointUUID());
+            	  
+              if (endpoint != null){
+            	  
+                  endpoint.webrtc.setLocalMedia(
+          	            { 
+          	            	mediaOut: document.querySelector('#' + _selfView),
+          	            	mediaIn: document.querySelector('#' + _remoteView)
+          	            });
+              }
+      	},
 	  };
 });
