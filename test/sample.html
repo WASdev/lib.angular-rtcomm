@@ -66,12 +66,12 @@
 
  	<div class="container-fluid">
 		<div class="row">
-			<div class="col-md-6">
+			<div class="col-md-9">
 				<!-- init'ing to true means active session count will be reported to presence if presence is active. -->	
 				<rtcomm-sessionmgr ng-init="init(true)"></rtcomm-sessionmgr>
 			</div>
-			<div class="col-md-6">
-				<rtcomm-endpointctrl ng-init="init(true)"></rtcomm-endpointctrl>
+			<div class="col-md-3">
+				<rtcomm-endpoint-status></rtcomm-endpoint-status>
 			</div>
 		</div>
 		<br>
@@ -101,9 +101,22 @@
 						<span class="glyphicon glyphicon-user"></span> Presence
 					</div> 
 					<div class="panel-body"  style="height:200px; position:relative; overflow-y: scroll; overflow-x: auto">
-						<rtcomm-presence ng-init="monitorTopics=['agents','patients']"></rtcomm-presence>
+						<rtcomm-presence ng-init="monitorTopics=['sampleRoom']"></rtcomm-presence>
 					</div>
 				</div>
+				
+				<div class="btn-group-sm pull-left" style='padding: 10px'>
+	    			<div ng-controller="RtcommEndpointController">
+						<button id="btnDisconnectEndpoint" class='btn  btn-primary' ng-click="disconnect()" ng-disabled="(sessionState == 'session:stopped' || sessionState == 'session:failed')">
+							<span aria-hidden="true" aria-label="Disconnect"></span>
+							Disconnect
+						</button>
+						<button id="btnEnableAV" class='btn  btn-primary' ng-click="toggleAV()" focusInput=true ng-disabled="(sessionState == 'session:stopped' || sessionState == 'session:failed')">
+							<span aria-hidden="true" aria-label="Enable A/V"></span>
+							{{epCtrlAVConnected ? 'Disable A/V' : 'Enable A/V'}}
+						</button>
+					</div>
+				</div>				
 			</div>
 		</div>
 	</div>
