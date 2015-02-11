@@ -7,7 +7,7 @@
 		<div class="panel-body">
 			<ul class="chat">
 				<li class="right clearfix" ng-repeat="chat in chats">
-					<div class="header">
+					<div id={{$index}} class="header">
 						<strong class="primary-font">{{chat.name}}</strong> 
 						<small class="pull-right text-muted"> 
 							{{chat.time | date:'HH:mm:ss'}}

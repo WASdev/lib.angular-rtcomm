@@ -11,10 +11,29 @@ rtcommModule.config(function($logProvider){
 	  $logProvider.debugEnabled(true);
 	});
 
+rtcommModule.config(function($locationProvider) {
+	  $locationProvider.html5Mode(  {enabled: true,
+			  						requireBase: false});
+	});
+
 /**
  *
  */
 rtcommModule.factory('RtcommConfig', function rtcommConfigFactory($location, $log, $window){
+	
+	//	First we check to see if the URL includes the query string disableRtcomm=true.
+	//	This is typically done when a URL is being shared vian an iFrame that includes Rtcomm directives.
+	//	If it is set we just return without setting up Rtcomm.
+	$log.debug('RtcommConfig: Abs URL: ' + $location.absUrl());
+	var _disableRtcomm = $location.search().disableRtcomm;
+	if (typeof _disableRtcomm == "undefined" || _disableRtcomm == null)
+		_disableRtcomm = false;
+	else if (_disableRtcomm == "true")
+		_disableRtcomm = true;
+	else
+		_disableRtcomm = false;
+	
+	$log.debug('RtcommConfig: _disableRtcomm = ' + _disableRtcomm);
 
 	var providerConfig = {
 		    server : $location.host(),
@@ -68,12 +87,14 @@ rtcommModule.factory('RtcommConfig', function rtcommConfigFactory($location, $lo
 
 		getBroadcastAudio : function(){return broadcastAudio;},
 
-		getBroadcastVideo : function(){return broadcastVideo;}
+		getBroadcastVideo : function(){return broadcastVideo;},
+		
+		isRtcommDisabled : function(){return _disableRtcomm;}
 	};
 });
 
 rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, $http) {
-
+	
 	  /** Setup the endpoint provider first **/
 	  var myEndpointProvider = new rtcomm.EndpointProvider();
 	  var endpointProviderInitialized = false;
@@ -425,7 +446,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
       	if ((activeEndpoint != null) && (activeEndpoint != endpointID)){
       		var session = _getSession(activeEndpoint);
       		if (session != null)
-      			session.actived = false;
+      			session.activated = false;
       	}
           
       	var session = _createSession(endpointID);
@@ -458,6 +479,12 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 		},
 
 		setConfig : function(config){
+			  if (RtcommConfig.isRtcommDisabled() == true){
+				  	$log.debug('RtcommService:setConfig: isRtcommDisabled = true; return with no setup');
+					return;
+			  }
+
+			
 			$log.debug('rtcomm-services: setConfig: config: ', config);
 
 			RtcommConfig.setProviderConfig(config);

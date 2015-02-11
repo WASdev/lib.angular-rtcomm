@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.1 - 2015-02-10
+ * @version v0.0.1 - 2015-02-11
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -31,10 +31,29 @@ rtcommModule.config(["$logProvider", function($logProvider){
 	  $logProvider.debugEnabled(true);
 	}]);
 
+rtcommModule.config(["$locationProvider", function($locationProvider) {
+	  $locationProvider.html5Mode(  {enabled: true,
+			  						requireBase: false});
+	}]);
+
 /**
  *
  */
 rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function rtcommConfigFactory($location, $log, $window){
+	
+	//	First we check to see if the URL includes the query string disableRtcomm=true.
+	//	This is typically done when a URL is being shared vian an iFrame that includes Rtcomm directives.
+	//	If it is set we just return without setting up Rtcomm.
+	$log.debug('RtcommConfig: Abs URL: ' + $location.absUrl());
+	var _disableRtcomm = $location.search().disableRtcomm;
+	if (typeof _disableRtcomm == "undefined" || _disableRtcomm == null)
+		_disableRtcomm = false;
+	else if (_disableRtcomm == "true")
+		_disableRtcomm = true;
+	else
+		_disableRtcomm = false;
+	
+	$log.debug('RtcommConfig: _disableRtcomm = ' + _disableRtcomm);
 
 	var providerConfig = {
 		    server : $location.host(),
@@ -88,12 +107,14 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function r
 
 		getBroadcastAudio : function(){return broadcastAudio;},
 
-		getBroadcastVideo : function(){return broadcastVideo;}
+		getBroadcastVideo : function(){return broadcastVideo;},
+		
+		isRtcommDisabled : function(){return _disableRtcomm;}
 	};
 }]);
 
 rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$http", function ($rootScope, RtcommConfig, $log, $http) {
-
+	
 	  /** Setup the endpoint provider first **/
 	  var myEndpointProvider = new rtcomm.EndpointProvider();
 	  var endpointProviderInitialized = false;
@@ -445,7 +466,7 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$h
       	if ((activeEndpoint != null) && (activeEndpoint != endpointID)){
       		var session = _getSession(activeEndpoint);
       		if (session != null)
-      			session.actived = false;
+      			session.activated = false;
       	}
           
       	var session = _createSession(endpointID);
@@ -478,6 +499,12 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$h
 		},
 
 		setConfig : function(config){
+			  if (RtcommConfig.isRtcommDisabled() == true){
+				  	$log.debug('RtcommService:setConfig: isRtcommDisabled = true; return with no setup');
+					return;
+			  }
+
+			
 			$log.debug('rtcomm-services: setConfig: config: ', config);
 
 			RtcommConfig.setProviderConfig(config);
@@ -1240,13 +1267,16 @@ rtcommModule.directive('rtcommVideo', ['RtcommService', '$log', function(RtcommS
  * is maintained in the RtcommService. This directive handles switching between
  * active endpoints.
  */
-rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommService, $log) {
+rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$anchorScroll', function(RtcommService, $log, $location, $anchorScroll) {
     return {
       restrict: 'E',
       templateUrl: "templates/rtcomm/rtcomm-chat.html",
       controller: ["$scope", function ($scope) {
 		  $scope.chatActiveEndpointUUID = RtcommService.getActiveEndpoint();
 		  $scope.chats = RtcommService.getChats($scope.chatActiveEndpointUUID);
+
+		  // This forces the scroll bar to the bottom and watches the $location.hash
+	      $anchorScroll();
 		  
 		  $scope.$on('endpointActivated', function (event, endpointUUID) {
 			  $log.debug('rtcommChat: endpointActivated =' + endpointUUID);
@@ -1259,6 +1289,13 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 	      $scope.$on('noEndpointActivated', function (event) {
 	    	  $scope.chats = [];
 	    	  $scope.chatActiveEndpointUUID = null;
+	      });
+	      
+	      $scope.$on('chat:message', function (event) {
+	  		  if (typeof $scope.chats != "undefined" && $scope.chats != null){
+	  			  $location.hash($scope.chats.length -1);
+	  		      $anchorScroll();
+	  		  }
 	      });
 	       	
 	      $scope.keySendMessage = function(keyEvent){
@@ -1273,8 +1310,12 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
   				  message : angular.copy($scope.message)
 	  		   };
 
-	  		  RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
 	  		  $scope.message = '';
+	  		  RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
+	  		  if (typeof $scope.chats != "undefined" && $scope.chats != null){
+	  			  $location.hash($scope.chats.length -1);
+	  		      $anchorScroll();
+	  		  }
 	  		};
 
       }],
@@ -1333,6 +1374,8 @@ rtcommModule.directive("rtcommIframe", ['RtcommService', '$log', '$sce', '$locat
 	      $scope.$on('rtcomm::iframeUpdate', function (eventType, endpointUUID, url) {
 		      if ($scope.syncSource == false){
 				  $log.debug('rtcomm::iframeUpdate: ' + url);
+				  //	This is needed to prevent rtcomm from logging in when the page is loaded in the iFrame.
+		    	  url = url + "?disableRtcomm=true";
 		    	  $scope.iframeURL = $sce.trustAsResourceUrl(url);
 		      }
 		      else{
@@ -1689,7 +1732,7 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
   'use strict';
 
   $templateCache.put('templates/rtcomm/rtcomm-chat.html',
-    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-comment\"></span> Chat</div><div class=\"panel-body\"><ul class=\"chat\"><li class=\"right clearfix\" ng-repeat=\"chat in chats\"><div class=\"header\"><strong class=\"primary-font\">{{chat.name}}</strong> <small class=\"pull-right text-muted\">{{chat.time | date:'HH:mm:ss'}}</small></div><p>{{chat.message}}</p></li></ul></div><div class=\"panel-footer\"><div class=\"input-group\"><input id=\"chat-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Type your message here...\" type=\"text\" ng-model=\"message\" ng-keypress=\"keySendMessage($event)\"> <span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-chat\" ng-click=\"sendMessage()\" focusinput=\"true\" ng-disabled=\"(chatActiveEndpointUUID == null)\">Send</button></span></div></div></div></div><!-- chat list ng-controller div -->"
+    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-comment\"></span> Chat</div><div class=\"panel-body\"><ul class=\"chat\"><li class=\"right clearfix\" ng-repeat=\"chat in chats\"><div id=\"{{$index}}\" class=\"header\"><strong class=\"primary-font\">{{chat.name}}</strong> <small class=\"pull-right text-muted\">{{chat.time | date:'HH:mm:ss'}}</small></div><p>{{chat.message}}</p></li></ul></div><div class=\"panel-footer\"><div class=\"input-group\"><input id=\"chat-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Type your message here...\" type=\"text\" ng-model=\"message\" ng-keypress=\"keySendMessage($event)\"> <span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-chat\" ng-click=\"sendMessage()\" focusinput=\"true\" ng-disabled=\"(chatActiveEndpointUUID == null)\">Send</button></span></div></div></div></div><!-- chat list ng-controller div -->"
   );
 
 
@@ -1729,7 +1772,7 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
 
 
   $templateCache.put('templates/rtcomm/rtcomm-sessionmgr.html',
-    "<div class=\"session-manager\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><div><button type=\"button\" ng-switch on=\"session.activated\" ng-class=\"{'btn btn-primary btn-sm': session.activated, 'btn btn-default btn-sm': !session.activated}\" ng-repeat=\"session in sessions\" ng-click=\"activateSession(session.endpointUUID)\"><!-- span class=\"glyphicon glyphicon-eye-open\" aria-hidden=\"true\" ng-switch-when=true></span --><!-- span class=\"glyphicon glyphicon-eye-close\" aria-hidden=\"true\" ng-switch-when=false></span -->{{session.remoteEndpointID}}</button></div></div><p class=\"session-manager-title navbar-text pull-right\">Sessions</p></div>"
+    "<div class=\"session-manager\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><div><button class=\"session-manager-button\" type=\"button\" ng-switch on=\"session.activated\" ng-class=\"{'btn btn-primary btn-sm': session.activated, 'btn btn-default btn-sm': !session.activated}\" ng-repeat=\"session in sessions\" ng-click=\"activateSession(session.endpointUUID)\"><span class=\"glyphicon glyphicon-eye-open\" aria-hidden=\"true\" ng-switch-when=\"true\"></span> <span class=\"glyphicon glyphicon-eye-close\" aria-hidden=\"true\" ng-switch-when=\"false\"></span> {{session.remoteEndpointID}}</button></div></div><p class=\"session-manager-title navbar-text pull-right\">Sessions</p></div>"
   );
 
 

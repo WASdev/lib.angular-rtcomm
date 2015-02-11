@@ -457,13 +457,16 @@ rtcommModule.directive('rtcommVideo', ['RtcommService', '$log', function(RtcommS
  * is maintained in the RtcommService. This directive handles switching between
  * active endpoints.
  */
-rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommService, $log) {
+rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$anchorScroll', function(RtcommService, $log, $location, $anchorScroll) {
     return {
       restrict: 'E',
       templateUrl: "templates/rtcomm/rtcomm-chat.html",
       controller: function ($scope) {
 		  $scope.chatActiveEndpointUUID = RtcommService.getActiveEndpoint();
 		  $scope.chats = RtcommService.getChats($scope.chatActiveEndpointUUID);
+
+		  // This forces the scroll bar to the bottom and watches the $location.hash
+	      $anchorScroll();
 		  
 		  $scope.$on('endpointActivated', function (event, endpointUUID) {
 			  $log.debug('rtcommChat: endpointActivated =' + endpointUUID);
@@ -476,6 +479,13 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 	      $scope.$on('noEndpointActivated', function (event) {
 	    	  $scope.chats = [];
 	    	  $scope.chatActiveEndpointUUID = null;
+	      });
+	      
+	      $scope.$on('chat:message', function (event) {
+	  		  if (typeof $scope.chats != "undefined" && $scope.chats != null){
+	  			  $location.hash($scope.chats.length -1);
+	  		      $anchorScroll();
+	  		  }
 	      });
 	       	
 	      $scope.keySendMessage = function(keyEvent){
@@ -490,8 +500,12 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
   				  message : angular.copy($scope.message)
 	  		   };
 
-	  		  RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
 	  		  $scope.message = '';
+	  		  RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
+	  		  if (typeof $scope.chats != "undefined" && $scope.chats != null){
+	  			  $location.hash($scope.chats.length -1);
+	  		      $anchorScroll();
+	  		  }
 	  		};
 
       },
@@ -550,6 +564,8 @@ rtcommModule.directive("rtcommIframe", ['RtcommService', '$log', '$sce', '$locat
 	      $scope.$on('rtcomm::iframeUpdate', function (eventType, endpointUUID, url) {
 		      if ($scope.syncSource == false){
 				  $log.debug('rtcomm::iframeUpdate: ' + url);
+				  //	This is needed to prevent rtcomm from logging in when the page is loaded in the iFrame.
+		    	  url = url + "?disableRtcomm=true";
 		    	  $scope.iframeURL = $sce.trustAsResourceUrl(url);
 		      }
 		      else{
