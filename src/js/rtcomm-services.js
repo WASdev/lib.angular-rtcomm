@@ -729,6 +729,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
             _setActiveEndpoint(endpoint.id);
 
             endpoint.connect(calleeID);
+            return(endpoint.id);
         },
         
         getSessions : function(){
