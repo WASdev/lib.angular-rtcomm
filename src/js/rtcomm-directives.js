@@ -23,7 +23,6 @@ rtcommModule.directive('rtcommSessionmgr', ['RtcommService', '$log', function(Rt
 	  	};
 
 	  	$scope.$on('endpointActivated', function (event, endpointUUID) {
-        	//	Not to do something here to show that this button is live.
             $log.debug('rtcommSessionmgr: endpointActivated =' + endpointUUID);
         	$scope.sessMgrActiveEndpointUUID = endpointUUID;
         });
