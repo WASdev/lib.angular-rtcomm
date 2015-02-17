@@ -1,6 +1,6 @@
 {
   "name": "angular-rtcomm",
-  "version": "0.0.1-beta.1",
+  "version": "0.0.2-beta.2",
   "description": "Angular module for Rtcomm",
   "main": [
     "dist/angular-rtcomm.js",
