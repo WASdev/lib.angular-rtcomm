@@ -36,6 +36,13 @@
 			padding-top: 60px;
 			padding-bottom: 40px;
 		}
+				
+		.video-panel {
+		    display: block;
+		    height: 0;
+		    padding-bottom: 75%;
+		    overflow: hidden;
+		}
 	</style>
 </head>
 
@@ -59,38 +66,58 @@
 
  	<div class="container-fluid">
 		<div class="row">
-			<div class="col-md-2">
-			
-		        <rtcomm-register></rtcomm-register>
-				<rtcomm-presence ng-init="monitorTopics=['sample']"></rtcomm-presence>
-
-			</div>
-
 			<div class="col-md-9">
-				<rtcomm-endpoint ng-init="init(true)">
-					<div class="row">
-						<div>
-							<div class="col-md-4 nopaddng-right vertical-stretch">
-								<rtcomm-chat></rtcomm-chat>
-							</div>
-								
-							<div class="col-md-8 nopadding-left">
-								<rtcomm-video></rtcomm-video>
-							</div>
-						</div>
-					</div> <!-- row -->
-	
-					<div class="row">
-						<div class="col-md-12">
-							<rtcomm-endpointctrl></rtcomm-endpointctrl>
-						</div>
-					</div> <!-- row -->
-				</rtcomm-endpoint> 
+				<!-- init'ing to true means active session count will be reported to presence if presence is active. -->	
+				<rtcomm-sessionmgr ng-init="init(true)"></rtcomm-sessionmgr>
+			</div>
+			<div class="col-md-3">
+				<rtcomm-endpoint-status></rtcomm-endpoint-status>
 			</div>
 		</div>
+		<br>
 		<div class="row">
-			<!-- init'ing to true means active session count will be reported to presence if presence is active. -->	
-			<rtcomm-sessionmgr ng-init="init(true)"></rtcomm-sessionmgr>
+			<div class="col-md-3">
+		        <rtcomm-register></rtcomm-register>
+				<rtcomm-chat></rtcomm-chat>
+
+			</div>
+
+			<div class="col-md-6">
+				<rtcomm-iframe></rtcomm-iframe>
+			</div>
+
+			<div class="col-md-3">
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<span class="glyphicon glyphicon-facetime-video"></span> Video
+					</div>
+					<div class="video-panel">
+						<rtcomm-video></rtcomm-video>
+					</div>
+				</div>
+
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<span class="glyphicon glyphicon-user"></span> Presence
+					</div> 
+					<div class="panel-body"  style="height:200px; position:relative; overflow-y: scroll; overflow-x: auto">
+						<rtcomm-presence ng-init="monitorTopics=['sampleRoom']"></rtcomm-presence>
+					</div>
+				</div>
+				
+				<div class="btn-group-sm pull-left" style='padding: 10px'>
+	    			<div ng-controller="RtcommEndpointController">
+						<button id="btnDisconnectEndpoint" class='btn  btn-primary' ng-click="disconnect()" ng-disabled="(sessionState == 'session:stopped' || sessionState == 'session:failed')">
+							<span aria-hidden="true" aria-label="Disconnect"></span>
+							Disconnect
+						</button>
+						<button id="btnEnableAV" class='btn  btn-primary' ng-click="toggleAV()" focusInput=true ng-disabled="(sessionState == 'session:stopped' || sessionState == 'session:failed')">
+							<span aria-hidden="true" aria-label="Enable A/V"></span>
+							{{epCtrlAVConnected ? 'Disable A/V' : 'Enable A/V'}}
+						</button>
+					</div>
+				</div>				
+			</div>
 		</div>
 	</div>
 </body>

@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.1 - 2015-01-12
+ * @version v0.0.2 - 2015-02-16
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -31,10 +31,29 @@ rtcommModule.config(["$logProvider", function($logProvider){
 	  $logProvider.debugEnabled(true);
 	}]);
 
+rtcommModule.config(["$locationProvider", function($locationProvider) {
+	  $locationProvider.html5Mode(  {enabled: true,
+			  						requireBase: false});
+	}]);
+
 /**
  *
  */
-rtcommModule.factory('RtcommConfig', ["$location", "$log", function rtcommConfigFactory($location, $log){
+rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function rtcommConfigFactory($location, $log, $window){
+	
+	//	First we check to see if the URL includes the query string disableRtcomm=true.
+	//	This is typically done when a URL is being shared vian an iFrame that includes Rtcomm directives.
+	//	If it is set we just return without setting up Rtcomm.
+	$log.debug('RtcommConfig: Abs URL: ' + $location.absUrl());
+	var _disableRtcomm = $location.search().disableRtcomm;
+	if (typeof _disableRtcomm == "undefined" || _disableRtcomm == null)
+		_disableRtcomm = false;
+	else if (_disableRtcomm == "true")
+		_disableRtcomm = true;
+	else
+		_disableRtcomm = false;
+	
+	$log.debug('RtcommConfig: _disableRtcomm = ' + _disableRtcomm);
 
 	var providerConfig = {
 		    server : $location.host(),
@@ -57,9 +76,8 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", function rtcommConfig
 	  // Default to enabling audio and video. It must be disabled through config.
 	  var broadcastAudio = true;
 	  var broadcastVideo = true;
-
-	return {
-		setProviderConfig : function(config){
+	  
+	  var setConfig = function(config){
 			providerConfig.server = (typeof config.server !== "undefined")? config.server : providerConfig.server;
 			providerConfig.port = (typeof config.port !== "undefined")? config.port : providerConfig.port;
 			providerConfig.rtcommTopicPath = (typeof config.rtcommTopicPath !== "undefined")? config.rtcommTopicPath : providerConfig.rtcommTopicPath;
@@ -76,7 +94,10 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", function rtcommConfig
 
 			if (typeof config.userid !== "undefined")
 				providerConfig.userid = config.userid;
-		},
+		};
+
+	return {
+		setProviderConfig : function(config){setConfig(config);},
 
 		getProviderConfig : function(){return providerConfig;},
 
@@ -86,12 +107,14 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", function rtcommConfig
 
 		getBroadcastAudio : function(){return broadcastAudio;},
 
-		getBroadcastVideo : function(){return broadcastVideo;}
+		getBroadcastVideo : function(){return broadcastVideo;},
+		
+		isRtcommDisabled : function(){return _disableRtcomm;}
 	};
 }]);
 
-rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", function ($rootScope, RtcommConfig, $log) {
-
+rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$http", function ($rootScope, RtcommConfig, $log, $http) {
+	
 	  /** Setup the endpoint provider first **/
 	  var myEndpointProvider = new rtcomm.EndpointProvider();
 	  var endpointProviderInitialized = false;
@@ -99,6 +122,9 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 	  var sessions = [];
 	  var presenceRecord = null;
 	  var karmaTesting = false;
+	  var _selfView = "selfView";		//	Default self view
+	  var _remoteView = "remoteView";	//	Default remote view
+
 	  
 	  /*
 	  myEndpointProvider.setLogLevel('DEBUG');
@@ -143,6 +169,20 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 
 	  myEndpointProvider.on('newendpoint', function(endpoint) {
 	 	  $log.debug('<<------rtcomm-service------>> - Event: newendpoint remoteEndpointID: ' + endpoint.getRemoteEndpointID());
+	 	  
+	 	 endpoint.on('onetimemessage',function(event){
+		 	  $log.debug('<<------rtcomm-onetimemessage------>> - Event: ', event);
+		 	  if (event.onetimemessage.type != "undefined" && event.onetimemessage.type == 'iFrameURL'){
+		 		  var session = _createSession(event.endpoint.id);
+		 		  session.iFrameURL = event.onetimemessage.iFrameURL;
+			 	  $rootScope.$evalAsync(
+			 				function () {
+							  $rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);
+			 				}
+			 		);
+		 	  }
+	 	 });
+	 	  
 	 	  $rootScope.$evalAsync(
 	 				function () {
 					  $rootScope.$broadcast('newendpoint', endpoint);
@@ -154,6 +194,10 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 	 		$log.debug('<<------rtcomm-service------>> - Event: ' + eventObject.eventName + ' remoteEndpointID: ' + eventObject.endpoint.getRemoteEndpointID());
 	 		$rootScope.$evalAsync(
 	 				function () {
+	 					if (eventObject.eventName.indexOf("session:") > -1){
+	 						var session = _createSession(eventObject.endpoint.id);
+ 							session.sessionState = eventObject.eventName;
+	 					}
 		 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 	 				}
 	            );
@@ -172,7 +216,10 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 		 		$log.debug('<<------rtcomm-service------>> - Event: ' + eventObject.eventName + ' remoteEndpointID: ' + eventObject.endpoint.getRemoteEndpointID());
 		 		$rootScope.$evalAsync(
 		 				function () {
-		 					getSession(eventObject.endpoint.id).sessionStarted = true;
+		 					var session = _createSession(eventObject.endpoint.id);
+		 					
+		 					session.sessionStarted = true;
+		 					session.remoteEndpointID = eventObject.endpoint.getRemoteEndpointID();
 			 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		            );
@@ -187,16 +234,26 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 		  'session:trying' : callback,
 		  'session:ringing' : callback,
 		  'session:queued' : callback,
-		  'session:failed' : callback,
+		  
+		  'session:failed' : function(eventObject) { 
+	  	 		$log.debug('<<------rtcomm-service------>> - Event: ' + eventObject.eventName + ' remoteEndpointID: ' + eventObject.endpoint.getRemoteEndpointID());
+		 		$rootScope.$evalAsync(
+		 				function () {
+		 					_removeSession(eventObject.endpoint.id);
+				  	 		$rootScope.$broadcast(eventObject.eventName, eventObject);
+		 				}
+		 			);
+		 		//	This is required in karma to get the evalAsync to fire. Ugly but necessary...
+		 		if (karmaTesting == true)
+		 			 $rootScope.$digest();
+
+			  },
 		  
 		  'session:stopped' : function(eventObject) { 
 	  	 		$log.debug('<<------rtcomm-service------>> - Event: ' + eventObject.eventName + ' remoteEndpointID: ' + eventObject.endpoint.getRemoteEndpointID());
 		 		$rootScope.$evalAsync(
 		 				function () {
-				  	 		//	Clean up existing data related to this session.
-				  	 		if (eventObject.endpoint.id in sessions)
-				  	 			delete sessions[eventObject.endpoint.id];
-					 		
+		 					_removeSession(eventObject.endpoint.id);
 				  	 		$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		 			);
@@ -212,7 +269,7 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 		 		
 		 		$rootScope.$evalAsync(
 		 				function () {
-		 					getSession(eventObject.endpoint.id).webrtcConnected = true;
+		 					_createSession(eventObject.endpoint.id).webrtcConnected = true;
 			 				$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		            );
@@ -226,8 +283,10 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 		 		
 		 		$rootScope.$evalAsync(
 		 				function () {
-		 					getSession(eventObject.endpoint.id).webrtcConnected = false;
-			 				$rootScope.$broadcast(eventObject.eventName, eventObject);
+		 					var session = _getSession(eventObject.endpoint.id);
+		 					if (session != null)
+			 					session.webrtcConnected = false;
+				 			$rootScope.$broadcast(eventObject.eventName, eventObject);
 		 				}
 		            );
 		 		
@@ -250,7 +309,7 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 					  				  message : angular.copy(eventObject.message.message)
 						  		   };
 					  		
-					  		getSession(eventObject.endpoint.id).chats.push(chat);
+					  		_createSession(eventObject.endpoint.id).chats.push(chat);
 					 		$rootScope.$broadcast(eventObject.eventName, eventObject);
 	 				}
 	 			);
@@ -301,38 +360,174 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
  		if (karmaTesting == true)
  			 $rootScope.$digest();
      };
-     
-     var getSession = function(endpointUUID){
+
+     /*
+      * Get session from local endpoint ID
+      */
+     var _getSession = function(endpointUUID){
     	 
-    	 if (endpointUUID in sessions)
-    		 return (sessions[endpointUUID]);
-    	 else{
-    		 var session = {
-    			chats : [],
-    			webrtcConnected : false,
-    			sessionStarted : false
-    		 };
-    		 sessions[endpointUUID] = session;
-    		 return (session);
-    	 }
+		var session = null;
+		 
+		for	(var index = 0; index < sessions.length; index++) {
+		    if(sessions[index].endpointUUID === endpointUUID){
+		    	session = sessions[index];
+		    	break;
+		    }
+		}
+		
+		return (session);
      };
+     
+     /*
+      * Get session from local endpoint ID
+      */
+     var _createSession = function(endpointUUID){
+    	 
+		var session = null;
+		 
+		for	(var index = 0; index < sessions.length; index++) {
+		    if(sessions[index].endpointUUID === endpointUUID){
+		    	session = sessions[index];
+		    	break;
+		    }
+		}
 
-	  return {
-			setKarmaTesting : function(){
-				karmaTesting = true;
-			},
+		if (session == null){
+			 session = {
+				endpointUUID : endpointUUID,
+				chats : [],
+				webrtcConnected : false,
+				sessionStarted : false,
+				iFrameURL : 'about:blank',
+				remoteEndpointID : null,
+				activated : true,
+				sessionState : 'session:stopped'
+			 };
+			 sessions[sessions.length] = session;
+		}
+		
+		return (session);
+     };
+     
+     var _removeSession = function(endpointUUID){
 
-			isInitialized : function(){
-				return(endpointProviderInitialized);
-			},
+    	 for (var index = 0; index < sessions.length; index++) {
+		    if(sessions[index].endpointUUID === endpointUUID){
+	            
+		    	_getEndpoint(endpointUUID).destroy();
 
-			setConfig : function(config){
-				$log.debug('rtcomm-services: setConfig: config: ', config);
-				
-				RtcommConfig.setProviderConfig(config);
-				myEndpointProvider.setRtcommEndpointConfig(getMediaConfig());
+		    	//	Remove the disconnected endpoint from the list.
+		    	sessions.splice(index, 1);
+		    	
+		    	//	Now we need to set the active endpoint to someone else or to no endpoint if none are left.
+		    	if (sessions.length == 0){
+			        $rootScope.$broadcast('noEndpointActivated');
+		    	}
+		    	else{
+			        _setActiveEndpoint(sessions[0].endpointUUID);
+		    	}
+		    	break;
+		    }
+		}
+      };
 
-				if (endpointProviderInitialized == false){
+
+     var _getEndpoint = function(uuid) {
+		  var endpoint = null;
+
+		  if ((typeof uuid === "undefined") || uuid == null){
+		 	  $log.debug('getEndpoint: create new endpoint and setup onetimemessage event');
+			  endpoint = myEndpointProvider.createRtcommEndpoint();
+			  endpoint.on('onetimemessage',function(event){
+			 	  $log.debug('<<------rtcomm-onetimemessage------>> - Event: ', event);
+			 	  if (event.onetimemessage.type != "undefined" && event.onetimemessage.type == 'iFrameURL'){
+			 		  var session = _createSession(event.endpoint.id);
+			 		  
+			 		  session.iFrameURL = event.onetimemessage.iFrameURL;
+			 		  
+				 	  $rootScope.$evalAsync(
+				 				function () {
+								  $rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);
+				 				}
+				 		);
+			 	  }
+			  });				  
+		  }
+		  else
+			  endpoint = myEndpointProvider.getRtcommEndpoint(uuid);
+			  
+		  return (endpoint);
+	  };
+	  
+      var _setActiveEndpoint = function(endpointID){
+
+      	// First get the old active endpoint
+      	var activeEndpoint = _getActiveEndpointUUID();
+      	if ((activeEndpoint != null) && (activeEndpoint != endpointID)){
+      		var session = _getSession(activeEndpoint);
+      		if (session != null)
+      			session.activated = false;
+      	}
+          
+      	var session = _createSession(endpointID);
+      	session.activated = true;
+
+     	$rootScope.$broadcast('endpointActivated', endpointID);
+      };
+      
+      var _getActiveEndpointUUID = function(){
+      	var activeEndpoint = null;
+      	
+       	 for (var index = 0; index < sessions.length; index++) {
+ 		    if(sessions[index].activated == true){
+ 		    	activeEndpoint = sessions[index].endpointUUID;
+ 		    	break;
+ 		    }
+ 		}
+       	return (activeEndpoint);
+      };
+
+
+	return {
+			
+		setKarmaTesting : function(){
+			karmaTesting = true;
+		},
+
+		isInitialized : function(){
+			return(endpointProviderInitialized);
+		},
+
+		setConfig : function(config){
+			  if (RtcommConfig.isRtcommDisabled() == true){
+				  	$log.debug('RtcommService:setConfig: isRtcommDisabled = true; return with no setup');
+					return;
+			  }
+
+			
+			$log.debug('rtcomm-services: setConfig: config: ', config);
+
+			RtcommConfig.setProviderConfig(config);
+			myEndpointProvider.setRtcommEndpointConfig(getMediaConfig());
+
+			if (endpointProviderInitialized == false){
+				//	If an identityServlet is defined we will get the User ID from the servlet.
+				//	This is used when the user ID needs to be derived from an SSO token like LTPA.
+				if (typeof config.identityServlet !== "undefined" && config.identityServlet != null){
+					$http.get(config.identityServlet).success (function(data){
+							
+						if (typeof data.userid !== "undefined"){
+							RtcommConfig.setProviderConfig(data);
+							myEndpointProvider.init(RtcommConfig.getProviderConfig(), initSuccess, initFailure);
+							endpointProviderInitialized = true;
+						}
+						else
+							$log.error('RtcommService: setConfig promise: Invalid JSON object return from identityServlet: ', data);
+					}).error(function(data, status, headers, config) {
+						$log.debug('RtcommService: setConfig promise: error accessing userid from identityServlet: ' + status);
+					});
+				}
+				else{
 					// If the user does not specify a userid, that says one will never be specified so go ahead
 					// and initialize the endpoint provider and let the provider assign a name. If a defined empty
 					// string is passed in, that means to wait until the end user registers a name.
@@ -341,153 +536,158 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 						  endpointProviderInitialized = true;
 					}
 				}
-			},
+			}
+		},
 
-	      // Presence related methods
-	      getPresenceMonitor:function(topic) {
-	    	  return myEndpointProvider.getPresenceMonitor(topic);
-	      },
+      // Presence related methods
+      getPresenceMonitor:function(topic) {
+    	  return myEndpointProvider.getPresenceMonitor(topic);
+      },
 	      
-	      publishPresence:function() {
-	    	  if (endpointProviderInitialized == true)
-	    		  myEndpointProvider.publishPresence(getPresenceRecord());
-	      },
+      publishPresence:function() {
+    	  if (endpointProviderInitialized == true)
+    		  myEndpointProvider.publishPresence(getPresenceRecord());
+      },
 
-	      /**
-	       * userDefines is an array of JSON objects that look like:
-	       * 
-	       * 	{
-	       * 		name : "some name",
-	       * 		value : "some value"
-	       *    }
-	       *    
-	       *    The only rule is that some name and some value have to both be strings.
-	       */
-	      addToPresenceRecord:function(userDefines) {
+      /**
+       * userDefines is an array of JSON objects that look like:
+       * 
+       * 	{
+       * 		name : "some name",
+       * 		value : "some value"
+       *    }
+       *    
+       *    The only rule is that some name and some value have to both be strings.
+       */
+      addToPresenceRecord:function(userDefines) {
 	    	  
- 			  for (var index = 0; index < userDefines.length; index++) {
- 				 getPresenceRecord().userDefines.push(userDefines[index]);
- 			  }
+		  for (var index = 0; index < userDefines.length; index++) {
+			 getPresenceRecord().userDefines.push(userDefines[index]);
+		  }
 
-	    	  if (endpointProviderInitialized == true){
-	              $log.debug('RtcommService: addToPresenceRecord: updating presence record to: ', getPresenceRecord());
-	    		  myEndpointProvider.publishPresence(getPresenceRecord());
-	    	  }
-	      },
+    	  if (endpointProviderInitialized == true){
+              $log.debug('RtcommService: addToPresenceRecord: updating presence record to: ', getPresenceRecord());
+    		  myEndpointProvider.publishPresence(getPresenceRecord());
+    	  }
+      },
 
-	      /**
-	       * userDefines is an array of JSON objects that look like:
-	       * 
-	       * 	{
-	       * 		name : "some name",
-	       * 		value : "some value"
-	       *    }
-	       *    
-	       *    The only rule is that some name and some value have to both be strings.
-	       */
-	      removeFromPresenceRecord:function(userDefines, doPublish) {
+      /**
+       * userDefines is an array of JSON objects that look like:
+       * 
+       * 	{
+       * 		name : "some name",
+       * 		value : "some value"
+       *    }
+       *    
+       *    The only rule is that some name and some value have to both be strings.
+       */
+	    removeFromPresenceRecord:function(userDefines, doPublish) {
 
-	    	  for (var i = 0; i < userDefines.length; i++) {
-		    	  for (var j = 0; j < getPresenceRecord().userDefines.length; j++) {
+	    	for (var i = 0; i < userDefines.length; i++) {
+		      for (var j = 0; j < getPresenceRecord().userDefines.length; j++) {
 		    		  
-		    		  if (getPresenceRecord().userDefines[j].name == userDefines[i].name){
-			    		  getPresenceRecord().userDefines.splice(j,1);
-		    			  break;
-		    		  }
+		    	  if (getPresenceRecord().userDefines[j].name == userDefines[i].name){
+			   		  getPresenceRecord().userDefines.splice(j,1);
+		    		  break;
 		    	  }
-  			  }
+		      }
+	    	}
 	    	  
-	    	  if ((endpointProviderInitialized == true) && doPublish){
-	              $log.debug('RtcommService: removeFromPresenceRecord: updating presence record to: ', getPresenceRecord());
-	    		  myEndpointProvider.publishPresence(getPresenceRecord());
-	    	  }
-	      },
+	    	if ((endpointProviderInitialized == true) && doPublish){
+	          $log.debug('RtcommService: removeFromPresenceRecord: updating presence record to: ', getPresenceRecord());
+	          myEndpointProvider.publishPresence(getPresenceRecord());
+	    	}
+	    },
 
-	      setPresenceRecordState:function(state) {
-	    	  getPresenceRecord().state = state;
-	    	  return myEndpointProvider.publishPresence(getPresenceRecord());
-	      },
+	    setPresenceRecordState:function(state) {
+	      getPresenceRecord().state = state;
+	      return myEndpointProvider.publishPresence(getPresenceRecord());
+	    },
 	      
-	      // Endpoint related methods
-	      getEndpoint : function(uuid) {
-			  var endpoint = null;
+	    // Endpoint related methods
+	    getEndpoint : function(uuid) {
+	      return(_getEndpoint(uuid));
+		},
 
-			  if ((typeof uuid === "undefined") || uuid == null)
-				  endpoint = myEndpointProvider.createRtcommEndpoint();
-			  else
-				  endpoint = myEndpointProvider.getRtcommEndpoint(uuid);
-				  
-			  return (endpoint);
-		  },
+		destroyEndpoint : function(uuid) {
+		  myEndpointProvider.getRtcommEndpoint(uuid).destroy();
+		},
 
-		  destroyEndpoint : function(uuid) {
-			  myEndpointProvider.getRtcommEndpoint(uuid).destroy();
-		  },
+		//	Registration related methods.
+		register : function(userid) {
+		   if (endpointProviderInitialized == false){
+			   RtcommConfig.getProviderConfig().userid = userid;
 
-		  //	Registration related methods.
-		  register : function(userid) {
-			   if (endpointProviderInitialized == false){
-				   RtcommConfig.getProviderConfig().userid = userid;
+			   myEndpointProvider.init(RtcommConfig.getProviderConfig(), initSuccess, initFailure);
+			   endpointProviderInitialized = true;
+		   }
+		   else
+			   $log.error('rtcomm-services: register: ERROR: endpoint provider already initialized');
+		},
 
-				   myEndpointProvider.init(RtcommConfig.getProviderConfig(), initSuccess, initFailure);
-				   endpointProviderInitialized = true;
-			   }
-			   else
-				   $log.error('rtcomm-services: register: ERROR: endpoint provider already initialized');
-		  },
-
-		  unregister : function() {
-			   if (endpointProviderInitialized == true){
-				   myEndpointProvider.destroy();
-				   endpointProviderInitialized = false;
-				   initFailure("destroyed");
-			   }
-			   else
-				   $log.error('rtcomm-services: unregister: ERROR: endpoint provider not initialized');
-		  },
+		unregister : function() {
+		   if (endpointProviderInitialized == true){
+			   myEndpointProvider.destroy();
+			   endpointProviderInitialized = false;
+			   initFailure("destroyed");
+		   }
+		   else
+			   $log.error('rtcomm-services: unregister: ERROR: endpoint provider not initialized');
+		},
 		   
 		  // Queue related methods
-		  joinQueue : function(queueID) {
-			   myEndpointProvider.joinQueue(queueID);
-		  },
+		joinQueue : function(queueID) {
+		   myEndpointProvider.joinQueue(queueID);
+		},
 
-		  leaveQueue : function(queueID) {
-			   myEndpointProvider.leaveQueue(queueID);
-		  },
+		leaveQueue : function(queueID) {
+		   myEndpointProvider.leaveQueue(queueID);
+		},
 
-		  getQueues : function() {
-			   return(queueList);
-		  },
+		getQueues : function() {
+		   return(queueList);
+		},
 
 		/**
 		 * Chat related methods
 		 */
 		sendChatMessage : function(chat, endpointUUID){
 			//	Save this chat in the local session store
-			var session = getSession(endpointUUID);
+			var session = _createSession(endpointUUID);
 			session.chats.push(chat);
 			
 			myEndpointProvider.getRtcommEndpoint(endpointUUID).chat.send(chat.message);
 		},
 			
 		getChats : function(endpointUUID) {
-			var session = getSession(endpointUUID);
-			if (session != null)
-				return (session.chats);
+			if (typeof endpointUUID !== "undefined" && endpointUUID != null){
+				var session = _getSession(endpointUUID);
+				if (session != null)
+					return (session.chats);
+				else
+					return(null);
+			}
 			else
 				return(null);
 		},
 
 		isWebrtcConnected : function(endpointUUID) {
-			var session = getSession(endpointUUID);
-			if (session != null)
-				return (session.webrtcConnected);
+			if (typeof endpointUUID !== 'undefined' && endpointUUID != null){
+				var session = _getSession(endpointUUID);
+				if (session != null)
+					return (session.webrtcConnected);
+				else
+					return(false);
+			}
 			else
 				return(false);
 		},
 
 		getSessionState : function(endpointUUID) {
-			return (myEndpointProvider.getRtcommEndpoint(endpointUUID).getState());
+			if (typeof endpointUUID !== "undefined" && endpointUUID != null)
+				return (myEndpointProvider.getRtcommEndpoint(endpointUUID).getState());
+			else
+				return ("session:stopped");
 		},
 		
 		setAlias : function(aliasID) {
@@ -508,6 +708,104 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", fun
 				myEndpointProvider.init(RtcommConfig.getProviderConfig(), initSuccess, initFailure);
 			}
 		},
+		
+		getIframeURL : function(endpointUUID){
+			if (typeof endpointUUID !== "undefined" && endpointUUID != null){
+				var session = _getSession(endpointUUID);
+				if (session != null)
+					return (session.iFrameURL);
+				else
+					return(null);
+			}
+			else
+				return(null);
+		},
+		
+  	  	putIframeURL : function(endpointUUID, newUrl){
+            $log.debug('RtcommService: putIframeURL: endpointUUID: ' + endpointUUID + ' newURL: ' + newUrl);
+  	  		var endpoint = myEndpointProvider.getRtcommEndpoint(endpointUUID);
+  	  		
+  	  		if (endpoint != null){
+  	  	  		var session = _createSession(endpointUUID);
+  				session.iFrameURL = newUrl;
+  				
+  				var message = {	type : 'iFrameURL',
+  								iFrameURL : newUrl};
+  				
+	            $log.debug('RtcommService: putIframeURL: sending new iFrame URL');
+				endpoint.sendOneTimeMessage(message);
+  	  		}
+  	  	},
+  	  	
+        placeCall : function(calleeID, mediaToEnable){
+            var endpoint = _getEndpoint();
+            
+            if (mediaToEnable.indexOf('chat') > -1)
+            	endpoint.chat.enable();
+        	
+            if (mediaToEnable.indexOf('webrtc') > -1)
+            	endpoint.webrtc.enable();
+            
+            _setActiveEndpoint(endpoint.id);
+
+            endpoint.connect(calleeID);
+            return(endpoint.id);
+        },
+        
+        getSessions : function(){
+       	 return(sessions);
+        },
+        
+        setActiveEndpoint : function(endpointID){
+        	_setActiveEndpoint(endpointID);
+        },
+
+        getActiveEndpoint : function(){
+        	return(_getActiveEndpointUUID());
+        },
+        
+        getRemoteEndpoint : function(localEndpointID){
+        	var remoteEndpointID = null;
+        	
+        	if (localEndpointID != null){
+            	var session = _getSession(localEndpointID);
+            	
+            	if (session != null){
+            		remoteEndpointID = session.remoteEndpointID;
+            	}
+        	}
+
+	       	return (remoteEndpointID);
+        },
+        
+    	setDefaultViewSelector : function() {
+      		_selfView = "selfView";
+      		_remoteView = "remoteView";
+      	},
+      	
+    	setViewSelector : function(selfView, remoteView) {
+      		_selfView = selfView;
+      		_remoteView = remoteView;
+      	},
+
+      	setVideoView : function(endpointUUID){
+              $log.debug('rtcommVideo: setting local media');
+              var endpoint = null;
+              
+              if (typeof endpointUUID != "undefined" &&  endpointUUID != null)
+            	  endpoint = _getEndpoint(endpointUUID);
+              else if (_getActiveEndpointUUID() != null)
+            	  endpoint = _getEndpoint(_getActiveEndpointUUID());
+            	  
+              if (endpoint != null){
+            	  
+                  endpoint.webrtc.setLocalMedia(
+          	            { 
+          	            	mediaOut: document.querySelector('#' + _selfView),
+          	            	mediaIn: document.querySelector('#' + _remoteView)
+          	            });
+              }
+      	},
 	  };
 }]);
 
@@ -523,10 +821,10 @@ rtcommModule.directive('rtcommSessionmgr', ['RtcommService', '$log', function(Rt
     return {
       restrict: 'E',
       templateUrl: 'templates/rtcomm/rtcomm-sessionmgr.html',
-      controller: ["$scope", "$rootScope", function ($scope, $rootScope) {
+      controller: ["$scope", function ($scope) {
 
-		$scope.sessions = [];
-		$scope.sessMgrActiveEndpointUUID = null;
+		$scope.sessions = RtcommService.getSessions();
+		$scope.sessMgrActiveEndpointUUID = RtcommService.getActiveEndpoint();
 		$scope.publishPresence = false;
 		$scope.sessionPresenceData = [];
 
@@ -536,94 +834,22 @@ rtcommModule.directive('rtcommSessionmgr', ['RtcommService', '$log', function(Rt
 	  	};
 
 	  	$scope.$on('endpointActivated', function (event, endpointUUID) {
-        	//	Not to do something here to show that this button is live.
             $log.debug('rtcommSessionmgr: endpointActivated =' + endpointUUID);
-            
-            if ($scope.sessMgrActiveEndpointUUID != null){
-            	var origSession = $scope.getSession($scope.sessMgrActiveEndpointUUID);
-            	
-            	if (origSession != null)
-            		origSession.activated = false;
-            }
-        	
-        	var newSession = $scope.getSession(endpointUUID);
-       		newSession.activated = true;
-       		newSession.remoteEndpointID = RtcommService.getEndpoint(endpointUUID).getRemoteEndpointID();
-        	
         	$scope.sessMgrActiveEndpointUUID = endpointUUID;
         });
         
 		$scope.$on('session:started', function (event, eventObject) {
             $log.debug('rtcommSessionmgr: session:started: uuid =' + eventObject.endpoint.id);
 
-            var session = $scope.getSession(eventObject.endpoint.id);
-            session.remoteEndpointID = eventObject.endpoint.getRemoteEndpointID();
-			
-			$scope.sessions.push(session);
 	    	$scope.updatePresence();
-			
-	        $rootScope.$broadcast('endpointActivated', eventObject.endpoint.id);
-        });
-		
-		$scope.$on('session:failed', function (event, eventObject) {
-			$scope.cleanupSession(eventObject.endpoint.id);
-        });
-
-		$scope.$on('session:rejected', function (event, eventObject) {
-			$scope.cleanupSession(eventObject.endpoint.id);
-        });
-
-
-		$scope.$on('session:stopped', function (event, eventObject) {
-			$scope.cleanupSession(eventObject.endpoint.id);
+	    	RtcommService.setActiveEndpoint(eventObject.endpoint.id);
         });
 		
         $scope.activateSession = function(endpointUUID) {
             $log.debug('rtcommSessionmgr: activateEndpoint =' + endpointUUID);
             if ($scope.sessMgrActiveEndpointUUID != endpointUUID){
-	            $rootScope.$broadcast('endpointActivated', endpointUUID);
+		    	RtcommService.setActiveEndpoint(endpointUUID);
             }
-        };
-        
-		$scope.cleanupSession = function(id){
-			for	(var index = 0; index < $scope.sessions.length; index++) {
-			    if($scope.sessions[index].endpointUUID === id){
-		            RtcommService.getEndpoint(id).destroy();
-
-			    	//	Remove the disconnected endpoint from the list.
-			    	$scope.sessions.splice(index, 1);
-			    	
-			    	//	Now we need to set the active endpoint to someone else or to no endpoint if none are left.
-			    	if ($scope.sessions.length != 0){
-				        $rootScope.$broadcast('endpointActivated', $scope.sessions[0].endpointUUID);
-			    	}
-			    	else{
-				        $rootScope.$broadcast('noEndpointActivated');
-			    	}
-			    	$scope.updatePresence();
-			    	break;
-			    }
-			}
-		};
-
-        $scope.getSession = function(endpointUUID) {
-        	var session = null;
-			for	(var index = 0; index < $scope.sessions.length; index++) {
-			    if($scope.sessions[index].endpointUUID === endpointUUID){
-			    	session = $scope.sessions[index];
-			    	break;
-			    }
-			}
-			
-			if (session == null){
-	            session = {
-						endpointUUID : endpointUUID,
-						remoteEndpointID : null,
-						activated : true
-				};
-			}
-			
-        	return (session);
         };
         
 		$scope.updatePresence = function(){
@@ -702,23 +928,37 @@ rtcommModule.directive('rtcommQueues', ['RtcommService', '$log', function(Rtcomm
 			$scope.autoJoinQueues = false;
 			$scope.queuePresenceData = [];
 			$scope.queuePublishPresence = false;
+			$scope.queueFilter = null;
 			
-			$scope.init = function(autoJoinQueues, queuePublishPresence) {
+			/**
+			 * autoJoinQueues - automatically join any queues that are not filtered out
+			 * queuePublishedPresence - will add to the presence document information about what queues this person joins.
+			 * queueFilter - If defined, this specifies which queues should be joined. All others will be ignored. 
+			 */
+			$scope.init = function(autoJoinQueues, queuePublishPresence, queueFilter) {
 				$log.debug('rtcommQueues: autoJoinQueues = ' + autoJoinQueues);
 				$scope.autoJoinQueues = autoJoinQueues;
 				$scope.queuePublishPresence = queuePublishPresence;
+				
+				if (typeof queueFilter !== "undefined")
+					$scope.queueFilter = queueFilter;
     	  	};
 
 			$scope.$on('queueupdate', function(event, queues) {
 				$log.debug('rtcommQueues: scope queues', $scope.rQueues);
+				
 				Object.keys(queues).forEach(function(key) {
 					$log.debug('rtcommQueues: Push queue: ' + queues[key]);
 					$log.debug('rtcommQueues: autoJoinQueues: ' + $scope.autoJoinQueues);
-					$scope.rQueues.push(queues[key]);
 					
-					// If autoJoin we go ahead and join the queue as soon as we get the queue update.
-					if ($scope.autoJoinQueues == true){
-						$scope.onQueueClick(queues[key]);
+					//	Check to make sure queue is not filteres out before adding it.
+					if ($scope.filterOutQueue(queues[key]) == false){
+						$scope.rQueues.push(queues[key]);
+						
+						// If autoJoin we go ahead and join the queue as soon as we get the queue update.
+						if ($scope.autoJoinQueues == true){
+							$scope.onQueueClick(queues[key]);
+						}
 					}
 				});
 				
@@ -731,6 +971,26 @@ rtcommModule.directive('rtcommQueues', ['RtcommService', '$log', function(Rtcomm
 					$scope.rQueues = [];
 				}
 	        });
+	        
+	        //
+			$scope.filterOutQueue = function(queue){
+				var returnValue = true;
+				
+				if ($scope.queueFilter != null){
+
+					for (var index = 0; index < $scope.queueFilter.length; ++index) {
+					    var entry = $scope.queueFilter[index];
+					    if (entry == queue.endpointID) {
+					    	returnValue = false;
+					        break;
+					    }
+					}
+				}
+				else
+					returnValue = false;
+				
+				return (returnValue);
+			};
 
 			$scope.onQueueClick = function(queue){
 				$log.debug('rtcommQueues: onClick: TOP');
@@ -848,7 +1108,7 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 
     	  $scope.onCallClick = function(calleeEndpointID){
 			  var endpoint = RtcommService.getEndpoint();
-			  $rootScope.$broadcast('endpointActivated', endpoint.id);
+			  RtcommService.setActiveEndpoint(endpoint.id);
 			  
 			  if ($scope.protocolList.chat == true)
 				  endpoint.chat.enable();
@@ -867,6 +1127,11 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 	      $scope.$on('rtcomm::init', function (event, success, details) {
 	    	  RtcommService.publishPresence();
 	    	  var presenceMonitor = RtcommService.getPresenceMonitor();
+	    	  
+	    	  presenceMonitor.on('updated', function(){
+					$log.debug('<<------rtcommPresence: updated------>>');
+	    		  	$scope.$apply();
+	    	  });
 	    	  
 		      $scope.presenceData = presenceMonitor.getPresenceData();
 
@@ -887,59 +1152,7 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 /********************** Endpoint Directives *******************************/
 
 /**
- * This directive is a container for all the endpoint related directives. It provides some
- * control over the display of the container if that is needed but for the most part it is
- * needed for containment and layout of all the directives related to a single endpoint session.
- */
-rtcommModule.directive('rtcommEndpoint', ['RtcommService', '$log', function(RtcommService, $log) {
-    return {
-        restrict: 'E',
-        templateUrl: 'templates/rtcomm/rtcomm-endpoint.html',
-        transclude: 'true', // Allows other directives to be contained by this one.
-        controller: ["$scope", function ($scope) {
-
-        	$scope.epActiveEndpointUUID = null; // Only define endpoint ID at the parent container. All other directives share this one.
-        	$scope.displayEndpoint = true;
-
-			$scope.init = function(displayEndpoint) {
-			      $log.debug('rtcommEndpoint: displayEndoint = ' + displayEndpoint);
-			      $scope.displayEndpoint = displayEndpoint;
-      	  	};
-
-			$scope.$on('endpointActivated', function (event, endpointUUID) {
-			    $log.debug('endointActivated received: endpointID = ' + endpointUUID);
-			    $scope.epActiveEndpointUUID = endpointUUID;
-				$scope.displayEndpoint = true;
-	        });
-
-			$scope.$on('session:failed', function (event, eventObject) {
-				if ($scope.epActiveEndpointUUID == eventObject.endpoint.id){
-					$scope.displayEndpoint = false;
-				}
-	        });
-
-			$scope.$on('session:rejected', function (event, eventObject) {
-				if ($scope.epActiveEndpointUUID == eventObject.endpoint.id){
-					$scope.displayEndpoint = false;
-				}
-	        });
-
-			$scope.$on('session:stopped', function (event, eventObject) {
-				if ($scope.epActiveEndpointUUID == eventObject.endpoint.id){
-					$scope.displayEndpoint = false;
-				}
-	        });
-        }],
-        controllerAs: 'endpoint'
-      };
-}]);
-
-/**
- * This directive is used for all the controls related to a single endpoint session. This includes
- * the ability to disconnect the sesssion and the ability to enable A/V for sessions that don't start
- * with A/V. This directive also maintains the enabled and disabled states of all its related controls.
- * 
- * This endpoint controller only shows the active endpoint. The $scope.sessionState always contains the 
+ * This endpoint status controller only shows the active endpoint. The $scope.sessionState always contains the 
  * state of the active endpoint if one exist. It will be one of the following states:
  * 
  * 'session:alerting'
@@ -952,46 +1165,19 @@ rtcommModule.directive('rtcommEndpoint', ['RtcommService', '$log', function(Rtco
  * 
  * You can bind to $scope.sessionState to track state in the view.
  */
-rtcommModule.directive('rtcommEndpointctrl', ['RtcommService', '$log', function(RtcommService, $log) {
+rtcommModule.directive('rtcommEndpointStatus', ['RtcommService', '$log', function(RtcommService, $log) {
     return {
         restrict: 'E',
-        templateUrl: 'templates/rtcomm/rtcomm-endpointctrl.html',
+        templateUrl: 'templates/rtcomm/rtcomm-endpoint-status.html',
         controller: ["$scope", function ($scope) {
         	
         	//	Session states.
-        	$scope.epCtrlActiveEndpointUUID = null;
-        	$scope.epCtrlAVConnected = false;
-        	$scope.sessionState = 'session:stopped';
-        	$scope.epCtrlRemoteEndpointID = null;
+        	$scope.epCtrlActiveEndpointUUID = RtcommService.getActiveEndpoint();
+        	$scope.epCtrlRemoteEndpointID = RtcommService.getRemoteEndpoint($scope.epCtrlActiveEndpointUUID);
+        	$scope.sessionState = RtcommService.getSessionState($scope.epCtrlActiveEndpointUUID);
         	$scope.failureReason = '';
-        	$scope.queueCount = 0;
-        	$scope.displayAVToggle = true;
+        	$scope.queueCount = 0;	// FIX: Currently not implemented!
         	
-			$scope.init = function(displayAVToggle) {
-				$scope.displayAVToggle = displayAVToggle;
-    	  	};
-
-			$scope.disconnect = function() {
-				$log.debug('Disconnecting call for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
-				RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).disconnect();
-        	};
-
-			$scope.toggleAV = function() {
-				$log.debug('Enable AV for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
-				
-				if ($scope.epCtrlAVConnected == false){
-					RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).webrtc.enable(function(value, message) {
-		          		if (!value) {
-		          			alertMessage('Failed to get local Audio/Video - nothing to broadcast');
-		          		}
-		          	});
-				}
-				else{
-					$log.debug('Disable AV for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
-					RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).webrtc.disable();
-				}
-			};
-
 			$scope.$on('session:started', function (event, eventObject) {
 			    $log.debug('session:started received: endpointID = ' + eventObject.endpoint.id);
 				if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id){
@@ -1049,34 +1235,18 @@ rtcommModule.directive('rtcommEndpointctrl', ['RtcommService', '$log', function(
 				}
 	        });
 
-			$scope.$on('webrtc:connected', function (event, eventObject) {
-	       		if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
-					$scope.epCtrlAVConnected = true; 
-	       	});
-	       	
-	       	$scope.$on('webrtc:disconnected', function (event, eventObject) {
-	       		if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
-					$scope.epCtrlAVConnected = false; 
-	       	});
-			
-			
 	       	$scope.$on('endpointActivated', function (event, endpointUUID) {
 				$scope.epCtrlActiveEndpointUUID = endpointUUID;
-				$scope.epCtrlAVConnected = RtcommService.isWebrtcConnected(endpointUUID);
 				$scope.epCtrlRemoteEndpointID = RtcommService.getEndpoint(endpointUUID).getRemoteEndpointID();
-
 				$scope.sessionState = RtcommService.getSessionState(endpointUUID);
 	       	});
 	       	
 	       	$scope.$on('noEndpointActivated', function (event) {
-				$scope.epCtrlAVConnected = false; 
 				$scope.epCtrlRemoteEndpointID = null;
-
-				$scope.sessionState = $scope.DISCONNECTED;
+				$scope.sessionState = 'session:stopped';
 	       	});
 	       	
-        }],
-        controllerAs: 'endpointctrl'
+        }]
       };
 }]);
 
@@ -1088,26 +1258,7 @@ rtcommModule.directive('rtcommVideo', ['RtcommService', '$log', function(RtcommS
     return {
       restrict: 'E',
       templateUrl: 'templates/rtcomm/rtcomm-video.html',
-
-  		controller: ["$scope", function ($scope) {
-
-       	  $scope.videoActiveEndpointUUID = null;
-          
-       	  $scope.$on('endpointActivated', function (event, endpointUUID) {
-          	//	Not to do something here to show that this button is live.
-              $log.debug('rtcommEndpointmgr: endpointActivated =' + endpointUUID);
-
-              if ($scope.videoActiveEndpointUUID != endpointUUID){
-            	  $scope.videoActiveEndpointUUID = endpointUUID;
-		          var endpoint = RtcommService.getEndpoint(endpointUUID);
-		          
-		          endpoint.webrtc.setLocalMedia(
-		  	            { mediaOut: document.querySelector('#selfView'),
-		  	              mediaIn: document.querySelector('#remoteView')});
-              }
-          });
-      }],
-      controllerAs: 'video'
+  	  controller: 'RtcommVideoController'
     };
 }]);
 
@@ -1116,13 +1267,16 @@ rtcommModule.directive('rtcommVideo', ['RtcommService', '$log', function(RtcommS
  * is maintained in the RtcommService. This directive handles switching between
  * active endpoints.
  */
-rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommService, $log) {
+rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$anchorScroll', function(RtcommService, $log, $location, $anchorScroll) {
     return {
       restrict: 'E',
       templateUrl: "templates/rtcomm/rtcomm-chat.html",
       controller: ["$scope", function ($scope) {
-		  $scope.chats = [];
-		  $scope.chatActiveEndpointUUID = null;
+		  $scope.chatActiveEndpointUUID = RtcommService.getActiveEndpoint();
+		  $scope.chats = RtcommService.getChats($scope.chatActiveEndpointUUID);
+
+		  // This forces the scroll bar to the bottom and watches the $location.hash
+	      $anchorScroll();
 		  
 		  $scope.$on('endpointActivated', function (event, endpointUUID) {
 			  $log.debug('rtcommChat: endpointActivated =' + endpointUUID);
@@ -1136,7 +1290,7 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 	    	  $scope.chats = [];
 	    	  $scope.chatActiveEndpointUUID = null;
 	      });
-	       	
+	      
 	      $scope.keySendMessage = function(keyEvent){
 	    	  if (keyEvent.which === 13)
 	    		  $scope.sendMessage();
@@ -1149,14 +1303,98 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
   				  message : angular.copy($scope.message)
 	  		   };
 
-	  		  RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
 	  		  $scope.message = '';
+	  		  RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
+	  		  if (typeof $scope.chats != "undefined" && $scope.chats != null){
+	  			  $location.hash($scope.chats.length -1);
+	  		      $anchorScroll();
+	  		  }
 	  		};
 
       }],
 	  controllerAs: 'chat'
     };
 }]);
+
+/**
+ * This directive manages the shared iFrame.
+ */
+rtcommModule.directive("rtcommIframe", ['RtcommService', '$log', '$sce', '$location', '$window', function(RtcommService, $log, $sce, $location, $window) {
+    return {
+      restrict: 'E',
+      templateUrl: "templates/rtcomm/rtcomm-iframe.html",
+      controller: ["$scope", function ($scope) {
+		  $scope.iframeActiveEndpointUUID = RtcommService.getActiveEndpoint();
+		  $scope.iframeURL = null;
+		  $scope.initiframeURL = null;
+		  $scope.syncSource = false;
+		  
+		  /*
+		   * syncSourcing means you a providing the URL source but no UI. Typically used in
+		   * customer/agent scenarios.
+		   */
+		  $scope.init = function(syncSource) {
+			  if (syncSource == true){
+				  $scope.syncSource = true;
+				  $scope.initiframeURL = $location.absUrl();	// init to current URL
+			  }
+    	  };
+
+	      $scope.$on('session:started', function (event, eventObject) {
+			    $log.debug('session:started received: endpointID = ' + eventObject.endpoint.id);
+			    
+			    if ($scope.syncSource == true){
+			    	RtcommService.putIframeURL(eventObject.endpoint.id,$scope.initiframeURL);	//Update on the current or next endpoint to be activated.
+			    }
+	      });
+
+    	  $scope.$on('endpointActivated', function (event, endpointUUID) {
+			  $log.debug('rtcommIframe: endpointActivated =' + endpointUUID);
+                
+		      if ($scope.syncSource == false){
+				  $scope.iframeURL = $sce.trustAsResourceUrl(RtcommService.getIframeURL(endpointUUID));
+				  $scope.iframeActiveEndpointUUID = endpointUUID;
+		      }
+	      });
+		  
+	      $scope.$on('noEndpointActivated', function (event) {
+		      if ($scope.syncSource == false){
+				  $scope.iframeURL = $sce.trustAsResourceUrl('about:blank');
+				  $scope.iframeActiveEndpointUUID = null;
+		      }
+	      });
+	       	
+	      $scope.$on('rtcomm::iframeUpdate', function (eventType, endpointUUID, url) {
+		      if ($scope.syncSource == false){
+				  $log.debug('rtcomm::iframeUpdate: ' + url);
+				  //	This is needed to prevent rtcomm from logging in when the page is loaded in the iFrame.
+		    	  url = url + "?disableRtcomm=true";
+		    	  $scope.iframeURL = $sce.trustAsResourceUrl(url);
+		      }
+		      else{
+				  $log.debug('rtcomm::iframeUpdate: load this url in a new tab: ' + url);
+		    	  // In this case we'll open the pushed URL in a new tab.
+		    	  $window.open($sce.trustAsResourceUrl(url), '_blank');
+		      }
+	      });
+		  
+	      $scope.setURL = function(newURL){
+			  $log.debug('rtcommIframe: setURL: newURL: ' + newURL);
+	    	  RtcommService.putIframeURL($scope.iframeActiveEndpointUUID, newURL);
+	    	  $scope.iframeURL = $sce.trustAsResourceUrl(newURL);
+	      };
+	      
+		  $scope.forward = function() {
+	  		};
+
+	  	  $scope.backward = function() {
+	  		};
+      }],
+	  controllerAs: 'rtcommiframe'
+    };
+}]);
+
+
 
 /******************************** Rtcomm Modals ************************************************/
 
@@ -1166,9 +1404,9 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
  */
 rtcommModule.controller('RtcommAlertModalController', ['$scope', 'RtcommService', '$modal', '$log', function ($scope,  RtcommService, $modal, $log) {
 
-    $scope.alertingEndpointObject = null;
+    $scope.alertingEndpointUUID = null;
     $scope.autoAnswerNewMedia = false;
-    $scope.alertActiveEndpointUUID = null;
+    $scope.alertActiveEndpointUUID = RtcommService.getActiveEndpoint();
     $scope.caller = null;
 
 	$scope.init = function(autoAnswerNewMedia) {
@@ -1187,7 +1425,7 @@ rtcommModule.controller('RtcommAlertModalController', ['$scope', 'RtcommService'
 		{
 			$log.debug('rtcommAlert: display alterting model: alertActiveEndpointUUID = ' + eventObject.endpoint + ' autoAnswerNewMedia = ' + $scope.autoAnswerNewMedia);
             $scope.caller = eventObject.endpoint.getRemoteEndpointID();
-            $scope.alertingEndpointObject = eventObject.endpoint;
+            $scope.alertingEndpointUUID = eventObject.endpoint.id;
             $scope.showAlerting();
 		}
 		else{
@@ -1210,14 +1448,21 @@ rtcommModule.controller('RtcommAlertModalController', ['$scope', 'RtcommService'
 
 	    modalInstance.result.then(
   		    	function() {
-   		            $log.debug('Accepting call from: ' + $scope.caller + ' for endpoint: ' + $scope.alertingEndpointObject.id);
-   		            $scope.alertingEndpointObject.accept();
-	            	$scope.alertingEndpointObject = null;
+  		    		var alertingEndpointObject = RtcommService.getEndpoint($scope.alertingEndpointUUID);
+  		    		
+  		    		if(alertingEndpointObject){
+  	   		            $log.debug('Accepting call from: ' + $scope.caller + ' for endpoint: ' + $scope.alertingEndpointUUID);
+  	   		            alertingEndpointObject.accept();
+  		            	alertingEndpointObject = null;
+  		    		}
  	    	     }, 
 		     	function () {
-		            $log.debug('Rejecting call from: ' + $scope.caller + ' for endpoint: ' + $scope.alertingEndpointObject.id);
-		            $scope.alertingEndpointObject.reject();
-		            $scope.alertingEndpointObject = null;
+   		    		var alertingEndpointObject = RtcommService.getEndpoint($scope.alertingEndpointUUID);
+  		    		if(alertingEndpointObject){
+			            $log.debug('Rejecting call from: ' + $scope.caller + ' for endpoint: ' + $scope.alertingEndpointUUID);
+			            alertingEndpointObject.reject();
+			            alertingEndpointObject = null;
+  		    		}
  	    });
     };
 }]);
@@ -1239,15 +1484,19 @@ rtcommModule.controller('RtcommAlertModalInstanceCtrl', ["$scope", "$modalInstan
 /**
  * This is a modal controller for placing an outbound call to a static callee such as a queue.
  */
-rtcommModule.controller('RtcommCallModalController', ['$scope',  '$rootScope', 'RtcommService', '$modal', '$log', function ($scope,  $rootScope, RtcommService, $modal, $log) {
+rtcommModule.controller('RtcommCallModalController', ['$scope',  'RtcommService', '$modal', '$log', function ($scope,  RtcommService, $modal, $log) {
 
 	    $scope.calleeID = null;
 	    $scope.callerID = null;
 	    
 	    $scope.enableCallModel = false;
+	    $scope.mediaToEnable = ['chat'];
 
-	    $scope.init = function(calleeID) {
+	    $scope.init = function(calleeID, mediaToEnable) {
 		    $scope.calleeID = calleeID;
+		    
+		    if (typeof mediaToEnable !== "undefined")
+		    	$scope.mediaToEnable = mediaToEnable;
 	    };
 	    
 	    $scope.$on('rtcomm::init', function (event, success, details) {
@@ -1285,11 +1534,8 @@ rtcommModule.controller('RtcommCallModalController', ['$scope',  '$rootScope', '
 		            	$scope.callerID = resultName;
 		            	RtcommService.setAlias(resultName);
 		            }
-	
-		            var endpoint = RtcommService.getEndpoint();
-		            $rootScope.$broadcast('endpointActivated', endpoint.id);
-		            endpoint.chat.enable();
-	            	endpoint.connect($scope.calleeID);
+		            
+		            RtcommService.placeCall($scope.calleeID, $scope.mediaToEnable);
 		     	}, 
 		     	function () {
 		     		$log.info('Modal dismissed at: ' + new Date());
@@ -1334,6 +1580,8 @@ rtcommModule.controller('RtcommCallModalInstanceCtrl', ['$scope',  '$modalInstan
  * the endpoint provider.
  */
 rtcommModule.controller('RtcommConfigController', ['$scope','$http', 'RtcommService', '$log', function($scope, $http, RtcommService, $log){
+	
+	$scope.extendedConfig = null;
 
     $log.debug('RtcommConfigController: configURL = ' + $scope.configURL);
 
@@ -1342,33 +1590,159 @@ rtcommModule.controller('RtcommConfigController', ['$scope','$http', 'RtcommServ
 		RtcommService.setConfig(data);
   	};
 
-  	$scope.init = function(configURL) {
+  	$scope.init = function(configURL,extendedConfig) {
 			$log.debug('RtcommConfigController: initing configURL = ' + configURL);
 			$scope.configURL = configURL;
+			
+		    if (typeof extendedConfig !== "undefined")
+		    	$scope.extendedConfig = extendedConfig;
+		    
 			$scope.getConfig();
 	  	};
 
 	$scope.getConfig = function() {
-		$http.get($scope.configURL).success (function(data){
-			RtcommService.setConfig(data);
+		$http.get($scope.configURL).success (function(config){
+			
+			// Now we need to update the config with any extensions passed in on init.
+			if ($scope.extendedConfig != null){
+				angular.extend(config, $scope.extendedConfig);
+				$log.debug('RtcommConfigController: extended config object: ' + config);
+			}
+			
+			RtcommService.setConfig(config);
+		}).error(function(data, status, headers, config) {
+			$log.debug('RtcommConfigController: error accessing config: ' + status);
 		});
 	};
 }]);
+
+
+rtcommModule.controller('RtcommVideoController', ['$scope','$http', 'RtcommService', '$log', function($scope, $http, RtcommService, $log){
+	
+	$scope.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
+		  
+  	  $scope.init = function(selfView,remoteView) {
+  		  RtcommService.setViewSelector(selfView,remoteView);
+
+  	      var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
+  	 	  if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null)
+  	 		  RtcommService.setVideoView(videoActiveEndpointUUID);
+	  };
+
+  	  // Go ahead and initialize the local media here if an endpoint already exist.
+      var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
+ 	  if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null)
+ 		  RtcommService.setVideoView(videoActiveEndpointUUID);
+    
+ 	  $scope.$on('endpointActivated', function (event, endpointUUID) {
+    	//	Not to do something here to show that this button is live.
+        $log.debug('rtcommVideo: endpointActivated =' + endpointUUID);
+		RtcommService.setVideoView(endpointUUID);
+		$scope.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
+ 	  });
+ 	
+ 	   	$scope.$on('noEndpointActivated', function (event) {
+ 			$scope.avConnected = false; 
+ 	   	});
+ 	  
+		$scope.$on('webrtc:connected', function (event, eventObject) {
+	   		if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
+				$scope.avConnected = true; 
+	   	});
+	   	
+	   	$scope.$on('webrtc:disconnected', function (event, eventObject) {
+	   		if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
+				$scope.avConnected = false; 
+	   	});
+}]);
+
+
+rtcommModule.controller('RtcommEndpointController', ['$scope','$http', 'RtcommService', '$log', function($scope, $http, RtcommService, $log){  		
+	
+	//	Session states.
+	$scope.epCtrlActiveEndpointUUID = RtcommService.getActiveEndpoint();
+	$scope.epCtrlAVConnected = RtcommService.isWebrtcConnected($scope.epCtrlActiveEndpointUUID);
+	$scope.sessionState = RtcommService.getSessionState($scope.epCtrlActiveEndpointUUID);
+	
+	$scope.disconnect = function() {
+		$log.debug('Disconnecting call for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
+		RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).disconnect();
+	};
+
+	$scope.toggleAV = function() {
+		$log.debug('Enable AV for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
+		
+		if ($scope.epCtrlAVConnected == false){
+			RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).webrtc.enable(function(value, message) {
+          		if (!value) {
+          			alertMessage('Failed to get local Audio/Video - nothing to broadcast');
+          		}
+          	});
+		}
+		else{
+			$log.debug('Disable AV for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
+			RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).webrtc.disable();
+		}
+	};
+
+	$scope.$on('session:started', function (event, eventObject) {
+	    $log.debug('session:started received: endpointID = ' + eventObject.endpoint.id);
+		if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id){
+			$scope.sessionState = 'session:started';
+		}
+    });
+
+	$scope.$on('session:stopped', function (event, eventObject) {
+	    $log.debug('session:stopped received: endpointID = ' + eventObject.endpoint.id);
+		if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id){
+			$scope.sessionState = 'session:stopped';
+		}
+    });
+
+	$scope.$on('session:failed', function (event, eventObject) {
+	    $log.debug('session:failed received: endpointID = ' + eventObject.endpoint.id);
+		if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id){
+			$scope.sessionState = 'session:failed';
+		}
+    });
+
+	$scope.$on('webrtc:connected', function (event, eventObject) {
+   		if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
+			$scope.epCtrlAVConnected = true; 
+   	});
+   	
+   	$scope.$on('webrtc:disconnected', function (event, eventObject) {
+   		if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
+			$scope.epCtrlAVConnected = false; 
+   	});
+	
+	
+   	$scope.$on('endpointActivated', function (event, endpointUUID) {
+		$scope.epCtrlActiveEndpointUUID = endpointUUID;
+		$scope.epCtrlAVConnected = RtcommService.isWebrtcConnected(endpointUUID);
+   	});
+   	
+   	$scope.$on('noEndpointActivated', function (event) {
+		$scope.epCtrlAVConnected = false; 
+   	});
+}]);
+
+
 angular.module('angular-rtcomm').run(['$templateCache', function($templateCache) {
   'use strict';
 
   $templateCache.put('templates/rtcomm/rtcomm-chat.html',
-    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-comment\"></span> Chat</div><div class=\"panel-body\"><ul class=\"chat\"><li class=\"right clearfix\" ng-repeat=\"chat in chats\"><div class=\"header\"><strong class=\"primary-font\">{{chat.name}}</strong> <small class=\"pull-right text-muted\"><span class=\"glyphicon glyphicon-time\"></span>{{chat.time | date:'HH:mm:ss MM-dd-yyyy'}}</small></div><p>{{chat.message}}</p></li></ul></div><div class=\"panel-footer\"><div class=\"input-group\"><input id=\"chat-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Type your message here...\" type=\"text\" ng-model=\"message\" ng-keypress=\"keySendMessage($event)\"> <span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-chat\" ng-click=\"sendMessage()\" focusinput=\"true\" ng-disabled=\"(chatActiveEndpointUUID == null)\">Send</button></span></div></div></div></div><!-- chat list ng-controller div -->"
+    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-comment\"></span> Chat</div><div class=\"panel-body\"><ul class=\"chat\"><li class=\"right clearfix\" ng-repeat=\"chat in chats\"><div id=\"{{$index}}\" class=\"header\"><strong class=\"primary-font\">{{chat.name}}</strong> <small class=\"pull-right text-muted\">{{chat.time | date:'HH:mm:ss'}}</small></div><p>{{chat.message}}</p></li></ul></div><div class=\"panel-footer\"><div class=\"input-group\"><input id=\"chat-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Type your message here...\" type=\"text\" ng-model=\"message\" ng-keypress=\"keySendMessage($event)\"> <span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-chat\" ng-click=\"sendMessage()\" focusinput=\"true\" ng-disabled=\"(chatActiveEndpointUUID == null)\">Send</button></span></div></div></div></div><!-- chat list ng-controller div -->"
   );
 
 
-  $templateCache.put('templates/rtcomm/rtcomm-endpoint.html',
-    "<div id=\"endpointContainer\" class=\"panel panel-primary\"><div ng-transclude></div></div>"
+  $templateCache.put('templates/rtcomm/rtcomm-endpoint-status.html',
+    "<div class=\"endpoint-status\"><p class=\"endpoint-controls-title navbar-text pull-right\" ng-switch on=\"sessionState\"><span ng-switch-when=\"session:started\">Connected to {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:stopped\">No active sessions, waiting...</span> <span ng-switch-when=\"session:alerting\">Inbound call from {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:trying\">Attempting to call {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:ringing\">Call to {{epCtrlRemoteEndpointID}} is ringing</span> <span ng-switch-when=\"session:queued\">Waiting in queue at: {{queueCount}}</span> <span ng-switch-when=\"session:failed\">Call failed with reason: {{failureReason}}</span></p></div>"
   );
 
 
-  $templateCache.put('templates/rtcomm/rtcomm-endpointctrl.html',
-    "<div class=\"endpoint-controls\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><button id=\"btnDisconnectEndpoint\" class=\"btn btn-primary\" ng-click=\"disconnect()\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span class=\"glyphicon glyphicon glyphicon-resize-full\" aria-hidden=\"true\" aria-label=\"Disconnect\"></span> Disconnect</button> <button id=\"btnEnableAV\" class=\"btn btn-primary\" ng-click=\"toggleAV()\" focusinput=\"true\" ng-hide=\"!displayAVToggle\" ng-disabled=\"(sessionState == 'session:stopped' || sessionState == 'session:failed')\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"Enable A/V\"></span> {{epCtrlAVConnected ? 'Disable A/V' : 'Enable A/V'}}</button></div><p class=\"endpoint-controls-title navbar-text pull-right\" ng-switch on=\"sessionState\"><span ng-switch-when=\"session:started\">Connected to {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:stopped\">Disconnected</span> <span ng-switch-when=\"session:alerting\">Inbound call from {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:trying\">Attempting to call {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:ringing\">Call to {{epCtrlRemoteEndpointID}} is ringing</span> <span ng-switch-when=\"session:queued\">Waiting in queue at: {{queueCount}}</span> <span ng-switch-when=\"session:failed\">Call failed with reason: {{failureReason}}</span></p></div>"
+  $templateCache.put('templates/rtcomm/rtcomm-iframe.html',
+    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-link\"></span> URL Sharing</div><div class=\"rtcomm-iframe\"><iframe width=\"100%\" height=\"100%\" ng-src=\"{{iframeURL}}\"></iframe></div><div class=\"row\"><div class=\"col-lg-2\"><button id=\"btnBackward\" class=\"btn btn-primary\" ng-click=\"backward()\" focusinput=\"true\" ng-disabled=\"(iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-left\" aria-hidden=\"true\" aria-label=\"Backward\"></span> Backward</button></div><div class=\"col-lg-2\"><button id=\"btnForward\" class=\"btn btn-primary\" ng-click=\"forward()\" ng-disabled=\"(iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-right\" aria-hidden=\"true\" aria-label=\"Forward\"></span> Forward</button></div><div class=\"col-lg-8\"><div class=\"input-group\"><input id=\"setUrl\" type=\"text\" class=\"form-control\" type=\"text\" ng-model=\"newUrl\"><span class=\"input-group-btn\"><button class=\"btn btn-primary\" id=\"btn-send-url\" ng-click=\"setURL(newUrl)\" focusinput=\"true\">Set URL</button></span></div><!-- /input-group --></div></div></div></div>"
   );
 
 
@@ -1383,7 +1757,7 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
 
 
   $templateCache.put('templates/rtcomm/rtcomm-presence.html',
-    "<!-- as an attribute --><div><div class=\"panel-presence panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-user\"></span> Presence</div><div class=\"panel-presence-body\"><div treecontrol class=\"tree-light\" tree-model=\"presenceData\" options=\"treeOptions\" on-selection=\"showSelected(node)\" expanded-nodes=\"expandedNodes\"><button type=\"button\" class=\"btn btn-primary btn-xs\" aria-label=\"Left Align\" ng-show=\"(node.record && !node.self)\" ng-click=\"onCallClick(node.name)\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"expand record\"></span></button> {{node.name}} {{node.value ? ': ' + node.value : ''}}</div></div></div></div>"
+    "<div treecontrol class=\"tree-light\" tree-model=\"presenceData\" options=\"treeOptions\" on-selection=\"showSelected(node)\" expanded-nodes=\"expandedNodes\"><button type=\"button\" class=\"btn btn-primary btn-xs\" aria-label=\"Left Align\" ng-show=\"(node.record && !node.self)\" ng-click=\"onCallClick(node.name)\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"expand record\"></span></button> {{node.name}} {{node.value ? ': ' + node.value : ''}}</div>"
   );
 
 
@@ -1398,7 +1772,7 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
 
 
   $templateCache.put('templates/rtcomm/rtcomm-sessionmgr.html',
-    "<div class=\"session-manager\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><div><button type=\"button\" ng-switch on=\"session.activated\" ng-class=\"{'btn btn-primary btn-sm': session.activated, 'btn btn-default btn-sm': !session.activated}\" ng-repeat=\"session in sessions\" ng-click=\"activateSession(session.endpointUUID)\"><!-- span class=\"glyphicon glyphicon-eye-open\" aria-hidden=\"true\" ng-switch-when=true></span --><!-- span class=\"glyphicon glyphicon-eye-close\" aria-hidden=\"true\" ng-switch-when=false></span -->{{session.remoteEndpointID}}</button></div></div><p class=\"session-manager-title navbar-text pull-right\">Sessions</p></div>"
+    "<div class=\"session-manager\"><div class=\"btn-group pull-left\" style=\"padding: 10px\"><div><button class=\"session-manager-button\" type=\"button\" ng-switch on=\"session.activated\" ng-class=\"{'btn btn-primary btn-sm': session.activated, 'btn btn-default btn-sm': !session.activated}\" ng-repeat=\"session in sessions\" ng-click=\"activateSession(session.endpointUUID)\"><span class=\"glyphicon glyphicon-eye-open\" aria-hidden=\"true\" ng-switch-when=\"true\"></span> <span class=\"glyphicon glyphicon-eye-close\" aria-hidden=\"true\" ng-switch-when=\"false\"></span> {{session.remoteEndpointID}}</button></div></div><p class=\"session-manager-title navbar-text pull-right\">Sessions</p></div>"
   );
 
 

@@ -5,5 +5,5 @@
     "userid" : "",
 	"broadcastAudio" : true,
 	"broadcastVideo" : true,
-	"presenceTopic" : "sample"
+	"presenceTopic" : "sampleRoom"
 }
