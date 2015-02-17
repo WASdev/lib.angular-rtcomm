@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.1 - 2015-02-16
+ * @version v0.0.2 - 2015-02-16
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -834,7 +834,6 @@ rtcommModule.directive('rtcommSessionmgr', ['RtcommService', '$log', function(Rt
 	  	};
 
 	  	$scope.$on('endpointActivated', function (event, endpointUUID) {
-        	//	Not to do something here to show that this button is live.
             $log.debug('rtcommSessionmgr: endpointActivated =' + endpointUUID);
         	$scope.sessMgrActiveEndpointUUID = endpointUUID;
         });
