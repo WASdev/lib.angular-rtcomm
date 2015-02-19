@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.2 - 2015-02-16
+ * @version v0.0.2 - 2015-02-17
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -1276,7 +1276,7 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$an
 		  $scope.chats = RtcommService.getChats($scope.chatActiveEndpointUUID);
 
 		  // This forces the scroll bar to the bottom and watches the $location.hash
-	      $anchorScroll();
+	      //$anchorScroll();
 		  
 		  $scope.$on('endpointActivated', function (event, endpointUUID) {
 			  $log.debug('rtcommChat: endpointActivated =' + endpointUUID);
@@ -1305,10 +1305,10 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$an
 
 	  		  $scope.message = '';
 	  		  RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
-	  		  if (typeof $scope.chats != "undefined" && $scope.chats != null){
-	  			  $location.hash($scope.chats.length -1);
-	  		      $anchorScroll();
-	  		  }
+//	  		  if (typeof $scope.chats != "undefined" && $scope.chats != null){
+//	  			  $location.hash($scope.chats.length -1);
+//	  		      $anchorScroll();
+//	  		  }
 	  		};
 
       }],

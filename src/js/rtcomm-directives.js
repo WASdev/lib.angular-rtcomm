@@ -465,7 +465,7 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$an
 		  $scope.chats = RtcommService.getChats($scope.chatActiveEndpointUUID);
 
 		  // This forces the scroll bar to the bottom and watches the $location.hash
-	      $anchorScroll();
+	      //$anchorScroll();
 		  
 		  $scope.$on('endpointActivated', function (event, endpointUUID) {
 			  $log.debug('rtcommChat: endpointActivated =' + endpointUUID);
@@ -494,10 +494,10 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$an
 
 	  		  $scope.message = '';
 	  		  RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
-	  		  if (typeof $scope.chats != "undefined" && $scope.chats != null){
-	  			  $location.hash($scope.chats.length -1);
-	  		      $anchorScroll();
-	  		  }
+//	  		  if (typeof $scope.chats != "undefined" && $scope.chats != null){
+//	  			  $location.hash($scope.chats.length -1);
+//	  		      $anchorScroll();
+//	  		  }
 	  		};
 
       },
