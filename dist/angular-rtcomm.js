@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.2 - 2015-02-17
+ * @version v0.0.3 - 2015-05-26
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -217,7 +217,8 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$h
 		 		$rootScope.$evalAsync(
 		 				function () {
 		 					var session = _createSession(eventObject.endpoint.id);
-		 					
+		 			    	_setActiveEndpoint(eventObject.endpoint.id);
+
 		 					session.sessionStarted = true;
 		 					session.remoteEndpointID = eventObject.endpoint.getRemoteEndpointID();
 			 				$rootScope.$broadcast(eventObject.eventName, eventObject);
@@ -842,7 +843,6 @@ rtcommModule.directive('rtcommSessionmgr', ['RtcommService', '$log', function(Rt
             $log.debug('rtcommSessionmgr: session:started: uuid =' + eventObject.endpoint.id);
 
 	    	$scope.updatePresence();
-	    	RtcommService.setActiveEndpoint(eventObject.endpoint.id);
         });
 		
         $scope.activateSession = function(endpointUUID) {

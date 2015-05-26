@@ -197,7 +197,8 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 		 		$rootScope.$evalAsync(
 		 				function () {
 		 					var session = _createSession(eventObject.endpoint.id);
-		 					
+		 			    	_setActiveEndpoint(eventObject.endpoint.id);
+
 		 					session.sessionStarted = true;
 		 					session.remoteEndpointID = eventObject.endpoint.getRemoteEndpointID();
 			 				$rootScope.$broadcast(eventObject.eventName, eventObject);

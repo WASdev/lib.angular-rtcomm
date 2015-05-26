@@ -31,7 +31,6 @@ rtcommModule.directive('rtcommSessionmgr', ['RtcommService', '$log', function(Rt
             $log.debug('rtcommSessionmgr: session:started: uuid =' + eventObject.endpoint.id);
 
 	    	$scope.updatePresence();
-	    	RtcommService.setActiveEndpoint(eventObject.endpoint.id);
         });
 		
         $scope.activateSession = function(endpointUUID) {
