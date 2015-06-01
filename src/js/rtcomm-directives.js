@@ -275,6 +275,8 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 					chat : true,
 					webrtc : false};
 
+      // use a tree view or flatten. 
+      $scope.flatten = false;
 			$scope.treeOptions = {
 					nodeChildren: "nodes",
 					dirSelectable: true,
@@ -290,8 +292,10 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 					}
 			};   	  
 
-			$scope.init = function(protocolList) {
-				$scope.protocolList = protocolList;
+			$scope.init = function(options) {
+				$scope.protocolList.chat = (typeof options.chat === 'boolean') ? options.chat : $scope.protocolList.chat;
+				$scope.protocolList.webrtc = (typeof options.webrtc === 'boolean') ? options.webrtc : $scope.protocolList.webrtc;
+				$scope.flatten  = (typeof options.flatten === 'boolean') ? options.flatten: $scope.flatten;
 			};
 
 			$scope.onCallClick = function(calleeEndpointID){
@@ -317,12 +321,19 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 				RtcommService.publishPresence();
 				var presenceMonitor = RtcommService.getPresenceMonitor();
 
-				presenceMonitor.on('updated', function(){
+				presenceMonitor.on('updated', function(presenceData){
 					$log.debug('<<------rtcommPresence: updated------>>');
+          if ($scope.flatten) {  
+					  $log.debug('<<------rtcommPresence: updated using flattened data ------>>');
+            $scope.presenceData = presenceData[0].flatten();
+          }
 					$scope.$apply();
 				});
 
-				$scope.presenceData = presenceMonitor.getPresenceData();
+        // Binding data if we are going to flatten causes a flash in the UI when it changes.
+        if (!$scope.flatten) {
+          $scope.presenceData = presenceMonitor.getPresenceData();
+        }
 
 				if ($scope.presenceData.length >= 1)
 					$scope.expandedNodes.push($scope.presenceData[0]);
