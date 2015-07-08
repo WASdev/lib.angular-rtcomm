@@ -1,6 +1,6 @@
 {
   "name": "angular-rtcomm",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Angular module for Rtcomm",
   "main": "Gruntfile.js",
   "scripts": {

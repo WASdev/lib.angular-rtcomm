@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.3 - 2015-06-01
+ * @version v0.0.3 - 2015-06-11
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -46,12 +46,13 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function r
 	//	If it is set we just return without setting up Rtcomm.
 	$log.debug('RtcommConfig: Abs URL: ' + $location.absUrl());
 	var _disableRtcomm = $location.search().disableRtcomm;
-	if (typeof _disableRtcomm == "undefined" || _disableRtcomm == null)
+	if (typeof _disableRtcomm === "undefined" || _disableRtcomm === null) {
 		_disableRtcomm = false;
-	else if (_disableRtcomm == "true")
+  } else if (_disableRtcomm === "true") {
 		_disableRtcomm = true;
-	else
+  } else {
 		_disableRtcomm = false;
+  }
 
 	$log.debug('RtcommConfig: _disableRtcomm = ' + _disableRtcomm);
 
@@ -77,6 +78,8 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function r
 	var broadcastAudio = true;
 	var broadcastVideo = true;
   var rtcommDebug = "DEBUG";
+  var ringtone = null;
+  var ringbacktone = null;
 
 	var setConfig = function(config){
 		providerConfig.server = (typeof config.server !== "undefined")? config.server : providerConfig.server;
@@ -92,6 +95,9 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function r
 
 		broadcastAudio = (typeof config.broadcastAudio !== "undefined")? config.broadcastAudio: broadcastAudio;
 		broadcastVideo = (typeof config.broadcastVideo !== "undefined")? config.broadcastVideo: broadcastVideo;
+
+		ringbacktone = (typeof config.ringbacktone !== "undefined")? config.ringbacktone: null;
+		ringtone = (typeof config.ringtone !== "undefined")? config.ringtone : null;
 
 		rtcommDebug = (typeof config.rtcommDebug !== "undefined")? config.rtcommDebug: rtcommDebug;
 
@@ -114,6 +120,10 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function r
 		getBroadcastAudio : function(){return broadcastAudio;},
 
 		getBroadcastVideo : function(){return broadcastVideo;},
+
+		getRingTone : function(){return ringtone;},
+
+		getRingBackTone : function(){return ringbacktone;},
 
 		getRtcommDebug: function(){return rtcommDebug;},
 
@@ -149,7 +159,8 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$h
 	var getMediaConfig = function() {
 
 		var mediaConfig = {
-
+			  ringbacktone: RtcommConfig.getRingBackTone(),
+			  ringtone: RtcommConfig.getRingTone(),
 				broadcast : {
 					audio : RtcommConfig.getBroadcastAudio(),
 					video : RtcommConfig.getBroadcastVideo()
@@ -215,7 +226,8 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$h
 
 	//	Setup all the callbacks here because they are all static.
 	myEndpointProvider.setRtcommEndpointConfig ({
-
+	  ringtone: RtcommConfig.getRingTone(),
+	  ringbacktone: RtcommConfig.getRingBackTone(),
 		// These are all the session related events.
 		'session:started' : function(eventObject) {
 			$log.debug('<<------rtcomm-service------>> - Event: ' + eventObject.eventName + ' remoteEndpointID: ' + eventObject.endpoint.getRemoteEndpointID());
