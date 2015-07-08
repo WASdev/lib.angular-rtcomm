@@ -20,7 +20,7 @@ This is useful if you want to modify the angular-rtcomm templates.
 ##Test
 This repository relies on Karma for testing. To run the test framework you can type the following in the root lib.angular-rtcomm directory:
 
-**karam start**
+**karma start**
 
 Note that the test framework assumes the MQTT broker is running on localhost:9080. There is also currently a dependency on the WebSphere Liberty server (which includes an embedded MQTT broker) for some of the Rtcomm features. The link to download a version of WebSphere Liberty for development and testing can be found at the top of the page. 
 
@@ -53,7 +53,10 @@ In addition, the angular-rtcomm module relies on the following additional JavaSc
 	<script src="//cdn.rawgit.com/wix/angular-tree-control/master/angular-tree-control.js" type="text/javascript"></script>
 	<script	src="//cdn.rawgit.com/WASdev/lib.rtcomm.clientjs/master/dist/rtcomm.js"></script>
 
-Note that we are working to reduce the number of dependencies (or to at least provide more flexibility in when these dependencies are required).	
+
+**Note**  
+The above dependencies can be accessed via CDN as above or via your bower_component install location.
+We are also working to reduce the number of dependencies (or to at least provide more flexibility in when these dependencies are required).	
 
 
 ###Module injection
