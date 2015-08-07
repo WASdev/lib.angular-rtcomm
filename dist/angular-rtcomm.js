@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.4 - 2015-07-08
+ * @version v0.0.4 - 2015-08-07
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -774,11 +774,6 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$h
 			endpoint.connect(calleeID);
 			return(endpoint.id);
 		},
-
-		endCall : function(endpoint){
-            endpoint.disconnect();
-        },
-
 
 		getSessions : function(){
 			return(sessions);
