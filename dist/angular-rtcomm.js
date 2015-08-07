@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.4 - 2015-08-07
+ * @version v0.0.5 - 2015-08-07
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -62,6 +62,7 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function r
 			rtcommTopicPath : "/rtcomm/",
 			createEndpoint : false,
 			appContext: 'default',
+      useSSL: false,
 			userid: "",
 			presence : {topic : ""}
 	};
@@ -89,6 +90,10 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function r
 		providerConfig.appContext = (typeof config.appContext !== "undefined")? config.appContext : providerConfig.appContext;
 		providerConfig.presence.topic = (typeof config.presenceTopic !== "undefined")? config.presenceTopic : providerConfig.presence.topic;
 
+		providerConfig.useSSL = (typeof config.useSSL !== "undefined")? config.useSSL : providerConfig.useSSL; 
+    $log.debug('config.useSSL:' + config.useSSL); 
+    $log.debug('providerConfig.useSSL:' + providerConfig.useSSL); 
+
 		//	Protocol related booleans
 		endpointConfig.chat= (typeof config.chat!== "undefined")? config.chat: endpointConfig.chat;
 		endpointConfig.webrtc = (typeof config.webrtc!== "undefined")? config.webrtc: endpointConfig.webrtc;
@@ -105,6 +110,8 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function r
 
 		if (typeof config.userid !== "undefined")
 			providerConfig.userid = config.userid;
+
+	  $log.debug('providerConfig is now: ', providerConfig);
 
 	};
 
