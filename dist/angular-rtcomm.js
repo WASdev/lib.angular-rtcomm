@@ -91,9 +91,6 @@ rtcommModule.factory('RtcommConfig', ["$location", "$log", "$window", function r
 		providerConfig.presence.topic = (typeof config.presenceTopic !== "undefined")? config.presenceTopic : providerConfig.presence.topic;
 
 		providerConfig.useSSL = (typeof config.useSSL !== "undefined")? config.useSSL : providerConfig.useSSL; 
-    $log.debug('config.useSSL:' + config.useSSL); 
-    $log.debug('providerConfig.useSSL:' + providerConfig.useSSL); 
-
 		//	Protocol related booleans
 		endpointConfig.chat= (typeof config.chat!== "undefined")? config.chat: endpointConfig.chat;
 		endpointConfig.webrtc = (typeof config.webrtc!== "undefined")? config.webrtc: endpointConfig.webrtc;
