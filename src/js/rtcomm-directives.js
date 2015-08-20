@@ -467,14 +467,14 @@ rtcommModule.directive('rtcommVideo', ['RtcommService', '$log', function(RtcommS
  * is maintained in the RtcommService. This directive handles switching between
  * active endpoints.
  */
-rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$anchorScroll', function(RtcommService, $log, $location, $anchorScroll) {
+rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommService, $log) {
 	return {
 		restrict: 'E',
 		templateUrl: "templates/rtcomm/rtcomm-chat.html",
 		controller: function ($scope) {
 			$scope.chatActiveEndpointUUID = RtcommService.getActiveEndpoint();
 			$scope.chats = RtcommService.getChats($scope.chatActiveEndpointUUID);
-
+			$scope.notify = false;
 			// This forces the scroll bar to the bottom and watches the $location.hash
 			//$anchorScroll();
 
@@ -505,15 +505,53 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$an
 
 				$scope.message = '';
 				RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
-//				if (typeof $scope.chats != "undefined" && $scope.chats != null){
-//				$location.hash($scope.chats.length -1);
-//				$anchorScroll();
-//				}
+				$scope.scrollToBottom();
 			};
 
 		},
-		controllerAs: 'chat'
+		controllerAs: 'chat',
+		link: function(scope, element){
+			
+			var chatPanel = angular.element(element.find('.panel-body')[0]);
+			
+			var bottom = true;
+			
+			//Scroll to bottom	
+			scope.scrollToBottom = function(){
+				//Scrolls to bottom
+				chatPanel.scrollTop(chatPanel.prop('scrollHeight'));// = chatPanel.scrollHeight;
+				
+			}
+			
+			//Watch scroll events	
+			chatPanel.bind('scroll', function(){
+				
+				if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
+					console.log("Reached Bottom");
+					bottom = true;
+				}		
+				else{
+					console.log("out!");
+					bottom = false;
+				}	
+			});	
+			
+			//Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom, else possibly send a notification
+			scope.$watch('chats', function(){
+				
+				if(bottom){
+					console.log("Scrolling ot Bottom");
+					scope.scrollToBottom();
+				}
+				else{
+					console.log("Notification send!");
+					scope.notify = true;
+				}
+
+			},true);
+       		}
 	};
+
 }]);
 
 /**

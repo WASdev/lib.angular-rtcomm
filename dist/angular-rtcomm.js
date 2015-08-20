@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.4 - 2015-07-08
+ * @version v0.0.4 - 2015-08-20
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -775,11 +775,6 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$h
 			return(endpoint.id);
 		},
 
-		endCall : function(endpoint){
-            endpoint.disconnect();
-        },
-
-
 		getSessions : function(){
 			return(sessions);
 		},
@@ -1306,14 +1301,14 @@ rtcommModule.directive('rtcommVideo', ['RtcommService', '$log', function(RtcommS
  * is maintained in the RtcommService. This directive handles switching between
  * active endpoints.
  */
-rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$anchorScroll', function(RtcommService, $log, $location, $anchorScroll) {
+rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommService, $log) {
 	return {
 		restrict: 'E',
 		templateUrl: "templates/rtcomm/rtcomm-chat.html",
 		controller: ["$scope", function ($scope) {
 			$scope.chatActiveEndpointUUID = RtcommService.getActiveEndpoint();
 			$scope.chats = RtcommService.getChats($scope.chatActiveEndpointUUID);
-
+			$scope.notify = false;
 			// This forces the scroll bar to the bottom and watches the $location.hash
 			//$anchorScroll();
 
@@ -1344,15 +1339,60 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$an
 
 				$scope.message = '';
 				RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
-//				if (typeof $scope.chats != "undefined" && $scope.chats != null){
-//				$location.hash($scope.chats.length -1);
-//				$anchorScroll();
-//				}
+				$scope.scrollToBottom();
 			};
 
 		}],
-		controllerAs: 'chat'
+		controllerAs: 'chat',
+		link: function(scope, element){
+			
+			var chatPanel = angular.element(element.find('.panel-body')[0]);
+			var bottom = true;
+			scope.notify = false;
+			
+			var popoverNotification = {
+				placement : "top",
+			}	
+			//Scroll to bottom	
+			scope.scrollToBottom = function(){
+				//Scrolls to bottom
+				chatPanel.scrollTop(chatPanel.prop('scrollHeight'));// = chatPanel.scrollHeight;
+				
+			}
+			
+			//Watch scroll events	
+			chatPanel.bind('scroll', function(){
+				
+				if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
+					console.log("Reached Bottom");
+					scope.notify = false;
+					$('#notify').popover('hide');
+					bottom = true;
+					scope.$apply();
+				}		
+				else{
+					console.log("out!");
+					bottom = false;
+				}	
+			});	
+			
+			//Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom, else possibly send a notification
+			scope.$watch('chats', function(){
+				
+				if(bottom){
+					console.log("Scrolling ot Bottom");
+					scope.scrollToBottom();
+				}
+				else{
+					console.log("Notification send!");
+					scope.notify = true;
+					$('#notify').popover('show');
+				}
+
+			},true);
+       		}
 	};
+
 }]);
 
 /**
@@ -1772,7 +1812,9 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
   'use strict';
 
   $templateCache.put('templates/rtcomm/rtcomm-chat.html',
-    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-comment\"></span> Chat</div><div class=\"panel-body\"><ul class=\"chat\"><li class=\"right clearfix\" ng-repeat=\"chat in chats\"><div id=\"{{$index}}\" class=\"header\"><strong class=\"primary-font\">{{chat.name}}</strong> <small class=\"pull-right text-muted\">{{chat.time | date:'HH:mm:ss'}}</small></div><p>{{chat.message}}</p></li></ul></div><div class=\"panel-footer\"><div class=\"input-group\"><input id=\"chat-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Type your message here...\" type=\"text\" ng-model=\"message\" ng-keypress=\"keySendMessage($event)\"> <span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-chat\" ng-click=\"sendMessage()\" focusinput=\"true\" ng-disabled=\"(chatActiveEndpointUUID == null)\">Send</button></span></div></div></div></div><!-- chat list ng-controller div -->"
+    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-comment\"></span> Chat</div><!-- div ng-show=\"notify\" style=\"z-index: 4\">\n" +
+    "                                <alert  type=\"info\" close=\"\">New Message (1)</alert>\n" +
+    "                        </div>--><div class=\"panel-body\"><ul class=\"chat\"><li class=\"right clearfix\" ng-repeat=\"chat in chats\"><div id=\"{{$index}}\" class=\"header\"><strong class=\"primary-font\">{{chat.name}}</strong> <small class=\"pull-right text-muted\">{{chat.time | date:'HH:mm:ss'}}</small></div><p>{{chat.message}}</p></li></ul></div><div class=\"panel-footer\" popover-placement=\"top\" popover=\"On the Bottom!\"><div class=\"input-group\"><input id=\"chat-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Type your message here...\" type=\"text\" ng-model=\"message\" ng-keypress=\"keySendMessage($event)\"> <span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-chat\" ng-click=\"sendMessage()\" focusinput=\"true\" ng-disabled=\"(chatActiveEndpointUUID == null)\">Send</button></span></div></div></div></div><!-- chat list ng-controller div -->"
   );
 
 
