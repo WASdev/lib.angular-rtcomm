@@ -1347,12 +1347,9 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 		link: function(scope, element){
 			
 			var chatPanel = angular.element(element.find('.panel-body')[0]);
-			var bottom = true;
-			scope.notify = false;
 			
-			var popoverNotification = {
-				placement : "top",
-			}	
+			var bottom = true;
+			
 			//Scroll to bottom	
 			scope.scrollToBottom = function(){
 				//Scrolls to bottom
@@ -1365,10 +1362,7 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 				
 				if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
 					console.log("Reached Bottom");
-					scope.notify = false;
-					$('#notify').popover('hide');
 					bottom = true;
-					scope.$apply();
 				}		
 				else{
 					console.log("out!");
@@ -1386,7 +1380,6 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 				else{
 					console.log("Notification send!");
 					scope.notify = true;
-					$('#notify').popover('show');
 				}
 
 			},true);
