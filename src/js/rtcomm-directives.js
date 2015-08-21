@@ -474,7 +474,6 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 		controller: function ($scope) {
 			$scope.chatActiveEndpointUUID = RtcommService.getActiveEndpoint();
 			$scope.chats = RtcommService.getChats($scope.chatActiveEndpointUUID);
-			$scope.notify = false;
 			// This forces the scroll bar to the bottom and watches the $location.hash
 			//$anchorScroll();
 
@@ -527,25 +526,21 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 			chatPanel.bind('scroll', function(){
 				
 				if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
-					console.log("Reached Bottom");
 					bottom = true;
 				}		
 				else{
-					console.log("out!");
 					bottom = false;
 				}	
 			});	
 			
-			//Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom, else possibly send a notification
+			//Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
 			scope.$watch('chats', function(){
 				
 				if(bottom){
-					console.log("Scrolling ot Bottom");
 					scope.scrollToBottom();
 				}
+				//In this else, a notification could be sent
 				else{
-					console.log("Notification send!");
-					scope.notify = true;
 				}
 
 			},true);
