@@ -503,8 +503,8 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 				};
 
 				$scope.message = '';
+				$scope.scrollToBottom(true);
 				RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
-				$scope.scrollToBottom();
 			};
 
 		},
@@ -512,24 +512,21 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 		link: function(scope, element){
 			
 			var chatPanel = angular.element(element.find('.panel-body')[0]);
-			
 			var bottom = true;
 			
-			//Scroll to bottom	
-			scope.scrollToBottom = function(){
-				//Scrolls to bottom
-				chatPanel.scrollTop(chatPanel.prop('scrollHeight'));// = chatPanel.scrollHeight;
-				
+			//Chooses if the scrollbar should be forced to the bottom on the next lifecycle	
+			scope.scrollToBottom = function(flag){
+				bottom = flag;
 			}
 			
 			//Watch scroll events	
 			chatPanel.bind('scroll', function(){
 				
 				if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
-					bottom = true;
+					scope.scrollToBottom(true);
 				}		
 				else{
-					bottom = false;
+					scope.scrollToBottom(false);
 				}	
 			});	
 			
@@ -537,7 +534,7 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 			scope.$watch('chats', function(){
 				
 				if(bottom){
-					scope.scrollToBottom();
+					chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
 				}
 				//In this else, a notification could be sent
 				else{
