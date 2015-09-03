@@ -155,6 +155,11 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 
 		return (mediaConfig);		
 	};
+  
+  myEndpointProvider.on('reset', function(event_object) {
+		$log.debug('<<------rtcomm-service------>> - Event: reset', event_object);
+
+  });
 
 
 	myEndpointProvider.on('queueupdate', function(queuelist) {
@@ -177,7 +182,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 				session.iFrameURL = event.onetimemessage.iFrameURL;
 				$rootScope.$evalAsync(
 						function () {
-							$rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);Well
+							$rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);
 						}
 				);
 			}
