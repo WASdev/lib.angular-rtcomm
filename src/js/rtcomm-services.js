@@ -763,6 +763,10 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 			return(sessions);
 		},
 
+    endCall : function(endpoint) {
+      endpoint.disconnect();
+    },
+
 		setActiveEndpoint : function(endpointID){
 			_setActiveEndpoint(endpointID);
 		},
