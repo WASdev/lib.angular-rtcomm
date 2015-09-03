@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v0.0.4 - 2015-07-08
+ * @version v0.0.4 - 2015-08-24
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -775,11 +775,6 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$h
 			return(endpoint.id);
 		},
 
-		endCall : function(endpoint){
-            endpoint.disconnect();
-        },
-
-
 		getSessions : function(){
 			return(sessions);
 		},
@@ -1306,14 +1301,13 @@ rtcommModule.directive('rtcommVideo', ['RtcommService', '$log', function(RtcommS
  * is maintained in the RtcommService. This directive handles switching between
  * active endpoints.
  */
-rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$anchorScroll', function(RtcommService, $log, $location, $anchorScroll) {
+rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommService, $log) {
 	return {
 		restrict: 'E',
 		templateUrl: "templates/rtcomm/rtcomm-chat.html",
 		controller: ["$scope", function ($scope) {
 			$scope.chatActiveEndpointUUID = RtcommService.getActiveEndpoint();
 			$scope.chats = RtcommService.getChats($scope.chatActiveEndpointUUID);
-
 			// This forces the scroll bar to the bottom and watches the $location.hash
 			//$anchorScroll();
 
@@ -1343,16 +1337,47 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', '$location', '$an
 				};
 
 				$scope.message = '';
+				$scope.scrollToBottom(true);
 				RtcommService.sendChatMessage(chat, $scope.chatActiveEndpointUUID);
-//				if (typeof $scope.chats != "undefined" && $scope.chats != null){
-//				$location.hash($scope.chats.length -1);
-//				$anchorScroll();
-//				}
 			};
 
 		}],
-		controllerAs: 'chat'
+		controllerAs: 'chat',
+		link: function(scope, element){
+			
+			var chatPanel = angular.element(element.find('.panel-body')[0]);
+			var bottom = true;
+			
+			//Chooses if the scrollbar should be forced to the bottom on the next lifecycle	
+			scope.scrollToBottom = function(flag){
+				bottom = flag;
+			}
+			
+			//Watch scroll events	
+			chatPanel.bind('scroll', function(){
+				
+				if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
+					scope.scrollToBottom(true);
+				}		
+				else{
+					scope.scrollToBottom(false);
+				}	
+			});	
+			
+			//Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
+			scope.$watch('chats', function(){
+				
+				if(bottom){
+					chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
+				}
+				//In this else, a notification could be sent
+				else{
+				}
+
+			},true);
+       		}
 	};
+
 }]);
 
 /**
