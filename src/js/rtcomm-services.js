@@ -157,8 +157,8 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 	};
   
   myEndpointProvider.on('reset', function(event_object) {
-		$log.debug('<<------rtcomm-service------>> - Event: reset', event_object);
-
+    // Should have a reason.
+    _alert({type:'danger', msg: event_object.reason});
   });
 
 
@@ -493,9 +493,25 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 		}
 		return (activeEndpoint);
 	};
+  var _alert = function _alert(alertObject) {
+      var a = { type: 'info', 
+                msg: 'default message'};
+      if (typeof alertObject === 'string') {
+        a.msg = alertObject;
+      } else {
+        a = alertObject;
+      }
+		  $rootScope.$evalAsync(
+				function () {
+					$rootScope.$broadcast('rtcomm::alert', a);
+				}
+		  );
+    };
 
 
 	return {
+
+    alert: _alert,
 
 		setKarmaTesting : function(){
 			karmaTesting = true;

@@ -12,10 +12,10 @@
 	<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link href="../bower_components/angular-tree-control/css/tree-control-attribute.css" rel="stylesheet" type="text/css">
 	
-  <!-- The core dependencies --> 
-  <script src="../bower_components/angular/angular.min.js"></script>
+  <!-- The core (order matters, include jquery first) dependencies --> 
   <script src="../bower_components/jquery/dist/jquery.min.js"></script>
   <script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="../bower_components/angular/angular.min.js"></script>
 	<script	src="../bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
 	<script src="../bower_components/angular-tree-control/angular-tree-control.js" type="text/javascript"></script>
 
@@ -82,15 +82,13 @@
 		<br>
 		<div class="row">
 			<div class="col-md-3">
-		        <rtcomm-register></rtcomm-register>
+		    <rtcomm-register></rtcomm-register>
 				<rtcomm-chat></rtcomm-chat>
-
 			</div>
-
 			<div class="col-md-6">
+        <rtcomm-alert></rtcomm-alert>
 				<rtcomm-iframe></rtcomm-iframe>
 			</div>
-
 			<div class="col-md-3">
 				<div class="panel panel-primary">
 					<div class="panel-heading">
@@ -100,7 +98,6 @@
 						<rtcomm-video></rtcomm-video>
 					</div>
 				</div>
-
 				<div class="panel panel-primary">
 					<div class="panel-heading">
 						<span class="glyphicon glyphicon-user"></span> Presence

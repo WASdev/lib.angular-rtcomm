@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.0 - 2015-09-03
+ * @version v1.0.0 - 2015-09-04
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -177,8 +177,8 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$h
 	};
   
   myEndpointProvider.on('reset', function(event_object) {
-		$log.debug('<<------rtcomm-service------>> - Event: reset', event_object);
-
+    // Should have a reason.
+    _alert({type:'danger', msg: event_object.reason});
   });
 
 
@@ -513,9 +513,25 @@ rtcommModule.factory('RtcommService', ["$rootScope", "RtcommConfig", "$log", "$h
 		}
 		return (activeEndpoint);
 	};
+  var _alert = function _alert(alertObject) {
+      var a = { type: 'info', 
+                msg: 'default message'};
+      if (typeof alertObject === 'string') {
+        a.msg = alertObject;
+      } else {
+        a = alertObject;
+      }
+		  $rootScope.$evalAsync(
+				function () {
+					$rootScope.$broadcast('rtcomm::alert', a);
+				}
+		  );
+    };
 
 
 	return {
+
+    alert: _alert,
 
 		setKarmaTesting : function(){
 			karmaTesting = true;
@@ -1155,7 +1171,7 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 				if ($scope.protocolList.webrtc == true){
 					endpoint.webrtc.enable(function(value, message) {
 						if (!value) {
-							alertMessage('Failed to get local Audio/Video - nothing to broadcast');
+              RtcommService.alert({type: 'danger', msg: message});
 						}
 					});
 				}
@@ -1194,6 +1210,26 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 		}],
 		controllerAs: 'presence'
 	};
+}]);
+
+//rtcommModule.controller('RtcommAlertController', ['$scope', '$log', function($scope, $log){
+rtcommModule.directive('rtcommAlert', ['$log', function($log){
+	return {
+		restrict: 'E',
+		templateUrl: "templates/rtcomm/rtcomm-alert.html",
+		controller: ["$scope", function ($scope) {
+      $scope.alerts = [];
+      $scope.addAlert = function(alert) {
+        $scope.alerts.push(alert);
+      };
+      $scope.closeAlert = function(index) {
+        $scope.alerts.splice(index, 1);
+      };
+      $scope.$on('rtcomm::alert', function(event, eventObject) {
+        $scope.addAlert(eventObject);
+      });
+    }]
+  }
 }]);
 
 /********************** Endpoint Directives *******************************/
@@ -1357,8 +1393,8 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 		}],
 		controllerAs: 'chat',
 		link: function(scope, element){
-
 			var chatPanel = angular.element(element.find('.panel-body')[0]);
+
 			var bottom = true;
 
 			//Chooses if the scrollbar should be forced to the bottom on the next lifecycle
@@ -1366,23 +1402,28 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 				bottom = flag;
 			}
 
-			//Watch scroll events
-			chatPanel.bind('scroll', function(){
-				if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
-					scope.scrollToBottom(true);
-        } else {
-					scope.scrollToBottom(false);
-				}
-			});
+      if (chatPanel.length > 0) {
+        //Watch scroll events
+        chatPanel.bind('scroll', function(){
+          if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
+            scope.scrollToBottom(true);
+          } else {
+            scope.scrollToBottom(false);
+          }
+        });
 
-			//Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
-			scope.$watch('chats', function(){
-				if(bottom){
-					chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
-				} else {
-				//In this else, a notification could be sent
-				}
-			},true);
+        //Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
+        scope.$watch('chats', function(){
+          if(bottom){
+            $log.debug('chatPanel is: ', chatPanel);
+            chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
+          } else {
+          //In this else, a notification could be sent
+          }
+        },true);
+      } else {
+        $log.warn('chatPanel not found: most likely you need to load jquery prior to angular');
+      }
     }
 	};
 
@@ -1730,7 +1771,7 @@ rtcommModule.controller('RtcommVideoController', ['$scope','$http', 'RtcommServi
 }]);
 
 
-rtcommModule.controller('RtcommEndpointController', ['$scope','$http', 'RtcommService', '$log', function($scope, $http, RtcommService, $log){
+rtcommModule.controller('RtcommEndpointController', ['$scope', '$rootScope', '$http', 'RtcommService', '$log', function($scope, $rootScope, $http, RtcommService, $log){
 
 	//	Session states.
 	$scope.epCtrlActiveEndpointUUID = RtcommService.getActiveEndpoint();
@@ -1748,7 +1789,8 @@ rtcommModule.controller('RtcommEndpointController', ['$scope','$http', 'RtcommSe
 		if ($scope.epCtrlAVConnected == false){
 			RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).webrtc.enable(function(value, message) {
 				if (!value) {
-					alertMessage('Failed to get local Audio/Video - nothing to broadcast');
+          $log.debug('Enable failed: ',message);
+          RtcommService.alert({type: 'danger', msg: message});
 				}
 			});
 		}
@@ -1800,9 +1842,13 @@ rtcommModule.controller('RtcommEndpointController', ['$scope','$http', 'RtcommSe
 	});
 }]);
 
-
 angular.module('angular-rtcomm').run(['$templateCache', function($templateCache) {
   'use strict';
+
+  $templateCache.put('templates/rtcomm/rtcomm-alert.html',
+    "<div class=\"row\"><alert ng-repeat=\"alert in alerts\" type=\"{{alert.type}}\" close=\"closeAlert($index)\">{{alert.msg}}</alert></div>"
+  );
+
 
   $templateCache.put('templates/rtcomm/rtcomm-chat.html',
     "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-comment\"></span> Chat</div><div class=\"panel-body\"><ul class=\"chat\"><li class=\"right clearfix\" ng-repeat=\"chat in chats\"><div id=\"{{$index}}\" class=\"header\"><strong class=\"primary-font\">{{chat.name}}</strong> <small class=\"pull-right text-muted\">{{chat.time | date:'HH:mm:ss'}}</small></div><p>{{chat.message}}</p></li></ul></div><div class=\"panel-footer\"><div class=\"input-group\"><input id=\"chat-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Type your message here...\" type=\"text\" ng-model=\"message\" ng-keypress=\"keySendMessage($event)\"> <span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-chat\" ng-click=\"sendMessage()\" focusinput=\"true\" ng-disabled=\"(chatActiveEndpointUUID == null)\">Send</button></span></div></div></div></div><!-- chat list ng-controller div -->"

@@ -308,7 +308,7 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 				if ($scope.protocolList.webrtc == true){
 					endpoint.webrtc.enable(function(value, message) {
 						if (!value) {
-							alertMessage('Failed to get local Audio/Video - nothing to broadcast');
+              RtcommService.alert({type: 'danger', msg: message});
 						}
 					});
 				}
@@ -347,6 +347,26 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 		},
 		controllerAs: 'presence'
 	};
+}]);
+
+//rtcommModule.controller('RtcommAlertController', ['$scope', '$log', function($scope, $log){
+rtcommModule.directive('rtcommAlert', ['$log', function($log){
+	return {
+		restrict: 'E',
+		templateUrl: "templates/rtcomm/rtcomm-alert.html",
+		controller: function ($scope) {
+      $scope.alerts = [];
+      $scope.addAlert = function(alert) {
+        $scope.alerts.push(alert);
+      };
+      $scope.closeAlert = function(index) {
+        $scope.alerts.splice(index, 1);
+      };
+      $scope.$on('rtcomm::alert', function(event, eventObject) {
+        $scope.addAlert(eventObject);
+      });
+    }
+  }
 }]);
 
 /********************** Endpoint Directives *******************************/
@@ -510,8 +530,8 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 		},
 		controllerAs: 'chat',
 		link: function(scope, element){
-
 			var chatPanel = angular.element(element.find('.panel-body')[0]);
+
 			var bottom = true;
 
 			//Chooses if the scrollbar should be forced to the bottom on the next lifecycle
@@ -519,23 +539,28 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 				bottom = flag;
 			}
 
-			//Watch scroll events
-			chatPanel.bind('scroll', function(){
-				if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
-					scope.scrollToBottom(true);
-        } else {
-					scope.scrollToBottom(false);
-				}
-			});
+      if (chatPanel.length > 0) {
+        //Watch scroll events
+        chatPanel.bind('scroll', function(){
+          if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
+            scope.scrollToBottom(true);
+          } else {
+            scope.scrollToBottom(false);
+          }
+        });
 
-			//Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
-			scope.$watch('chats', function(){
-				if(bottom){
-					chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
-				} else {
-				//In this else, a notification could be sent
-				}
-			},true);
+        //Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
+        scope.$watch('chats', function(){
+          if(bottom){
+            $log.debug('chatPanel is: ', chatPanel);
+            chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
+          } else {
+          //In this else, a notification could be sent
+          }
+        },true);
+      } else {
+        $log.warn('chatPanel not found: most likely you need to load jquery prior to angular');
+      }
     }
 	};
 
@@ -883,7 +908,7 @@ rtcommModule.controller('RtcommVideoController', ['$scope','$http', 'RtcommServi
 }]);
 
 
-rtcommModule.controller('RtcommEndpointController', ['$scope','$http', 'RtcommService', '$log', function($scope, $http, RtcommService, $log){
+rtcommModule.controller('RtcommEndpointController', ['$scope', '$rootScope', '$http', 'RtcommService', '$log', function($scope, $rootScope, $http, RtcommService, $log){
 
 	//	Session states.
 	$scope.epCtrlActiveEndpointUUID = RtcommService.getActiveEndpoint();
@@ -901,7 +926,8 @@ rtcommModule.controller('RtcommEndpointController', ['$scope','$http', 'RtcommSe
 		if ($scope.epCtrlAVConnected == false){
 			RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).webrtc.enable(function(value, message) {
 				if (!value) {
-					alertMessage('Failed to get local Audio/Video - nothing to broadcast');
+          $log.debug('Enable failed: ',message);
+          RtcommService.alert({type: 'danger', msg: message});
 				}
 			});
 		}
@@ -952,5 +978,4 @@ rtcommModule.controller('RtcommEndpointController', ['$scope','$http', 'RtcommSe
 		$scope.epCtrlAVConnected = false;
 	});
 }]);
-
 
