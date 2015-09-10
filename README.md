@@ -34,14 +34,16 @@ A sample page is also included in the test directory along with a sample config 
 To use the module, you will need to include the following js and css files with your project:
 
 First the angular-rtcomm related files:
-
+```html
 	<script	src="bower_components/angular-rtcomm/dist/angular-rtcomm.js"></script>
 	<link href="bower_components/angular-rtcomm/dist/css/angular-rtcomm.css" rel="stylesheet">
+```
 	
 See the dist directory for minified versions.
 	
 In addition, the angular-rtcomm module relies on the following additional JavaScript libraries that can be accessed via various CDNs:
 
+```html
 	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet">
 	<link href="//cdn.rawgit.com/wix/angular-tree-control/master/css/tree-control-attribute.css" rel="stylesheet" type="text/css">
 	
@@ -49,9 +51,12 @@ In addition, the angular-rtcomm module relies on the following additional JavaSc
 	<script	src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.js"></script>
 	<script	src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.0/ui-bootstrap-tpls.min.js"></script>
-	<script	src="//git.eclipse.org/c/paho/org.eclipse.paho.mqtt.javascript.git/plain/src/mqttws31.js"></script>
 	<script src="//cdn.rawgit.com/wix/angular-tree-control/master/angular-tree-control.js" type="text/javascript"></script>
-	<script	src="//cdn.rawgit.com/WASdev/lib.rtcomm.clientjs/master/dist/rtcomm.js"></script>
+
+  <script src="bower_components/bower-mqttws/mqttws31.js"></script>
+  <script src="bower_components/webrtc-adapter/adapter.js"></script>
+  <script src="bower_components/rtcomm/dist/rtcomm.js"></script>
+``` 
 
 
 **Note**  

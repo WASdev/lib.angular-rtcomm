@@ -2,7 +2,7 @@
 /************* Endpoint Provider Directives *******************************/
 
 /**
- * This directive is used to manage multiple sessions. If you are only supporting at most one session you wont need 
+ * This directive is used to manage multiple sessions. If you are only supporting at most one session you wont need
  * this directive. The associated template provides a way to switch between active sessions. The session must be in
  * the started state to be managed by this directive and is removed when the session stops.
  */
@@ -121,7 +121,7 @@ rtcommModule.directive('rtcommQueues', ['RtcommService', '$log', function(Rtcomm
 			/**
 			 * autoJoinQueues - automatically join any queues that are not filtered out
 			 * queuePublishedPresence - will add to the presence document information about what queues this person joins.
-			 * queueFilter - If defined, this specifies which queues should be joined. All others will be ignored. 
+			 * queueFilter - If defined, this specifies which queues should be joined. All others will be ignored.
 			 */
 			$scope.init = function(autoJoinQueues, queuePublishPresence, queueFilter) {
 				$log.debug('rtcommQueues: autoJoinQueues = ' + autoJoinQueues);
@@ -217,7 +217,7 @@ rtcommModule.directive('rtcommQueues', ['RtcommService', '$log', function(Rtcomm
 							$scope.queuePresenceData.push (
 									{
 										'name' : "queue",
-										'value' : $scope.rQueues[index].endpointID	
+										'value' : $scope.rQueues[index].endpointID
 									});
 						}
 					}
@@ -234,18 +234,18 @@ rtcommModule.directive('rtcommQueues', ['RtcommService', '$log', function(Rtcomm
  * This directive manages the chat portion of a session. The data model for chat
  * is maintained in the RtcommService. This directive handles switching between
  * active endpoints.
- * 
+ *
  * Here is the formate of the presenceData:
- * 
+ *
  * 		This is a Node:
  *  	                {
  *	                		"name" : "agents",
  *	                		"record" : false,
  *	                		"nodes" : []
  *	                	}
- *	                	
+ *
  *		This is a record with a set of user defines:
- *						{   	            
+ *						{
  *							"name" : "Brian Pulito",
  *    	    	            "record" : true,
  *   	                	"nodes" : [
@@ -275,7 +275,7 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 					chat : true,
 					webrtc : false};
 
-      // use a tree view or flatten. 
+      // use a tree view or flatten.
       $scope.flatten = false;
 			$scope.treeOptions = {
 					nodeChildren: "nodes",
@@ -290,7 +290,7 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 						label: "a6",
 						labelSelected: "a8"
 					}
-			};   	  
+			};
 
 			$scope.init = function(options) {
 				$scope.protocolList.chat = (typeof options.chat === 'boolean') ? options.chat : $scope.protocolList.chat;
@@ -308,9 +308,9 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 				if ($scope.protocolList.webrtc == true){
 					endpoint.webrtc.enable(function(value, message) {
 						if (!value) {
-							alertMessage('Failed to get local Audio/Video - nothing to broadcast');
+              RtcommService.alert({type: 'danger', msg: message});
 						}
-					});				  
+					});
 				}
 
 				endpoint.connect(calleeEndpointID);
@@ -323,7 +323,7 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 
 				presenceMonitor.on('updated', function(presenceData){
 					$log.debug('<<------rtcommPresence: updated------>>');
-          if ($scope.flatten) {  
+          if ($scope.flatten) {
 					  $log.debug('<<------rtcommPresence: updated using flattened data ------>>');
             $scope.presenceData = presenceData[0].flatten();
           }
@@ -349,20 +349,40 @@ rtcommModule.directive("rtcommPresence", ['RtcommService', '$log', function(Rtco
 	};
 }]);
 
+//rtcommModule.controller('RtcommAlertController', ['$scope', '$log', function($scope, $log){
+rtcommModule.directive('rtcommAlert', ['$log', function($log){
+	return {
+		restrict: 'E',
+		templateUrl: "templates/rtcomm/rtcomm-alert.html",
+		controller: function ($scope) {
+      $scope.alerts = [];
+      $scope.addAlert = function(alert) {
+        $scope.alerts.push(alert);
+      };
+      $scope.closeAlert = function(index) {
+        $scope.alerts.splice(index, 1);
+      };
+      $scope.$on('rtcomm::alert', function(event, eventObject) {
+        $scope.addAlert(eventObject);
+      });
+    }
+  }
+}]);
+
 /********************** Endpoint Directives *******************************/
 
 /**
- * This endpoint status controller only shows the active endpoint. The $scope.sessionState always contains the 
+ * This endpoint status controller only shows the active endpoint. The $scope.sessionState always contains the
  * state of the active endpoint if one exist. It will be one of the following states:
- * 
+ *
  * 'session:alerting'
- * 'session:trying' 
- * 'session:ringing' 
+ * 'session:trying'
+ * 'session:ringing'
  * 'session:queued' - for this one $scope.queueCount will tell you where you are in the queue.
  * 'session:failed' - for this one $scope.reason will tell you why the call failed.
- * 'session:started' 
+ * 'session:started'
  * 'session:stopped'
- * 
+ *
  * You can bind to $scope.sessionState to track state in the view.
  */
 rtcommModule.directive('rtcommEndpointStatus', ['RtcommService', '$log', function(RtcommService, $log) {
@@ -510,38 +530,38 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 		},
 		controllerAs: 'chat',
 		link: function(scope, element){
-			
 			var chatPanel = angular.element(element.find('.panel-body')[0]);
+
 			var bottom = true;
-			
-			//Chooses if the scrollbar should be forced to the bottom on the next lifecycle	
+
+			//Chooses if the scrollbar should be forced to the bottom on the next lifecycle
 			scope.scrollToBottom = function(flag){
 				bottom = flag;
 			}
-			
-			//Watch scroll events	
-			chatPanel.bind('scroll', function(){
-				
-				if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
-					scope.scrollToBottom(true);
-				}		
-				else{
-					scope.scrollToBottom(false);
-				}	
-			});	
-			
-			//Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
-			scope.$watch('chats', function(){
-				
-				if(bottom){
-					chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
-				}
-				//In this else, a notification could be sent
-				else{
-				}
 
-			},true);
-       		}
+      if (chatPanel.length > 0) {
+        //Watch scroll events
+        chatPanel.bind('scroll', function(){
+          if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
+            scope.scrollToBottom(true);
+          } else {
+            scope.scrollToBottom(false);
+          }
+        });
+
+        //Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
+        scope.$watch('chats', function(){
+          if(bottom){
+            $log.debug('chatPanel is: ', chatPanel);
+            chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
+          } else {
+          //In this else, a notification could be sent
+          }
+        },true);
+      } else {
+        $log.warn('chatPanel not found: most likely you need to load jquery prior to angular');
+      }
+    }
 	};
 
 }]);
@@ -686,7 +706,7 @@ rtcommModule.controller('RtcommAlertModalController', ['$rootScope', '$scope', '
 						$rootScope.$broadcast('rtcomm::alert-success');
 						alertingEndpointObject = null;
 					}
-				}, 
+				},
 				function () {
 					var alertingEndpointObject = RtcommService.getEndpoint($scope.alertingEndpointUUID);
 					if(alertingEndpointObject){
@@ -744,7 +764,7 @@ rtcommModule.controller('RtcommCallModalController', ['$scope',  'RtcommService'
 
 	$scope.$on('session:stopped', function (event, eventObject) {
 		$scope.enableCallModel = true;
-	});	    
+	});
 
 	$scope.placeCall = function (size) {
 
@@ -767,7 +787,7 @@ rtcommModule.controller('RtcommCallModalController', ['$scope',  'RtcommService'
 					}
 
 					RtcommService.placeCall($scope.calleeID, $scope.mediaToEnable);
-				}, 
+				},
 				function () {
 					$log.info('Modal dismissed at: ' + new Date());
 				});
@@ -792,9 +812,9 @@ rtcommModule.controller('RtcommCallModalInstanceCtrl', ['$scope',  '$modalInstan
 /**
  * This is the controller for config loader. It reads a JSON object and utilizes the RtcommService to set the configuration.
  * This can also result in the initialization of the endpoint provider if the config JSON object includes a registration name.
- * 
+ *
  * Here is an example of the config object:
- * 
+ *
  * {
  *  "server" : "server address",
  *	"port" : 1883,
@@ -804,7 +824,7 @@ rtcommModule.controller('RtcommCallModalInstanceCtrl', ['$scope',  '$modalInstan
  *	"broadcastAudio" : true,
  *	"broadcastVideo" : true
  * }
- * 
+ *
  * NOTE: If the user does not specify a userid, that says one will never be specified so go ahead
  * and initialize the endpoint provider and let the provider assign a name. If a defined empty
  * string is passed in, that means to wait until the end user registers a name before initializing
@@ -873,22 +893,22 @@ rtcommModule.controller('RtcommVideoController', ['$scope','$http', 'RtcommServi
 	});
 
 	$scope.$on('noEndpointActivated', function (event) {
-		$scope.avConnected = false; 
+		$scope.avConnected = false;
 	});
 
 	$scope.$on('webrtc:connected', function (event, eventObject) {
 		if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
-			$scope.avConnected = true; 
+			$scope.avConnected = true;
 	});
 
 	$scope.$on('webrtc:disconnected', function (event, eventObject) {
 		if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
-			$scope.avConnected = false; 
+			$scope.avConnected = false;
 	});
 }]);
 
 
-rtcommModule.controller('RtcommEndpointController', ['$scope','$http', 'RtcommService', '$log', function($scope, $http, RtcommService, $log){  		
+rtcommModule.controller('RtcommEndpointController', ['$scope', '$rootScope', '$http', 'RtcommService', '$log', function($scope, $rootScope, $http, RtcommService, $log){
 
 	//	Session states.
 	$scope.epCtrlActiveEndpointUUID = RtcommService.getActiveEndpoint();
@@ -906,7 +926,8 @@ rtcommModule.controller('RtcommEndpointController', ['$scope','$http', 'RtcommSe
 		if ($scope.epCtrlAVConnected == false){
 			RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).webrtc.enable(function(value, message) {
 				if (!value) {
-					alertMessage('Failed to get local Audio/Video - nothing to broadcast');
+          $log.debug('Enable failed: ',message);
+          RtcommService.alert({type: 'danger', msg: message});
 				}
 			});
 		}
@@ -939,12 +960,12 @@ rtcommModule.controller('RtcommEndpointController', ['$scope','$http', 'RtcommSe
 
 	$scope.$on('webrtc:connected', function (event, eventObject) {
 		if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
-			$scope.epCtrlAVConnected = true; 
+			$scope.epCtrlAVConnected = true;
 	});
 
 	$scope.$on('webrtc:disconnected', function (event, eventObject) {
 		if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
-			$scope.epCtrlAVConnected = false; 
+			$scope.epCtrlAVConnected = false;
 	});
 
 
@@ -954,8 +975,7 @@ rtcommModule.controller('RtcommEndpointController', ['$scope','$http', 'RtcommSe
 	});
 
 	$scope.$on('noEndpointActivated', function (event) {
-		$scope.epCtrlAVConnected = false; 
+		$scope.epCtrlAVConnected = false;
 	});
 }]);
-
 

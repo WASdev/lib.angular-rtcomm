@@ -42,6 +42,7 @@ rtcommModule.factory('RtcommConfig', function rtcommConfigFactory($location, $lo
 			rtcommTopicPath : "/rtcomm/",
 			createEndpoint : false,
 			appContext: 'default',
+      useSSL: false,
 			userid: "",
 			presence : {topic : ""}
 	};
@@ -69,6 +70,7 @@ rtcommModule.factory('RtcommConfig', function rtcommConfigFactory($location, $lo
 		providerConfig.appContext = (typeof config.appContext !== "undefined")? config.appContext : providerConfig.appContext;
 		providerConfig.presence.topic = (typeof config.presenceTopic !== "undefined")? config.presenceTopic : providerConfig.presence.topic;
 
+		providerConfig.useSSL = (typeof config.useSSL !== "undefined")? config.useSSL : providerConfig.useSSL; 
 		//	Protocol related booleans
 		endpointConfig.chat= (typeof config.chat!== "undefined")? config.chat: endpointConfig.chat;
 		endpointConfig.webrtc = (typeof config.webrtc!== "undefined")? config.webrtc: endpointConfig.webrtc;
@@ -85,6 +87,8 @@ rtcommModule.factory('RtcommConfig', function rtcommConfigFactory($location, $lo
 
 		if (typeof config.userid !== "undefined")
 			providerConfig.userid = config.userid;
+
+	  $log.debug('providerConfig is now: ', providerConfig);
 
 	};
 
@@ -151,6 +155,11 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 
 		return (mediaConfig);		
 	};
+  
+  myEndpointProvider.on('reset', function(event_object) {
+    // Should have a reason.
+    _alert({type:'danger', msg: event_object.reason});
+  });
 
 
 	myEndpointProvider.on('queueupdate', function(queuelist) {
@@ -173,7 +182,7 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 				session.iFrameURL = event.onetimemessage.iFrameURL;
 				$rootScope.$evalAsync(
 						function () {
-							$rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);Well
+							$rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);
 						}
 				);
 			}
@@ -484,9 +493,25 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 		}
 		return (activeEndpoint);
 	};
+  var _alert = function _alert(alertObject) {
+      var a = { type: 'info', 
+                msg: 'default message'};
+      if (typeof alertObject === 'string') {
+        a.msg = alertObject;
+      } else {
+        a = alertObject;
+      }
+		  $rootScope.$evalAsync(
+				function () {
+					$rootScope.$broadcast('rtcomm::alert', a);
+				}
+		  );
+    };
 
 
 	return {
+
+    alert: _alert,
 
 		setKarmaTesting : function(){
 			karmaTesting = true;
@@ -758,6 +783,10 @@ rtcommModule.factory('RtcommService', function ($rootScope, RtcommConfig, $log, 
 		getSessions : function(){
 			return(sessions);
 		},
+
+    endCall : function(endpoint) {
+      endpoint.disconnect();
+    },
 
 		setActiveEndpoint : function(endpointID){
 			_setActiveEndpoint(endpointID);
