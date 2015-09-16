@@ -112,7 +112,7 @@ rtcommModule.directive('rtcommRegister', ['RtcommService', '$log', function(Rtco
 					$scope.nextAction = 'Register';
 
 					if (details == 'destroyed')
-						$scope.reguserid = null;
+						$scope.reguserid = '';
 					else
 						$scope.reguserid = 'Init failed:' +  details;
 				}
