@@ -70,9 +70,29 @@ rtcommModule.directive('rtcommRegister', ['RtcommService', '$log', function(Rtco
 		controller: function ($scope) {
 
 			$scope.nextAction = 'Register';
+			
+			$scope.reguserid = '';
+			
+			$scope.invalid = false;
+
+			var invalidCharacters = /(\$|#|\+|\/|\\)+/i; //Invalid characters for MQTT Topic Path
+			
+			//Watch for changes in reguserid 
+                        $scope.$watch('reguserid', function(){
+
+                                if($scope.reguserid.length < 1 || invalidCharacters.test($scope.reguserid)){
+
+                                        $scope.invalid = true;
+                                }
+                                else{
+                                        $scope.invalid = false;
+                                }
+                        });
+
 
 			$scope.onRegClick = function() {
-				if ($scope.nextAction === 'Register'){
+				if ($scope.nextAction === 'Register' && !invalidCharacters.test($scope.reguserid)){
+
 					$log.debug('Register: reguserid =' + $scope.reguserid);
 					RtcommService.register($scope.reguserid);
 				}
@@ -425,7 +445,7 @@ rtcommModule.directive('rtcommEndpointStatus', ['RtcommService', '$log', functio
 
 			$scope.$on('session:alerting', function (event, eventObject) {
 				$log.debug('session:alerting received: endpointID = ' + eventObject.endpoint.id);
-				if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id){
+				if ($scope.epCtrlActiveEndpointUUID != eventObject.endpoint.id){
 					$scope.sessionState = 'session:alerting';
 					$scope.epCtrlRemoteEndpointID = eventObject.endpoint.getRemoteEndpointID();
 				}
@@ -465,6 +485,16 @@ rtcommModule.directive('rtcommEndpointStatus', ['RtcommService', '$log', functio
 				$scope.epCtrlRemoteEndpointID = null;
 				$scope.sessionState = 'session:stopped';
 			});
+
+			$scope.$on('rtcomm::init', function(event, success, details){
+
+				if(success == false){
+					$scope.sessionState = 'session:stopped';
+					$scope.epCtrlRemoteEndpointID = null;
+                                }
+                        });
+
+
 
 		}
 	};
@@ -539,29 +569,30 @@ rtcommModule.directive("rtcommChat", ['RtcommService', '$log', function(RtcommSe
 				bottom = flag;
 			}
 
-      if (chatPanel.length > 0) {
-        //Watch scroll events
-        chatPanel.bind('scroll', function(){
-          if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
-            scope.scrollToBottom(true);
-          } else {
-            scope.scrollToBottom(false);
-          }
-        });
-
-        //Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
-        scope.$watch('chats', function(){
-          if(bottom){
-            $log.debug('chatPanel is: ', chatPanel);
-            chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
-          } else {
-          //In this else, a notification could be sent
-          }
-        },true);
-      } else {
-        $log.warn('chatPanel not found: most likely you need to load jquery prior to angular');
-      }
-    }
+			if (chatPanel.length > 0) {
+				//Watch scroll events
+				chatPanel.bind('scroll', function(){
+					if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
+						scope.scrollToBottom(true);
+					}
+					else {
+						scope.scrollToBottom(false);
+					}
+				});
+				//Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
+				scope.$watch('chats', function(){
+					if(bottom){
+						chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
+					}
+					else {
+						//In this else, a notification could be sent
+					}
+				},true);
+			} 
+			else {
+			        $log.warn('chatPanel not found: most likely you need to load jquery prior to angular');
+			}
+		}
 	};
 
 }]);
@@ -690,6 +721,7 @@ rtcommModule.controller('RtcommAlertModalController', ['$rootScope', '$scope', '
 			templateUrl: 'templates/rtcomm/rtcomm-modal-alert.html',
 			controller: 'RtcommAlertModalInstanceCtrl',
 			size: size,
+			backdrop: 'static',
 			resolve: {
 				caller: function () {
 					return $scope.caller;
