@@ -40,7 +40,7 @@ module.exports = function(grunt) {
       },
       dist: {
 //        src: ['<%= dirs.src %>/*.js', '<%= dirs.src %>/**/*.js'],
-        src: ['<%= dirs.src %>/js/rtcomm-services.js', '<%= dirs.src %>/js/rtcomm-directives.js'],
+        src: ['<%= dirs.src %>/js/angular-rtcomm.js', '<%= dirs.src %>/js/rtcomm-services.js', '<%= dirs.src %>/js/rtcomm-directives.js'],
         dest: '<%= dirs.dest %>/<%= pkg.name %>.js'
       }
     },
