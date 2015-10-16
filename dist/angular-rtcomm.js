@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.0 - 2015-10-14
+ * @version v1.0.1 - 2015-10-16
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -26,6 +26,7 @@
     'ui.bootstrap',
     'treeControl',
     'angular-rtcomm-ui',
+    'angular-rtcomm-presence',
     'angular-rtcomm-service'
   ]);
 })();
@@ -885,12 +886,10 @@
 angular
   .module('angular-rtcomm-ui', [
     'ui.bootstrap', 
-    'treeControl', 
     'angular-rtcomm-service'])
   .directive('rtcommSessionManager', rtcommSessionManager)
   .directive('rtcommRegister', rtcommRegister)
   .directive('rtcommQueues', rtcommQueues)
-  .directive('rtcommPresence', rtcommPresence)
   .directive('rtcommAlert', rtcommAlert)
   .directive('rtcommEndpointStatus', rtcommEndpointStatus)
   .directive('rtcommVideo', rtcommVideo)
@@ -1134,125 +1133,6 @@ function rtcommQueues(rtcommService, $log) {
 			};
 		}],
 		controllerAs : 'queues'
-	};
-};
-
-/**
- * This directive manages the chat portion of a session. The data model for chat
- * is maintained in the rtcommService. This directive handles switching between
- * active endpoints.
- *
- * Here is the formate of the presenceData:
- *
- * 		This is a Node:
- *  	                {
- *	                		"name" : "agents",
- *	                		"record" : false,
- *	                		"nodes" : []
- *	                	}
- *
- *		This is a record with a set of user defines:
- *						{
- *							"name" : "Brian Pulito",
- *    	    	            "record" : true,
- *   	                	"nodes" : [
- *									{
- *	                      				"name" : "queue",
- *	                      			    "value" : "appliances"
- *	                      			},
- *	                      			{
- *										"name" : "sessions",
- *	                      			    "value" : "3"
- *	                      			}
- *								]
- */
-rtcommPresence.$inject=['rtcommService', '$log'];
-function rtcommPresence(rtcommService, $log) {
-	return {
-		restrict: 'E',
-		templateUrl: "templates/rtcomm/rtcomm-presence.html",
-		controller: ["$scope", "$rootScope", function ($scope, $rootScope) {
-
-			$scope.monitorTopics = [];
-			$scope.presenceData = [];
-			$scope.expandedNodes = [];
-
-			// Default protocol list initiated from presence. Start with chat only.
-			$scope.protocolList = {
-					chat : true,
-					webrtc : false};
-
-      // use a tree view or flatten.
-      $scope.flatten = false;
-			$scope.treeOptions = {
-					nodeChildren: "nodes",
-					dirSelectable: true,
-					injectClasses: {
-						ul: "a1",
-						li: "a2",
-						liSelected: "a7",
-						iExpanded: "a3",
-						iCollapsed: "a4",
-						iLeaf: "a5",
-						label: "a6",
-						labelSelected: "a8"
-					}
-			};
-
-			$scope.init = function(options) {
-				$scope.protocolList.chat = (typeof options.chat === 'boolean') ? options.chat : $scope.protocolList.chat;
-				$scope.protocolList.webrtc = (typeof options.webrtc === 'boolean') ? options.webrtc : $scope.protocolList.webrtc;
-				$scope.flatten  = (typeof options.flatten === 'boolean') ? options.flatten: $scope.flatten;
-			};
-
-			$scope.onCallClick = function(calleeEndpointID){
-				var endpoint = rtcommService.getEndpoint();
-				rtcommService.setActiveEndpoint(endpoint.id);
-
-				if ($scope.protocolList.chat == true)
-					endpoint.chat.enable();
-
-				if ($scope.protocolList.webrtc == true){
-					endpoint.webrtc.enable(function(value, message) {
-						if (!value) {
-              rtcommService.alert({type: 'danger', msg: message});
-						}
-					});
-				}
-
-				endpoint.connect(calleeEndpointID);
-        $rootScope.$broadcast('rtcomm::presence-click');
-			};
-
-			$scope.$on('rtcomm::init', function (event, success, details) {
-				rtcommService.publishPresence();
-				var presenceMonitor = rtcommService.getPresenceMonitor();
-
-				presenceMonitor.on('updated', function(presenceData){
-					$log.debug('<<------rtcommPresence: updated------>>');
-          if ($scope.flatten) {
-					  $log.debug('<<------rtcommPresence: updated using flattened data ------>>');
-            $scope.presenceData = presenceData[0].flatten();
-          }
-					$scope.$apply();
-				});
-
-        // Binding data if we are going to flatten causes a flash in the UI when it changes.
-        if (!$scope.flatten) {
-          $scope.presenceData = presenceMonitor.getPresenceData();
-        }
-
-				if ($scope.presenceData.length >= 1)
-					$scope.expandedNodes.push($scope.presenceData[0]);
-
-				for (var index = 0; index < $scope.monitorTopics.length; index++) {
-					$log.debug('rtcommPresence: monitorTopic: ' + $scope.monitorTopics[index]);
-					presenceMonitor.add($scope.monitorTopics[index]);
-				}
-			});
-
-		}],
-		controllerAs: 'presence'
 	};
 };
 
@@ -1893,7 +1773,139 @@ function RtcommEndpointController($scope, $rootScope, $http, rtcommService, $log
 };
 
 })();
-angular.module('angular-rtcomm').run(['$templateCache', function($templateCache) {
+
+/*
+ * The angular-rtcomm-presence  module
+ * This has controllers and directives in it.
+ */
+(function(){
+  angular
+    .module('angular-rtcomm-presence', [
+      'ui.bootstrap', 
+      'treeControl',
+      'angular-rtcomm-service'])
+    .directive('rtcommPresence', rtcommPresence);
+
+  /**
+   * This directive manages the chat portion of a session. The data model for chat
+   * is maintained in the rtcommService. This directive handles switching between
+   * active endpoints.
+   *
+   * Here is the formate of the presenceData:
+   *
+   * 		This is a Node:
+   *  	                {
+   *	                		"name" : "agents",
+   *	                		"record" : false,
+   *	                		"nodes" : []
+   *	                	}
+   *
+   *		This is a record with a set of user defines:
+   *						{
+   *							"name" : "Brian Pulito",
+   *    	    	            "record" : true,
+   *   	                	"nodes" : [
+   *									{
+   *	                      				"name" : "queue",
+   *	                      			    "value" : "appliances"
+   *	                      			},
+   *	                      			{
+   *										"name" : "sessions",
+   *	                      			    "value" : "3"
+   *	                      			}
+   *								]
+   */
+  rtcommPresence.$inject=['rtcommService', '$log'];
+  function rtcommPresence(rtcommService, $log) {
+    return {
+      restrict: 'E',
+      templateUrl: "templates/rtcomm/rtcomm-presence.html",
+      controller: ["$scope", "$rootScope", function ($scope, $rootScope) {
+
+        $scope.monitorTopics = [];
+        $scope.presenceData = [];
+        $scope.expandedNodes = [];
+
+        // Default protocol list initiated from presence. Start with chat only.
+        $scope.protocolList = {
+            chat : true,
+            webrtc : false};
+
+        // use a tree view or flatten.
+        $scope.flatten = false;
+        $scope.treeOptions = {
+            nodeChildren: "nodes",
+            dirSelectable: true,
+            injectClasses: {
+              ul: "a1",
+              li: "a2",
+              liSelected: "a7",
+              iExpanded: "a3",
+              iCollapsed: "a4",
+              iLeaf: "a5",
+              label: "a6",
+              labelSelected: "a8"
+            }
+        };
+
+        $scope.init = function(options) {
+          $scope.protocolList.chat = (typeof options.chat === 'boolean') ? options.chat : $scope.protocolList.chat;
+          $scope.protocolList.webrtc = (typeof options.webrtc === 'boolean') ? options.webrtc : $scope.protocolList.webrtc;
+          $scope.flatten  = (typeof options.flatten === 'boolean') ? options.flatten: $scope.flatten;
+        };
+
+        $scope.onCallClick = function(calleeEndpointID){
+          var endpoint = rtcommService.getEndpoint();
+          rtcommService.setActiveEndpoint(endpoint.id);
+
+          if ($scope.protocolList.chat == true)
+            endpoint.chat.enable();
+
+          if ($scope.protocolList.webrtc == true){
+            endpoint.webrtc.enable(function(value, message) {
+              if (!value) {
+                rtcommService.alert({type: 'danger', msg: message});
+              }
+            });
+          }
+
+          endpoint.connect(calleeEndpointID);
+          $rootScope.$broadcast('rtcomm::presence-click');
+        };
+
+        $scope.$on('rtcomm::init', function (event, success, details) {
+          rtcommService.publishPresence();
+          var presenceMonitor = rtcommService.getPresenceMonitor();
+
+          presenceMonitor.on('updated', function(presenceData){
+            $log.debug('<<------rtcommPresence: updated------>>');
+            if ($scope.flatten) {
+              $log.debug('<<------rtcommPresence: updated using flattened data ------>>');
+              $scope.presenceData = presenceData[0].flatten();
+            }
+            $scope.$apply();
+          });
+
+          // Binding data if we are going to flatten causes a flash in the UI when it changes.
+          if (!$scope.flatten) {
+            $scope.presenceData = presenceMonitor.getPresenceData();
+          }
+
+          if ($scope.presenceData.length >= 1)
+            $scope.expandedNodes.push($scope.presenceData[0]);
+
+          for (var index = 0; index < $scope.monitorTopics.length; index++) {
+            $log.debug('rtcommPresence: monitorTopic: ' + $scope.monitorTopics[index]);
+            presenceMonitor.add($scope.monitorTopics[index]);
+          }
+        });
+
+      }],
+      controllerAs: 'presence'
+    };
+  };
+})();
+angular.module('angular-rtcomm-ui').run(['$templateCache', function($templateCache) {
   'use strict';
 
   $templateCache.put('templates/rtcomm/rtcomm-alert.html',
@@ -1948,6 +1960,14 @@ angular.module('angular-rtcomm').run(['$templateCache', function($templateCache)
 
   $templateCache.put('templates/rtcomm/rtcomm-video.html',
     "<div id=\"videoContainer\"><div id=\"selfViewContainer\"><video title=\"selfView\" id=\"selfView\" class=\"selfView\" autoplay muted></video></div><video title=\"remoteView\" id=\"remoteView\" class=\"remoteView\" autoplay></video><!--  video title=\"remoteView\" id=\"remoteView\" class=\"remoteView\" autoplay=\"true\" poster=\"../views/rtcomm/images/video_camera_big.png\"></video --></div>"
+  );
+
+}]);
+angular.module('angular-rtcomm-presence').run(['$templateCache', function($templateCache) {
+  'use strict';
+
+  $templateCache.put('templates/rtcomm/rtcomm-presence.html',
+    "<div treecontrol class=\"tree-light\" tree-model=\"presenceData\" options=\"treeOptions\" on-selection=\"showSelected(node)\" expanded-nodes=\"expandedNodes\"><button type=\"button\" class=\"btn btn-primary btn-xs\" aria-label=\"Left Align\" ng-show=\"(node.record && !node.self)\" ng-click=\"onCallClick(node.name)\"><span class=\"glyphicon glyphicon-facetime-video\" aria-hidden=\"true\" aria-label=\"expand record\"></span></button> {{node.name}} {{node.value ? ': ' + node.value : ''}}</div>"
   );
 
 }]);

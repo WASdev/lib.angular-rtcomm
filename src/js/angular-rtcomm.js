@@ -6,6 +6,7 @@
     'ui.bootstrap',
     'treeControl',
     'angular-rtcomm-ui',
+    'angular-rtcomm-presence',
     'angular-rtcomm-service'
   ]);
 })();
