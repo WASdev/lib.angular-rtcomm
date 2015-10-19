@@ -118,7 +118,7 @@ module.exports = function(grunt) {
     ngtemplates:  {
         'angular-rtcomm-ui': {
     	    cwd:      '<%= dirs.src %>',
-    	    src:      'templates/rtcomm/**.html',
+    	    src:      ['templates/rtcomm/**.html', '!templates/rtcomm/rtcomm-presence.html'],
     	    dest:     '<%= dirs.dest %>/<%= pkg.name %>.js',
 	        options:    {
 	            htmlmin:  { collapseWhitespace: true, collapseBooleanAttributes: true },
