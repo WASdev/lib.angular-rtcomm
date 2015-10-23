@@ -1,6 +1,6 @@
 {
- "server" : "svt-msd4.rtp.raleigh.ibm.com",
-	"port" : 1883,
+ "server" : "messagesight.demos.ibm.com",
+	"port" : 1884,
 	"rtcommTopicPath" : "/rtcommAngularSample/",
   "userid" : "",
 	"broadcastAudio" : true,

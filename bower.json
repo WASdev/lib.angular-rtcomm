@@ -1,6 +1,6 @@
 {
   "name": "angular-rtcomm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Angular module for Rtcomm",
   "main": [
     "dist/angular-rtcomm.js",
@@ -33,8 +33,8 @@
     "jquery": "~2.1.1",
     "angular-tree-control": "~0.2.7",
     "bootstrap": "~3.3.1",
-    "angular": "~1.3.8",
+    "angular": "^1.4.6",
     "angular-bootstrap": "~0.13.0",
-    "rtcomm": "~1.0.0"
+    "rtcomm": "^1.0.0"
   }
 }
