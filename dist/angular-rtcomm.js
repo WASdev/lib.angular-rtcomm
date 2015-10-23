@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.1 - 2015-10-19
+ * @version v1.0.1 - 2015-10-20
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -311,6 +311,18 @@
         $rootScope.$evalAsync(
             function () {
               _createSession(eventObject.endpoint.id).webrtcConnected = true;
+              $rootScope.$broadcast(eventObject.eventName, eventObject);
+            }
+        );
+        //	This is required in karma to get the evalAsync to fire. Ugly but necessary...
+        if (karmaTesting == true)
+          $rootScope.$digest();
+      },
+      // These are all the WebRTC related events.
+      'webrtc:remotemuted' : function(eventObject) {
+        $log.debug('<<------rtcomm-service------>> - Event: ' + eventObject.eventName + ' remoteEndpointID: ' + eventObject.endpoint.getRemoteEndpointID());
+        $rootScope.$evalAsync(
+            function () {
               $rootScope.$broadcast(eventObject.eventName, eventObject);
             }
         );

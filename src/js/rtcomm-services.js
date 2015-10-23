@@ -285,6 +285,18 @@
         if (karmaTesting == true)
           $rootScope.$digest();
       },
+      // These are all the WebRTC related events.
+      'webrtc:remotemuted' : function(eventObject) {
+        $log.debug('<<------rtcomm-service------>> - Event: ' + eventObject.eventName + ' remoteEndpointID: ' + eventObject.endpoint.getRemoteEndpointID());
+        $rootScope.$evalAsync(
+            function () {
+              $rootScope.$broadcast(eventObject.eventName, eventObject);
+            }
+        );
+        //	This is required in karma to get the evalAsync to fire. Ugly but necessary...
+        if (karmaTesting == true)
+          $rootScope.$digest();
+      },
 
       'webrtc:disconnected' : function(eventObject) {
         $log.debug('<<------rtcomm-service------>> - Event: ' + eventObject.eventName + ' remoteEndpointID: ' + eventObject.endpoint.getRemoteEndpointID());
