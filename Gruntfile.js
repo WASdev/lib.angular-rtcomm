@@ -40,7 +40,7 @@ module.exports = function(grunt) {
       },
       dist: {
 //        src: ['<%= dirs.src %>/*.js', '<%= dirs.src %>/**/*.js'],
-        src: ['<%= dirs.src %>/js/rtcomm-services.js', '<%= dirs.src %>/js/rtcomm-directives.js'],
+        src: ['<%= dirs.src %>/js/angular-rtcomm.js', '<%= dirs.src %>/js/rtcomm-services.js', '<%= dirs.src %>/js/rtcomm-directives.js', '<%= dirs.src %>/js/rtcomm-presence.js'],
         dest: '<%= dirs.dest %>/<%= pkg.name %>.js'
       }
     },
@@ -116,19 +116,26 @@ module.exports = function(grunt) {
     },
     
     ngtemplates:  {
-    	  app:        {
+        'angular-rtcomm-ui': {
     	    cwd:      '<%= dirs.src %>',
-    	    src:      'templates/rtcomm/**.html',
+    	    src:      ['templates/rtcomm/**.html', '!templates/rtcomm/rtcomm-presence.html'],
     	    dest:     '<%= dirs.dest %>/<%= pkg.name %>.js',
 	        options:    {
 	            htmlmin:  { collapseWhitespace: true, collapseBooleanAttributes: true },
-	            module: '<%= pkg.name %>',
+	            append: 'true'
+	          }
+        },
+        'angular-rtcomm-presence': {
+    	    cwd:      '<%= dirs.src %>',
+    	    src:      'templates/rtcomm/rtcomm-presence.html',
+    	    dest:     '<%= dirs.dest %>/<%= pkg.name %>.js',
+	        options:    {
+	            htmlmin:  { collapseWhitespace: true, collapseBooleanAttributes: true },
 	            append: 'true'
 	          }
 
     	  }
     	}
-    
   });
 
   // Build task.
