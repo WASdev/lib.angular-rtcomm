@@ -15,17 +15,17 @@
 	      $locationProvider.html5Mode(  {enabled: true,
 		    requireBase: false});
     }) */
-    .factory('rtcommConfigService', rtcommConfigService)
-    .factory('rtcommService', rtcommService);
+    .factory('RtcommConfigService', RtcommConfigService)
+    .factory('RtcommService', RtcommService);
     /**
      *
      */
-    rtcommConfigService.$inject = ['$location', '$log', '$window'];
-    function rtcommConfigService($location, $log, $window) {
+    RtcommConfigService.$inject = ['$location', '$log', '$window'];
+    function RtcommConfigService($location, $log, $window) {
       //	First we check to see if the URL includes the query string disableRtcomm=true.
       //	This is typically done when a URL is being shared vian an iFrame that includes Rtcomm directives.
       //	If it is set we just return without setting up Rtcomm.
-      $log.debug('rtcommConfigService: Abs URL: ' + $location.absUrl());
+      $log.debug('RtcommConfigService: Abs URL: ' + $location.absUrl());
       var _disableRtcomm = $location.search().disableRtcomm;
       if (typeof _disableRtcomm === "undefined" || _disableRtcomm === null) {
         _disableRtcomm = false;
@@ -35,7 +35,7 @@
         _disableRtcomm = false;
       }
 
-      $log.debug('rtcommConfigService: _disableRtcomm = ' + _disableRtcomm);
+      $log.debug('RtcommConfigService: _disableRtcomm = ' + _disableRtcomm);
 
       var providerConfig = {
           server : $location.host(),
@@ -116,8 +116,8 @@
       };
   };
 
-  rtcommService.$inject=['$rootScope', '$log', '$http', 'rtcommConfigService'];
-  function rtcommService($rootScope, $log, $http, rtcommConfigService) {
+  RtcommService.$inject=['$rootScope', '$log', '$http', 'RtcommConfigService'];
+  function RtcommService($rootScope, $log, $http, RtcommConfigService) {
       /** Setup the endpoint provider first **/
     var myEndpointProvider = new rtcomm.EndpointProvider();
     var endpointProviderInitialized = false;
@@ -128,10 +128,10 @@
     var _selfView = "selfView";		//	Default self view
     var _remoteView = "remoteView";	//	Default remote view
 
-    myEndpointProvider.setLogLevel(rtcommConfigService.getRtcommDebug());
+    myEndpointProvider.setLogLevel(RtcommConfigService.getRtcommDebug());
     $log.debug('rtcomm-service - endpointProvider log level is: '+myEndpointProvider.getLogLevel());
-    $log.debug('rtcomm-service - endpointProvider log level should be: '+rtcommConfigService.getRtcommDebug());
-    myEndpointProvider.setAppContext(rtcommConfigService.getProviderConfig().appContext);
+    $log.debug('rtcomm-service - endpointProvider log level should be: '+RtcommConfigService.getRtcommDebug());
+    myEndpointProvider.setAppContext(RtcommConfigService.getProviderConfig().appContext);
 
     var getPresenceRecord = function(){
       if (presenceRecord == null)
@@ -144,14 +144,14 @@
     var getMediaConfig = function() {
 
       var mediaConfig = {
-          ringbacktone: rtcommConfigService.getRingBackTone(),
-          ringtone: rtcommConfigService.getRingTone(),
+          ringbacktone: RtcommConfigService.getRingBackTone(),
+          ringtone: RtcommConfigService.getRingTone(),
           broadcast : {
-            audio : rtcommConfigService.getBroadcastAudio(),
-            video : rtcommConfigService.getBroadcastVideo()
+            audio : RtcommConfigService.getBroadcastAudio(),
+            video : RtcommConfigService.getBroadcastVideo()
           },
-          webrtc : rtcommConfigService.getWebRTCEnabled(),
-          chat : rtcommConfigService.getChatEnabled(),
+          webrtc : RtcommConfigService.getWebRTCEnabled(),
+          chat : RtcommConfigService.getChatEnabled(),
       };
 
       return (mediaConfig);
@@ -216,8 +216,8 @@
 
     //	Setup all the callbacks here because they are all static.
     myEndpointProvider.setRtcommEndpointConfig ({
-      ringtone: rtcommConfigService.getRingTone(),
-      ringbacktone: rtcommConfigService.getRingBackTone(),
+      ringtone: RtcommConfigService.getRingTone(),
+      ringbacktone: RtcommConfigService.getRingBackTone(),
       // These are all the session related events.
       'session:started' : function(eventObject) {
         $log.debug('<<------rtcomm-service------>> - Event: ' + eventObject.eventName + ' remoteEndpointID: ' + eventObject.endpoint.getRemoteEndpointID());
@@ -357,7 +357,7 @@
                 'ready': event.ready,
                 'registered': event.registered,
                 'endpoint': event.endpoint,
-                'userid' : rtcommConfigService.getProviderConfig().userid
+                'userid' : RtcommConfigService.getProviderConfig().userid
             };
 
             $rootScope.$broadcast('rtcomm::init', true, broadcastEvent);
@@ -535,7 +535,7 @@
       },
 
       setConfig : function(config){
-        if (rtcommConfigService.isRtcommDisabled() == true){
+        if (RtcommConfigService.isRtcommDisabled() == true){
           $log.debug('RtcommService:setConfig: isRtcommDisabled = true; return with no setup');
           return;
         }
@@ -543,7 +543,7 @@
 
         $log.debug('rtcomm-services: setConfig: config: ', config);
 
-        rtcommConfigService.setProviderConfig(config);
+        RtcommConfigService.setProviderConfig(config);
         myEndpointProvider.setRtcommEndpointConfig(getMediaConfig());
 
         if (endpointProviderInitialized == false){
@@ -553,8 +553,8 @@
             $http.get(config.identityServlet).success (function(data){
 
               if (typeof data.userid !== "undefined"){
-                rtcommConfigService.setProviderConfig(data);
-                myEndpointProvider.init(rtcommConfigService.getProviderConfig(), initSuccess, initFailure);
+                RtcommConfigService.setProviderConfig(data);
+                myEndpointProvider.init(RtcommConfigService.getProviderConfig(), initSuccess, initFailure);
                 endpointProviderInitialized = true;
               }
               else
@@ -567,8 +567,8 @@
             // If the user does not specify a userid, that says one will never be specified so go ahead
             // and initialize the endpoint provider and let the provider assign a name. If a defined empty
             // string is passed in, that means to wait until the end user registers a name.
-            if (typeof config.userid == "undefined" || rtcommConfigService.getProviderConfig().userid != ''){
-              myEndpointProvider.init(rtcommConfigService.getProviderConfig(), initSuccess, initFailure);
+            if (typeof config.userid == "undefined" || RtcommConfigService.getProviderConfig().userid != ''){
+              myEndpointProvider.init(RtcommConfigService.getProviderConfig(), initSuccess, initFailure);
               endpointProviderInitialized = true;
             }
           }
@@ -652,9 +652,9 @@
       //	Registration related methods.
       register : function(userid) {
         if (endpointProviderInitialized == false){
-          rtcommConfigService.getProviderConfig().userid = userid;
+          RtcommConfigService.getProviderConfig().userid = userid;
 
-          myEndpointProvider.init(rtcommConfigService.getProviderConfig(), initSuccess, initFailure);
+          myEndpointProvider.init(RtcommConfigService.getProviderConfig(), initSuccess, initFailure);
           endpointProviderInitialized = true;
         }
         else
@@ -733,15 +733,15 @@
 
       setUserID : function(userID) {
         if ((typeof userID !== "undefined") && userID != ''){
-          rtcommConfigService.setProviderConfig({userid: userID});
-          myEndpointProvider.init(rtcommConfigService.getProviderConfig(), initSuccess, initFailure);
+          RtcommConfigService.setProviderConfig({userid: userID});
+          myEndpointProvider.init(RtcommConfigService.getProviderConfig(), initSuccess, initFailure);
         }
       },
 
       setPresenceTopic : function(presenceTopic) {
         if ((typeof presenceTopic !== "undefined") && presenceTopic != ''){
-          rtcommConfigService.setProviderConfig({presenceTopic : presenceTopic});
-          myEndpointProvider.init(rtcommConfigService.getProviderConfig(), initSuccess, initFailure);
+          RtcommConfigService.setProviderConfig({presenceTopic : presenceTopic});
+          myEndpointProvider.init(RtcommConfigService.getProviderConfig(), initSuccess, initFailure);
         }
       },
 
