@@ -12,7 +12,7 @@
 
   /**
    * This directive manages the chat portion of a session. The data model for chat
-   * is maintained in the rtcommService. This directive handles switching between
+   * is maintained in the RtcommService. This directive handles switching between
    * active endpoints.
    *
    * Here is the formate of the presenceData:
@@ -39,8 +39,8 @@
    *	                      			}
    *								]
    */
-  rtcommPresence.$inject=['rtcommService', '$log'];
-  function rtcommPresence(rtcommService, $log) {
+  rtcommPresence.$inject=['RtcommService', '$log'];
+  function rtcommPresence(RtcommService, $log) {
     return {
       restrict: 'E',
       templateUrl: "templates/rtcomm/rtcomm-presence.html",
@@ -79,8 +79,8 @@
         };
 
         $scope.onCallClick = function(calleeEndpointID){
-          var endpoint = rtcommService.getEndpoint();
-          rtcommService.setActiveEndpoint(endpoint.id);
+          var endpoint = RtcommService.getEndpoint();
+          RtcommService.setActiveEndpoint(endpoint.id);
 
           if ($scope.protocolList.chat == true)
             endpoint.chat.enable();
@@ -88,7 +88,7 @@
           if ($scope.protocolList.webrtc == true){
             endpoint.webrtc.enable(function(value, message) {
               if (!value) {
-                rtcommService.alert({type: 'danger', msg: message});
+                RtcommService.alert({type: 'danger', msg: message});
               }
             });
           }
@@ -98,8 +98,8 @@
         };
 
         $scope.$on('rtcomm::init', function (event, success, details) {
-          rtcommService.publishPresence();
-          var presenceMonitor = rtcommService.getPresenceMonitor();
+          RtcommService.publishPresence();
+          var presenceMonitor = RtcommService.getPresenceMonitor();
 
           presenceMonitor.on('updated', function(presenceData){
             $log.debug('<<------rtcommPresence: updated------>>');
