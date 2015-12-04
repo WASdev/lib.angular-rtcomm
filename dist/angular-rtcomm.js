@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.1 - 2015-10-26
+ * @version v1.0.1 - 2015-12-04
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -987,9 +987,29 @@ function rtcommRegister(RtcommService, $log) {
 		controller: ["$scope", function ($scope) {
 
 			$scope.nextAction = 'Register';
+			
+			$scope.reguserid = '';
+			
+			$scope.invalid = false;
+
+			var invalidCharacters = /(\$|#|\+|\/|\\)+/i; //Invalid characters for MQTT Topic Path
+			
+			//Watch for changes in reguserid 
+                        $scope.$watch('reguserid', function(){
+
+                                if($scope.reguserid.length < 1 || invalidCharacters.test($scope.reguserid)){
+
+                                        $scope.invalid = true;
+                                }
+                                else{
+                                        $scope.invalid = false;
+                                }
+                        });
+
 
 			$scope.onRegClick = function() {
-				if ($scope.nextAction === 'Register'){
+				if ($scope.nextAction === 'Register' && !invalidCharacters.test($scope.reguserid)){
+
 					$log.debug('Register: reguserid =' + $scope.reguserid);
 					RtcommService.register($scope.reguserid);
 				}
@@ -1009,7 +1029,7 @@ function rtcommRegister(RtcommService, $log) {
 					$scope.nextAction = 'Register';
 
 					if (details == 'destroyed')
-						$scope.reguserid = null;
+						$scope.reguserid = '';
 					else
 						$scope.reguserid = 'Init failed:' +  details;
 				}
@@ -1226,7 +1246,7 @@ function rtcommEndpointStatus(RtcommService, $log){
 
 			$scope.$on('session:alerting', function (event, eventObject) {
 				$log.debug('session:alerting received: endpointID = ' + eventObject.endpoint.id);
-				if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id){
+				if ($scope.epCtrlActiveEndpointUUID != eventObject.endpoint.id){
 					$scope.sessionState = 'session:alerting';
 					$scope.epCtrlRemoteEndpointID = eventObject.endpoint.getRemoteEndpointID();
 				}
@@ -1266,6 +1286,16 @@ function rtcommEndpointStatus(RtcommService, $log){
 				$scope.epCtrlRemoteEndpointID = null;
 				$scope.sessionState = 'session:stopped';
 			});
+
+			$scope.$on('rtcomm::init', function(event, success, details){
+
+				if(success == false){
+					$scope.sessionState = 'session:stopped';
+					$scope.epCtrlRemoteEndpointID = null;
+                                }
+                        });
+
+
 
 		}]
 	};
@@ -1342,29 +1372,30 @@ function rtcommChat(RtcommService, $log) {
 				bottom = flag;
 			}
 
-      if (chatPanel.length > 0) {
-        //Watch scroll events
-        chatPanel.bind('scroll', function(){
-          if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
-            scope.scrollToBottom(true);
-          } else {
-            scope.scrollToBottom(false);
-          }
-        });
-
-        //Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
-        scope.$watch('chats', function(){
-          if(bottom){
-            $log.debug('chatPanel is: ', chatPanel);
-            chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
-          } else {
-          //In this else, a notification could be sent
-          }
-        },true);
-      } else {
-        $log.warn('chatPanel not found: most likely you need to load jquery prior to angular');
-      }
-    }
+			if (chatPanel.length > 0) {
+				//Watch scroll events
+				chatPanel.bind('scroll', function(){
+					if(chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') ==  chatPanel.prop('scrollHeight')){
+						scope.scrollToBottom(true);
+					}
+					else {
+						scope.scrollToBottom(false);
+					}
+				});
+				//Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
+				scope.$watch('chats', function(){
+					if(bottom){
+						chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
+					}
+					else {
+						//In this else, a notification could be sent
+					}
+				},true);
+			} 
+			else {
+			        $log.warn('chatPanel not found: most likely you need to load jquery prior to angular');
+			}
+		}
 	};
 
 };
@@ -1496,6 +1527,7 @@ function RtcommAlertModalController($rootScope, $scope, RtcommService, $modal, $
 			templateUrl: 'templates/rtcomm/rtcomm-modal-alert.html',
 			controller: 'RtcommAlertModalInstanceController',
 			size: size,
+			backdrop: 'static',
 			resolve: {
 				caller: function () {
 					return $scope.caller;
@@ -1956,7 +1988,7 @@ angular.module('angular-rtcomm-ui').run(['$templateCache', function($templateCac
 
 
   $templateCache.put('templates/rtcomm/rtcomm-register.html',
-    "<div><div class=\"panel panel-primary\"><div class=\"input-group\"><input id=\"register-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Enter your ID here...\" type=\"text\" ng-model=\"reguserid\"><span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-register\" ng-click=\"onRegClick(reguserid)\" focusinput=\"true\">{{nextAction}}</button></span></div></div></div>"
+    "<div><div class=\"panel panel-primary\"><div class=\"input-group\"><input id=\"register-input\" type=\"text\" class=\"form-control input-sm\" placeholder=\"Enter your ID here...\" type=\"text\" ng-model=\"reguserid\" ng-disabled=\"(nextAction=='Unregister')\"><span class=\"input-group-btn\"><button class=\"btn btn-primary btn-sm\" id=\"btn-register\" ng-click=\"onRegClick(reguserid)\" ng-disabled=\"invalid\" focusinput=\"true\">{{nextAction}}</button></span></div></div></div>"
   );
 
 
