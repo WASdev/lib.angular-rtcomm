@@ -43,7 +43,6 @@
           rtcommTopicPath : "/rtcomm/",
           createEndpoint : false,
           appContext: 'default',
-          useSSL: false,
           userid: "",
           presence : {topic : ""}
       };
