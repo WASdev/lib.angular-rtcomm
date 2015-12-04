@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.1 - 2015-12-04
+ * @version v1.0.3 - 2015-12-04
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -76,7 +76,6 @@
           rtcommTopicPath : "/rtcomm/",
           createEndpoint : false,
           appContext: 'default',
-          useSSL: false,
           userid: "",
           presence : {topic : ""}
       };
