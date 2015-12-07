@@ -2,9 +2,9 @@
 	<div class="panel panel-primary">
   		<div class="input-group">
 	  		<input id="register-input" type="text" class="form-control input-sm"
-					placeholder="Enter your ID here..." type="text" ng-model="reguserid"></input>
+					placeholder="Enter your ID here..." type="text" ng-model="reguserid" ng-disabled="(nextAction=='Unregister')"></input>
 				<span class="input-group-btn">
-					<button class="btn btn-primary btn-sm" id="btn-register" ng-click="onRegClick(reguserid)" focusInput=true>{{nextAction}}</button>
+					<button class="btn btn-primary btn-sm" id="btn-register" ng-click="onRegClick(reguserid)" ng-disabled="invalid" focusInput=true>{{nextAction}}</button>
 				</span>
 		</div>
 	</div>

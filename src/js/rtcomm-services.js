@@ -43,7 +43,6 @@
           rtcommTopicPath : "/rtcomm/",
           createEndpoint : false,
           appContext: 'default',
-          useSSL: false,
           userid: "",
           presence : {topic : ""}
       };
@@ -71,7 +70,8 @@
         providerConfig.appContext = (typeof config.appContext !== "undefined")? config.appContext : providerConfig.appContext;
         providerConfig.presence.topic = (typeof config.presenceTopic !== "undefined")? config.presenceTopic : providerConfig.presence.topic;
 
-        providerConfig.useSSL = (typeof config.useSSL !== "undefined")? config.useSSL : providerConfig.useSSL;
+        // We no longer need to set 'useSSL'  This will be set based on how page is served.
+//        providerConfig.useSSL = (typeof config.useSSL !== "undefined")? config.useSSL : providerConfig.useSSL;
         //	Protocol related booleans
         endpointConfig.chat= (typeof config.chat!== "undefined")? config.chat: endpointConfig.chat;
         endpointConfig.webrtc = (typeof config.webrtc!== "undefined")? config.webrtc: endpointConfig.webrtc;
