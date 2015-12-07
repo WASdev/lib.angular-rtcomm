@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.3 - 2015-12-04
+ * @version v1.0.3 - 2015-12-07
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -103,7 +103,8 @@
         providerConfig.appContext = (typeof config.appContext !== "undefined")? config.appContext : providerConfig.appContext;
         providerConfig.presence.topic = (typeof config.presenceTopic !== "undefined")? config.presenceTopic : providerConfig.presence.topic;
 
-        providerConfig.useSSL = (typeof config.useSSL !== "undefined")? config.useSSL : providerConfig.useSSL;
+        // We no longer need to set 'useSSL'  This will be set based on how page is served.
+//        providerConfig.useSSL = (typeof config.useSSL !== "undefined")? config.useSSL : providerConfig.useSSL;
         //	Protocol related booleans
         endpointConfig.chat= (typeof config.chat!== "undefined")? config.chat: endpointConfig.chat;
         endpointConfig.webrtc = (typeof config.webrtc!== "undefined")? config.webrtc: endpointConfig.webrtc;
