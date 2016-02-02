@@ -79,8 +79,8 @@
         broadcastAudio = (typeof config.broadcastAudio !== "undefined")? config.broadcastAudio: broadcastAudio;
         broadcastVideo = (typeof config.broadcastVideo !== "undefined")? config.broadcastVideo: broadcastVideo;
 
-        ringbacktone = (typeof config.ringbacktone !== "undefined")? config.ringbacktone: null;
-        ringtone = (typeof config.ringtone !== "undefined")? config.ringtone : null;
+        ringbacktone = (typeof config.ringbacktone !== "undefined")? config.ringbacktone: ringbacktone;
+        ringtone = (typeof config.ringtone !== "undefined")? config.ringtone : ringtone;
 
         rtcommDebug = (typeof config.rtcommDebug !== "undefined")? config.rtcommDebug: rtcommDebug;
 
@@ -146,9 +146,11 @@
       var mediaConfig = {
           ringbacktone: RtcommConfigService.getRingBackTone(),
           ringtone: RtcommConfigService.getRingTone(),
-          broadcast : {
-            audio : RtcommConfigService.getBroadcastAudio(),
-            video : RtcommConfigService.getBroadcastVideo()
+          webrtcConfig: {
+            broadcast : {
+              audio : RtcommConfigService.getBroadcastAudio(),
+              video : RtcommConfigService.getBroadcastVideo()
+            }
           },
           webrtc : RtcommConfigService.getWebRTCEnabled(),
           chat : RtcommConfigService.getChatEnabled(),
