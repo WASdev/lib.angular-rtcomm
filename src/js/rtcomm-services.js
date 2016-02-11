@@ -61,7 +61,8 @@
       var rtcommDebug = "DEBUG";
       var ringtone = null;
       var ringbacktone = null;
-
+      var trickleICE = true;
+      
       var setConfig = function(config){
         providerConfig.server = (typeof config.server !== "undefined")? config.server : providerConfig.server;
         providerConfig.port = (typeof config.port !== "undefined")? config.port : providerConfig.port;
@@ -78,6 +79,7 @@
 
         broadcastAudio = (typeof config.broadcastAudio !== "undefined")? config.broadcastAudio: broadcastAudio;
         broadcastVideo = (typeof config.broadcastVideo !== "undefined")? config.broadcastVideo: broadcastVideo;
+        trickleICE = (typeof config.trickleICE !== "undefined")? config.trickleICE: trickleICE;
 
         ringbacktone = (typeof config.ringbacktone !== "undefined")? config.ringbacktone: ringbacktone;
         ringtone = (typeof config.ringtone !== "undefined")? config.ringtone : ringtone;
@@ -112,7 +114,9 @@
 
         getRtcommDebug: function(){return rtcommDebug;},
 
-        isRtcommDisabled : function(){return _disableRtcomm;}
+        isRtcommDisabled : function(){return _disableRtcomm;},
+        
+        getTrickleICE: function(){return trickleICE;}
       };
   };
 
@@ -150,7 +154,8 @@
             broadcast : {
               audio : RtcommConfigService.getBroadcastAudio(),
               video : RtcommConfigService.getBroadcastVideo()
-            }
+            },
+            trickleICE: RtcommConfigService.getTrickleICE()
           },
           webrtc : RtcommConfigService.getWebRTCEnabled(),
           chat : RtcommConfigService.getChatEnabled(),
@@ -272,6 +277,8 @@
           $rootScope.$digest();
 
       },
+      
+      'session:connecting' : callback,
 
       // These are all the WebRTC related events.
       'webrtc:connected' : function(eventObject) {
@@ -436,7 +443,9 @@
       for (var index = 0; index < sessions.length; index++) {
         if(sessions[index].endpointUUID === endpointUUID){
 
-          _getEndpoint(endpointUUID).destroy();
+          var endpoint = _getEndpoint(endpointUUID);
+          if(typeof endpoint !== 'undefined')
+            endpoint.destroy();
 
           //	Remove the disconnected endpoint from the list.
           sessions.splice(index, 1);
