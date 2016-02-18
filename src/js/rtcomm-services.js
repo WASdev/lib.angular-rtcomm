@@ -62,7 +62,7 @@
       var ringtone = null;
       var ringbacktone = null;
       var trickleICE = true;
-      
+
       var setConfig = function(config){
         providerConfig.server = (typeof config.server !== "undefined")? config.server : providerConfig.server;
         providerConfig.port = (typeof config.port !== "undefined")? config.port : providerConfig.port;
@@ -115,7 +115,7 @@
         getRtcommDebug: function(){return rtcommDebug;},
 
         isRtcommDisabled : function(){return _disableRtcomm;},
-        
+
         getTrickleICE: function(){return trickleICE;}
       };
   };
@@ -165,7 +165,8 @@
     };
 
     myEndpointProvider.on('reset', function(event_object) {
-      // Should have a reason.
+      //The Endpoint provider is destroyed on reset
+      endpointProviderInitialized = false;
       _alert({type:'danger', msg: event_object.reason});
     });
 
@@ -277,7 +278,7 @@
           $rootScope.$digest();
 
       },
-      
+
       'session:connecting' : callback,
 
       // These are all the WebRTC related events.
