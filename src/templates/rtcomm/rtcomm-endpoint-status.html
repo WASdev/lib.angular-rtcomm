@@ -7,5 +7,7 @@
 		<span ng-switch-when="session:ringing">Call to {{epCtrlRemoteEndpointID}} is ringing</span>
 		<span ng-switch-when="session:queued">Waiting in queue at: {{queueCount}}</span>
 		<span ng-switch-when="session:failed">Call failed with reason: {{failureReason}}</span>
+		<span ng-switch-when="session:connecting">Connecting to {{epCtrlRemoteEndpointID}} ...</span>
+
 	</p>
 </div>

@@ -6,7 +6,7 @@
 
 angular
   .module('angular-rtcomm-ui', [
-    'ui.bootstrap', 
+    'ui.bootstrap',
     'angular-rtcomm-service'])
   .directive('rtcommSessionManager', rtcommSessionManager)
   .directive('rtcommRegister', rtcommRegister)
@@ -96,14 +96,14 @@ function rtcommRegister(RtcommService, $log) {
 		controller: function ($scope) {
 
 			$scope.nextAction = 'Register';
-			
+
 			$scope.reguserid = '';
-			
+
 			$scope.invalid = false;
 
 			var invalidCharacters = /(\$|#|\+|\/|\\)+/i; //Invalid characters for MQTT Topic Path
-			
-			//Watch for changes in reguserid 
+
+			//Watch for changes in reguserid
                         $scope.$watch('reguserid', function(){
 
                                 if($scope.reguserid.length < 1 || invalidCharacters.test($scope.reguserid)){
@@ -361,6 +361,15 @@ function rtcommEndpointStatus(RtcommService, $log){
 				}
 			});
 
+      $scope.$on('session:connecting', function (event, eventObject) {
+        $log.debug('session:connecting received: endpointID = ' + eventObject.endpoint.id);
+        // if ($scope.epCtrlActiveEndpointUUID != eventObject.endpoint.id){
+          $scope.sessionState = 'session:connecting';
+          $scope.epCtrlRemoteEndpointID = eventObject.endpoint.getRemoteEndpointID();
+        // }
+      });
+
+
 			$scope.$on('session:queued', function (event, eventObject) {
 				$log.debug('session:queued received: endpointID = ' + eventObject.endpoint.id);
 				if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id){
@@ -397,7 +406,12 @@ function rtcommEndpointStatus(RtcommService, $log){
 			});
 
 			$scope.$on('rtcomm::init', function(event, success, details){
-
+        if(success === true){
+          $scope.epCtrlActiveEndpointUUID = RtcommService.getActiveEndpoint();
+          $scope.epCtrlRemoteEndpointID = RtcommService.getRemoteEndpoint($scope.epCtrlActiveEndpointUUID);
+          $scope.sessionState = RtcommService.getSessionState($scope.epCtrlActiveEndpointUUID);
+          $scope.failureReason = '';
+        }
 				if(success == false){
 					$scope.sessionState = 'session:stopped';
 					$scope.epCtrlRemoteEndpointID = null;
@@ -500,7 +514,7 @@ function rtcommChat(RtcommService, $log) {
 						//In this else, a notification could be sent
 					}
 				},true);
-			} 
+			}
 			else {
 			        $log.warn('chatPanel not found: most likely you need to load jquery prior to angular');
 			}

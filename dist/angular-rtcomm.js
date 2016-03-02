@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.3 - 2016-02-02
+ * @version v1.0.3 - 2016-02-18
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -94,6 +94,7 @@
       var rtcommDebug = "DEBUG";
       var ringtone = null;
       var ringbacktone = null;
+      var trickleICE = true;
 
       var setConfig = function(config){
         providerConfig.server = (typeof config.server !== "undefined")? config.server : providerConfig.server;
@@ -111,6 +112,7 @@
 
         broadcastAudio = (typeof config.broadcastAudio !== "undefined")? config.broadcastAudio: broadcastAudio;
         broadcastVideo = (typeof config.broadcastVideo !== "undefined")? config.broadcastVideo: broadcastVideo;
+        trickleICE = (typeof config.trickleICE !== "undefined")? config.trickleICE: trickleICE;
 
         ringbacktone = (typeof config.ringbacktone !== "undefined")? config.ringbacktone: ringbacktone;
         ringtone = (typeof config.ringtone !== "undefined")? config.ringtone : ringtone;
@@ -145,7 +147,9 @@
 
         getRtcommDebug: function(){return rtcommDebug;},
 
-        isRtcommDisabled : function(){return _disableRtcomm;}
+        isRtcommDisabled : function(){return _disableRtcomm;},
+
+        getTrickleICE: function(){return trickleICE;}
       };
   };
 
@@ -183,7 +187,8 @@
             broadcast : {
               audio : RtcommConfigService.getBroadcastAudio(),
               video : RtcommConfigService.getBroadcastVideo()
-            }
+            },
+            trickleICE: RtcommConfigService.getTrickleICE()
           },
           webrtc : RtcommConfigService.getWebRTCEnabled(),
           chat : RtcommConfigService.getChatEnabled(),
@@ -193,7 +198,8 @@
     };
 
     myEndpointProvider.on('reset', function(event_object) {
-      // Should have a reason.
+      //The Endpoint provider is destroyed on reset
+      endpointProviderInitialized = false;
       _alert({type:'danger', msg: event_object.reason});
     });
 
@@ -305,6 +311,8 @@
           $rootScope.$digest();
 
       },
+
+      'session:connecting' : callback,
 
       // These are all the WebRTC related events.
       'webrtc:connected' : function(eventObject) {
@@ -469,7 +477,9 @@
       for (var index = 0; index < sessions.length; index++) {
         if(sessions[index].endpointUUID === endpointUUID){
 
-          _getEndpoint(endpointUUID).destroy();
+          var endpoint = _getEndpoint(endpointUUID);
+          if(typeof endpoint !== 'undefined')
+            endpoint.destroy();
 
           //	Remove the disconnected endpoint from the list.
           sessions.splice(index, 1);
@@ -899,7 +909,7 @@
 
 angular
   .module('angular-rtcomm-ui', [
-    'ui.bootstrap', 
+    'ui.bootstrap',
     'angular-rtcomm-service'])
   .directive('rtcommSessionManager', rtcommSessionManager)
   .directive('rtcommRegister', rtcommRegister)
@@ -989,14 +999,14 @@ function rtcommRegister(RtcommService, $log) {
 		controller: ["$scope", function ($scope) {
 
 			$scope.nextAction = 'Register';
-			
+
 			$scope.reguserid = '';
-			
+
 			$scope.invalid = false;
 
 			var invalidCharacters = /(\$|#|\+|\/|\\)+/i; //Invalid characters for MQTT Topic Path
-			
-			//Watch for changes in reguserid 
+
+			//Watch for changes in reguserid
                         $scope.$watch('reguserid', function(){
 
                                 if($scope.reguserid.length < 1 || invalidCharacters.test($scope.reguserid)){
@@ -1254,6 +1264,15 @@ function rtcommEndpointStatus(RtcommService, $log){
 				}
 			});
 
+      $scope.$on('session:connecting', function (event, eventObject) {
+        $log.debug('session:connecting received: endpointID = ' + eventObject.endpoint.id);
+        // if ($scope.epCtrlActiveEndpointUUID != eventObject.endpoint.id){
+          $scope.sessionState = 'session:connecting';
+          $scope.epCtrlRemoteEndpointID = eventObject.endpoint.getRemoteEndpointID();
+        // }
+      });
+
+
 			$scope.$on('session:queued', function (event, eventObject) {
 				$log.debug('session:queued received: endpointID = ' + eventObject.endpoint.id);
 				if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id){
@@ -1290,7 +1309,12 @@ function rtcommEndpointStatus(RtcommService, $log){
 			});
 
 			$scope.$on('rtcomm::init', function(event, success, details){
-
+        if(success === true){
+          $scope.epCtrlActiveEndpointUUID = RtcommService.getActiveEndpoint();
+          $scope.epCtrlRemoteEndpointID = RtcommService.getRemoteEndpoint($scope.epCtrlActiveEndpointUUID);
+          $scope.sessionState = RtcommService.getSessionState($scope.epCtrlActiveEndpointUUID);
+          $scope.failureReason = '';
+        }
 				if(success == false){
 					$scope.sessionState = 'session:stopped';
 					$scope.epCtrlRemoteEndpointID = null;
@@ -1393,7 +1417,7 @@ function rtcommChat(RtcommService, $log) {
 						//In this else, a notification could be sent
 					}
 				},true);
-			} 
+			}
 			else {
 			        $log.warn('chatPanel not found: most likely you need to load jquery prior to angular');
 			}
@@ -1965,7 +1989,7 @@ angular.module('angular-rtcomm-ui').run(['$templateCache', function($templateCac
 
 
   $templateCache.put('templates/rtcomm/rtcomm-endpoint-status.html',
-    "<div class=\"endpoint-status\"><p class=\"endpoint-controls-title navbar-text pull-right\" ng-switch on=\"sessionState\"><span ng-switch-when=\"session:started\">Connected to {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:stopped\">No active sessions, waiting...</span> <span ng-switch-when=\"session:alerting\">Inbound call from {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:trying\">Attempting to call {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:ringing\">Call to {{epCtrlRemoteEndpointID}} is ringing</span> <span ng-switch-when=\"session:queued\">Waiting in queue at: {{queueCount}}</span> <span ng-switch-when=\"session:failed\">Call failed with reason: {{failureReason}}</span></p></div>"
+    "<div class=\"endpoint-status\"><p class=\"endpoint-controls-title navbar-text pull-right\" ng-switch on=\"sessionState\"><span ng-switch-when=\"session:started\">Connected to {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:stopped\">No active sessions, waiting...</span> <span ng-switch-when=\"session:alerting\">Inbound call from {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:trying\">Attempting to call {{epCtrlRemoteEndpointID}}</span> <span ng-switch-when=\"session:ringing\">Call to {{epCtrlRemoteEndpointID}} is ringing</span> <span ng-switch-when=\"session:queued\">Waiting in queue at: {{queueCount}}</span> <span ng-switch-when=\"session:failed\">Call failed with reason: {{failureReason}}</span> <span ng-switch-when=\"session:connecting\">Connecting to {{epCtrlRemoteEndpointID}} ...</span></p></div>"
   );
 
 
