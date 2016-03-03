@@ -16,7 +16,8 @@
 		    requireBase: false});
     }) */
     .factory('RtcommConfigService', RtcommConfigService)
-    .factory('RtcommService', RtcommService);
+    .factory('RtcommService', RtcommService)
+    .constant('rtcomm', rtcomm);
     /**
      *
      */
@@ -120,8 +121,8 @@
       };
   };
 
-  RtcommService.$inject=['$rootScope', '$log', '$http', 'RtcommConfigService'];
-  function RtcommService($rootScope, $log, $http, RtcommConfigService) {
+  RtcommService.$inject=['$rootScope', '$log', '$http', 'RtcommConfigService', 'rtcomm'];
+  function RtcommService($rootScope, $log, $http, RtcommConfigService, rtcomm) {
       /** Setup the endpoint provider first **/
     var myEndpointProvider = new rtcomm.EndpointProvider();
     var endpointProviderInitialized = false;
