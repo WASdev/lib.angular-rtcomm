@@ -1,4 +1,20 @@
 /**
+ * (C) Copyright IBM Corporation 2016.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
  * This directive manages the WebRTC video screen, including both the self view and the remote view. It
  * also takes care of switching state between endpoints based on which endpoint is "actively" being viewed.
  */
@@ -16,7 +32,7 @@
             restrict: 'E',
             templateUrl: 'templates/rtcomm/rtcomm-video.html',
             controller: VideoController,
-            controllerAs: 'vm',
+            controllerAs: 'videoVM',
             bindToController: true
         };
 
@@ -25,11 +41,12 @@
 
     VideoController.$inject = ['RtcommService', '$scope', '$log'];
 
-    /* @ngInject */
+    // /* @ngInject */
     function VideoController(RtcommService, $scope, $log) {
         var vm = this;
+        $log.debug('VideoController Starting');
         vm.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
-        vm.init = function(selfView, remoteView) {
+        $scope.init = function(selfView, remoteView) {
             RtcommService.setViewSelector(selfView, remoteView);
 
             var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
@@ -48,7 +65,7 @@
             RtcommService.setVideoView(endpointUUID);
             vm.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
         });
-
+        //
         $scope.$on('noEndpointActivated', function(event) {
             vm.avConnected = false;
         });

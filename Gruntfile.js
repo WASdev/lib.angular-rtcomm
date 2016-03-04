@@ -5,7 +5,7 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    
+
     meta: {
       banner: '/**\n' +
       ' * Copyright 2014 IBM Corp.\n' +
@@ -28,23 +28,23 @@ module.exports = function(grunt) {
       ' * @author <%= pkg.author %>\n' +
       ' */\n'
     },
-    
+
     dirs: {
       src: 'src',
       dest: 'dist'
     },
-    
+
     concat: {
       options: {
         banner: '<%= meta.banner %>'
       },
       dist: {
 //        src: ['<%= dirs.src %>/*.js', '<%= dirs.src %>/**/*.js'],
-        src: ['<%= dirs.src %>/js/angular-rtcomm.js', '<%= dirs.src %>/js/rtcomm-services.js', '<%= dirs.src %>/js/rtcomm-directives.js', '<%= dirs.src %>/js/rtcomm-presence.js'],
+        src: ['<%= dirs.src %>/js/**/*.module.js', '<%= dirs.src %>/js/**/*.js'],
         dest: '<%= dirs.dest %>/<%= pkg.name %>.js'
       }
     },
-    
+
     copy: {
     	main: {
     		expand: true,
@@ -65,7 +65,7 @@ module.exports = function(grunt) {
     	    }]
     	  }
     },
-    
+
     ngAnnotate: {
         dist: {
           files: {
@@ -107,14 +107,14 @@ module.exports = function(grunt) {
         }
       }
     },
-    
+
      watch: {
       dev: {
         files: ['<%= dirs.src %>/**'],
         tasks: ['build']
       },
     },
-    
+
     ngtemplates:  {
         'angular-rtcomm-ui': {
     	    cwd:      '<%= dirs.src %>',

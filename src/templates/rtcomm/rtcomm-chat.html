@@ -6,10 +6,10 @@
 
 		<div class="panel-body">
 			<ul class="chat">
-				<li class="right clearfix" ng-repeat="chat in chats">
+				<li class="right clearfix" ng-repeat="chat in chatVM.chats">
 					<div id={{$index}} class="header">
-						<strong class="primary-font">{{chat.name}}</strong> 
-						<small class="pull-right text-muted"> 
+						<strong class="primary-font">{{chat.name}}</strong>
+						<small class="pull-right text-muted">
 							{{chat.time | date:'HH:mm:ss'}}
 						</small>
 					</div>
@@ -20,9 +20,9 @@
 		<div class="panel-footer">
 			<div class="input-group">
 				<input id="chat-input" type="text" class="form-control input-sm"
-					placeholder="Type your message here..." type="text" ng-model="message" ng-keypress="keySendMessage($event)"> 
+					placeholder="Type your message here..." type="text" ng-model="chatVM.message" ng-keypress="chatVM.keySendMessage($event)">
 				<span class="input-group-btn">
-					<button class="btn btn-primary btn-sm" id="btn-chat" ng-click="sendMessage()" focusInput=true ng-disabled="(chatActiveEndpointUUID == null)">Send</button>
+					<button class="btn btn-primary btn-sm" id="btn-chat" ng-click="chatVM.sendMessage()" focusInput=true ng-disabled="(chatVM.chatActiveEndpointUUID == null)">Send</button>
 				</span>
 			</div>
 		</div>

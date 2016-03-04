@@ -1,13 +1,13 @@
 <div class="endpoint-status">
-	<p class="endpoint-controls-title navbar-text pull-right" ng-switch on="sessionState">
-		<span ng-switch-when="session:started">Connected to {{epCtrlRemoteEndpointID}}</span>
+	<p class="endpoint-controls-title navbar-text pull-right" ng-switch on="endpointStatusVM.sessionState">
+		<span ng-switch-when="session:started">Connected to {{endpointStatusVM.epCtrlRemoteEndpointID}}</span>
 		<span ng-switch-when="session:stopped">No active sessions, waiting...</span>
-		<span ng-switch-when="session:alerting">Inbound call from {{epCtrlRemoteEndpointID}}</span>
-		<span ng-switch-when="session:trying">Attempting to call {{epCtrlRemoteEndpointID}}</span>
-		<span ng-switch-when="session:ringing">Call to {{epCtrlRemoteEndpointID}} is ringing</span>
-		<span ng-switch-when="session:queued">Waiting in queue at: {{queueCount}}</span>
-		<span ng-switch-when="session:failed">Call failed with reason: {{failureReason}}</span>
-		<span ng-switch-when="session:connecting">Connecting to {{epCtrlRemoteEndpointID}} ...</span>
+		<span ng-switch-when="session:alerting">Inbound call from {{endpointStatusVM.epCtrlRemoteEndpointID}}</span>
+		<span ng-switch-when="session:trying">Attempting to call {{endpointStatusVM.epCtrlRemoteEndpointID}}</span>
+		<span ng-switch-when="session:ringing">Call to {{endpointStatusVM.epCtrlRemoteEndpointID}} is ringing</span>
+		<span ng-switch-when="session:queued">Waiting in queue at: {{endpointStatusVM.queueCount}}</span>
+		<span ng-switch-when="session:failed">Call failed with reason: {{endpointStatusVM.failureReason}}</span>
+		<span ng-switch-when="session:connecting">Connecting to {{endpointStatusVM.epCtrlRemoteEndpointID}} ...</span>
 
 	</p>
 </div>

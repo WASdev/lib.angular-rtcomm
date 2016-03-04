@@ -10,9 +10,13 @@ describe('Unit Testing: Register directive', function(){
     }]
   ));
 
-  it('chat directive should be available', function(){
+  it('directive should compile', function(){
     var element = $compile('<rtcomm-register></rtcomm-register>')($rootScope);
     $rootScope.$digest();
     expect(element.html()).to.include('id="register-input"');
   });
+
+  it('should register')
+
+
 })
