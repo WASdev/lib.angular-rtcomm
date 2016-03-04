@@ -90,10 +90,5 @@
 
             vm.updatePresence();
         });
-        activate();
-
-        function activate() {
-
-        }
     }
 })();

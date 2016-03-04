@@ -1300,7 +1300,7 @@ angular
          * queuePublishedPresence - will add to the presence document information about what queues this person joins.
          * queueFilter - If defined, this specifies which queues should be joined. All others will be ignored.
          */
-        vm.init = function(autoJoinQueues, queuePublishPresence, queueFilter) {
+        $scope.init = function(autoJoinQueues, queuePublishPresence, queueFilter) {
             $log.debug('rtcommQueues: autoJoinQueues = ' + autoJoinQueues);
             vm.autoJoinQueues = autoJoinQueues;
             vm.queuePublishPresence = queuePublishPresence;
@@ -1361,7 +1361,7 @@ angular
                     if (vm.rQueues[index].active === true) {
                         vm.queuePresenceData.push({
                             'name': "queue",
-                            'value': $scope.rQueues[index].endpointID
+                            'value': vm.rQueues[index].endpointID
                         });
                     }
                 }
@@ -1626,21 +1626,20 @@ angular
 
     /* @ngInject */
     function RtcommEndpointController(RtcommService, $http, $rootScope, $scope, $log) {
-        var vm = this;
-        vm.epCtrlActiveEndpointUUID = RtcommService.getActiveEndpoint();
-        vm.epCtrlAVConnected = RtcommService.isWebrtcConnected(vm.epCtrlActiveEndpointUUID);
-        vm.sessionState = RtcommService.getSessionState(vm.epCtrlActiveEndpointUUID);
+        $scope.epCtrlActiveEndpointUUID = RtcommService.getActiveEndpoint();
+        $scope.epCtrlAVConnected = RtcommService.isWebrtcConnected($scope.epCtrlActiveEndpointUUID);
+        $scope.sessionState = RtcommService.getSessionState($scope.epCtrlActiveEndpointUUID);
 
-        vm.disconnect = function() {
-            $log.debug('Disconnecting call for endpoint: ' + vm.epCtrlActiveEndpointUUID);
-            RtcommService.getEndpoint(vm.epCtrlActiveEndpointUUID).disconnect();
+        $scope.disconnect = function() {
+            $log.debug('Disconnecting call for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
+            RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).disconnect();
         };
 
-        vm.toggleAV = function() {
-            $log.debug('Enable AV for endpoint: ' + vm.epCtrlActiveEndpointUUID);
+        $scope.toggleAV = function() {
+            $log.debug('Enable AV for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
 
-            if (vm.epCtrlAVConnected == false) {
-                RtcommService.getEndpoint(vm.epCtrlActiveEndpointUUID).webrtc.enable(function(value, message) {
+            if ($scope.epCtrlAVConnected == false) {
+                RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).webrtc.enable(function(value, message) {
                     if (!value) {
                         $log.debug('Enable failed: ', message);
                         RtcommService.alert({
@@ -1650,50 +1649,50 @@ angular
                     }
                 });
             } else {
-                $log.debug('Disable AV for endpoint: ' + vm.epCtrlActiveEndpointUUID);
-                RtcommService.getEndpoint(vm.epCtrlActiveEndpointUUID).webrtc.disable();
+                $log.debug('Disable AV for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
+                RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).webrtc.disable();
             }
         };
 
         $scope.$on('session:started', function(event, eventObject) {
             $log.debug('session:started received: endpointID = ' + eventObject.endpoint.id);
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
-                vm.sessionState = 'session:started';
+            if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
+                $scope.sessionState = 'session:started';
             }
         });
 
         $scope.$on('session:stopped', function(event, eventObject) {
             $log.debug('session:stopped received: endpointID = ' + eventObject.endpoint.id);
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
-                vm.sessionState = 'session:stopped';
+            if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
+                $scope.sessionState = 'session:stopped';
             }
         });
 
         $scope.$on('session:failed', function(event, eventObject) {
             $log.debug('session:failed received: endpointID = ' + eventObject.endpoint.id);
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
-                vm.sessionState = 'session:failed';
+            if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
+                $scope.sessionState = 'session:failed';
             }
         });
 
         $scope.$on('webrtc:connected', function(event, eventObject) {
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
-                vm.epCtrlAVConnected = true;
+            if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
+                $scope.epCtrlAVConnected = true;
         });
 
         $scope.$on('webrtc:disconnected', function(event, eventObject) {
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
-                vm.epCtrlAVConnected = false;
+            if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
+                $scope.epCtrlAVConnected = false;
         });
 
 
         $scope.$on('endpointActivated', function(event, endpointUUID) {
-            vm.epCtrlActiveEndpointUUID = endpointUUID;
-            vm.epCtrlAVConnected = RtcommService.isWebrtcConnected(endpointUUID);
+            $scope.epCtrlActiveEndpointUUID = endpointUUID;
+            $scope.epCtrlAVConnected = RtcommService.isWebrtcConnected(endpointUUID);
         });
 
         $scope.$on('noEndpointActivated', function(event) {
-            vm.epCtrlAVConnected = false;
+            $scope.epCtrlAVConnected = false;
         });
         activate();
 
@@ -2029,10 +2028,10 @@ angular
         return directive;
     }
 
-    IFrameController.$inject = ['RtcommService', '$scope', '$log'];
+    IFrameController.$inject = ['RtcommService', '$sce', '$location', '$window','$scope', '$log'];
 
     /* @ngInject */
-    function IFrameController(RtcommService, $scope, $log) {
+    function IFrameController(RtcommService, $sce, $location, $window, $scope, $log) {
         var vm = this;
         vm.iframeActiveEndpointUUID = RtcommService.getActiveEndpoint();
         vm.iframeURL = null;
@@ -2043,7 +2042,7 @@ angular
          * syncSourcing means you a providing the URL source but no UI. Typically used in
          * customer/agent scenarios.
          */
-        vm.init = function(syncSource) {
+        $scope.init = function(syncSource) {
             if (syncSource == true) {
                 vm.syncSource = true;
                 vm.initiframeURL = $location.absUrl(); // init to current URL
@@ -2433,7 +2432,7 @@ angular.module('angular-rtcomm-ui').run(['$templateCache', function($templateCac
 
 
   $templateCache.put('templates/rtcomm/rtcomm-iframe.html',
-    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-link\"></span> URL Sharing</div><div class=\"rtcomm-iframe\"><iframe width=\"100%\" height=\"100%\" ng-src=\"{{iframeURL}}\"></iframe></div><div class=\"row\"><div class=\"col-lg-2\"><button id=\"btnBackward\" class=\"btn btn-primary\" ng-click=\"backward()\" focusinput=\"true\" ng-disabled=\"(iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-left\" aria-hidden=\"true\" aria-label=\"Backward\"></span> Backward</button></div><div class=\"col-lg-2\"><button id=\"btnForward\" class=\"btn btn-primary\" ng-click=\"forward()\" ng-disabled=\"(iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-right\" aria-hidden=\"true\" aria-label=\"Forward\"></span> Forward</button></div><div class=\"col-lg-8\"><div class=\"input-group\"><input id=\"setUrl\" type=\"text\" class=\"form-control\" type=\"text\" ng-model=\"newUrl\"><span class=\"input-group-btn\"><button class=\"btn btn-primary\" id=\"btn-send-url\" ng-click=\"setURL(newUrl)\" focusinput=\"true\">Set URL</button></span></div><!-- /input-group --></div></div></div></div>"
+    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-link\"></span> URL Sharing</div><div class=\"rtcomm-iframe\"><iframe width=\"100%\" height=\"100%\" ng-src=\"{{iframeVM.iframeURL}}\"></iframe></div><div class=\"row\"><div class=\"col-lg-2\"><button id=\"btnBackward\" class=\"btn btn-primary\" ng-click=\"iframeVM.backward()\" focusinput=\"true\" ng-disabled=\"(iframeVM.iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-left\" aria-hidden=\"true\" aria-label=\"Backward\"></span> Backward</button></div><div class=\"col-lg-2\"><button id=\"btnForward\" class=\"btn btn-primary\" ng-click=\"iframeVM.forward()\" ng-disabled=\"(iframeVM.iframeVM.iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-right\" aria-hidden=\"true\" aria-label=\"Forward\"></span> Forward</button></div><div class=\"col-lg-8\"><div class=\"input-group\"><input id=\"setUrl\" type=\"text\" class=\"form-control\" type=\"text\" ng-model=\"iframeVM.newUrl\"><span class=\"input-group-btn\"><button class=\"btn btn-primary\" id=\"btn-send-url\" ng-click=\"iframeVM.setURL(newUrl)\" focusinput=\"true\">Set URL</button></span></div><!-- /input-group --></div></div></div></div>"
   );
 
 
@@ -2448,7 +2447,7 @@ angular.module('angular-rtcomm-ui').run(['$templateCache', function($templateCac
 
 
   $templateCache.put('templates/rtcomm/rtcomm-queues.html',
-    "<div><div class=\"panel panel-primary\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-sort-by-attributes-alt\"></span> Queues</div><div class=\"queueContainer\"><button type=\"button\" ng-class=\"{'btn btn-primary btn-default btn-block': queue.active, 'btn btn-default btn-default btn-block': !queue.active}\" ng-repeat=\"queue in rQueues\" ng-click=\"onQueueClick(queue)\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"{{queue.description}}\">{{queue.active ? 'Leave' : 'Join'}} {{queue.endpointID}}</button></div></div></div>"
+    "<div><div class=\"panel panel-primary\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-sort-by-attributes-alt\"></span> Queues</div><div class=\"queueContainer\"><button type=\"button\" ng-class=\"{'btn btn-primary btn-default btn-block': queue.active, 'btn btn-default btn-default btn-block': !queue.active}\" ng-repeat=\"queue in queuesVM.rQueues\" ng-click=\"queuesVM.onQueueClick(queue)\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"{{queue.description}}\">{{queue.active ? 'Leave' : 'Join'}} {{queue.endpointID}}</button></div></div></div>"
   );
 
 

@@ -60,7 +60,7 @@
          * queuePublishedPresence - will add to the presence document information about what queues this person joins.
          * queueFilter - If defined, this specifies which queues should be joined. All others will be ignored.
          */
-        vm.init = function(autoJoinQueues, queuePublishPresence, queueFilter) {
+        $scope.init = function(autoJoinQueues, queuePublishPresence, queueFilter) {
             $log.debug('rtcommQueues: autoJoinQueues = ' + autoJoinQueues);
             vm.autoJoinQueues = autoJoinQueues;
             vm.queuePublishPresence = queuePublishPresence;
@@ -121,7 +121,7 @@
                     if (vm.rQueues[index].active === true) {
                         vm.queuePresenceData.push({
                             'name': "queue",
-                            'value': $scope.rQueues[index].endpointID
+                            'value': vm.rQueues[index].endpointID
                         });
                     }
                 }
@@ -158,11 +158,5 @@
             }
         });
 
-
-        activate();
-
-        function activate() {
-
-        }
     }
 })();

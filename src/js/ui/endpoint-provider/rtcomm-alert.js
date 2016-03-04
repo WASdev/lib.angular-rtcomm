@@ -49,10 +49,5 @@
         $scope.$on('rtcomm::alert', function(event, eventObject) {
           vm.addAlert(eventObject);
         });
-        activate();
-
-        function activate() {
-
-        }
     }
 })();

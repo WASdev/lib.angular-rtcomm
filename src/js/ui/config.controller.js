@@ -80,10 +80,5 @@
                 $log.debug('RtcommConfigController: error accessing config: ' + status);
             });
         };
-        activate();
-
-        function activate() {
-
-        }
     }
 })();

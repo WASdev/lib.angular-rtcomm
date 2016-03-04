@@ -85,11 +85,7 @@
         $scope.$on('session:stopped', function(event, eventObject) {
             vm.enableCallModel = true;
         });
-        activate();
 
-        function activate() {
-
-        }
     }
 
     function RtcommCallModalInstanceController($scope, $modalInstance, RtcommService) {

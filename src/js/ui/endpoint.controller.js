@@ -24,21 +24,20 @@
 
     /* @ngInject */
     function RtcommEndpointController(RtcommService, $http, $rootScope, $scope, $log) {
-        var vm = this;
-        vm.epCtrlActiveEndpointUUID = RtcommService.getActiveEndpoint();
-        vm.epCtrlAVConnected = RtcommService.isWebrtcConnected(vm.epCtrlActiveEndpointUUID);
-        vm.sessionState = RtcommService.getSessionState(vm.epCtrlActiveEndpointUUID);
+        $scope.epCtrlActiveEndpointUUID = RtcommService.getActiveEndpoint();
+        $scope.epCtrlAVConnected = RtcommService.isWebrtcConnected($scope.epCtrlActiveEndpointUUID);
+        $scope.sessionState = RtcommService.getSessionState($scope.epCtrlActiveEndpointUUID);
 
-        vm.disconnect = function() {
-            $log.debug('Disconnecting call for endpoint: ' + vm.epCtrlActiveEndpointUUID);
-            RtcommService.getEndpoint(vm.epCtrlActiveEndpointUUID).disconnect();
+        $scope.disconnect = function() {
+            $log.debug('Disconnecting call for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
+            RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).disconnect();
         };
 
-        vm.toggleAV = function() {
-            $log.debug('Enable AV for endpoint: ' + vm.epCtrlActiveEndpointUUID);
+        $scope.toggleAV = function() {
+            $log.debug('Enable AV for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
 
-            if (vm.epCtrlAVConnected == false) {
-                RtcommService.getEndpoint(vm.epCtrlActiveEndpointUUID).webrtc.enable(function(value, message) {
+            if ($scope.epCtrlAVConnected == false) {
+                RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).webrtc.enable(function(value, message) {
                     if (!value) {
                         $log.debug('Enable failed: ', message);
                         RtcommService.alert({
@@ -48,55 +47,50 @@
                     }
                 });
             } else {
-                $log.debug('Disable AV for endpoint: ' + vm.epCtrlActiveEndpointUUID);
-                RtcommService.getEndpoint(vm.epCtrlActiveEndpointUUID).webrtc.disable();
+                $log.debug('Disable AV for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
+                RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).webrtc.disable();
             }
         };
 
         $scope.$on('session:started', function(event, eventObject) {
             $log.debug('session:started received: endpointID = ' + eventObject.endpoint.id);
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
-                vm.sessionState = 'session:started';
+            if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
+                $scope.sessionState = 'session:started';
             }
         });
 
         $scope.$on('session:stopped', function(event, eventObject) {
             $log.debug('session:stopped received: endpointID = ' + eventObject.endpoint.id);
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
-                vm.sessionState = 'session:stopped';
+            if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
+                $scope.sessionState = 'session:stopped';
             }
         });
 
         $scope.$on('session:failed', function(event, eventObject) {
             $log.debug('session:failed received: endpointID = ' + eventObject.endpoint.id);
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
-                vm.sessionState = 'session:failed';
+            if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
+                $scope.sessionState = 'session:failed';
             }
         });
 
         $scope.$on('webrtc:connected', function(event, eventObject) {
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
-                vm.epCtrlAVConnected = true;
+            if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
+                $scope.epCtrlAVConnected = true;
         });
 
         $scope.$on('webrtc:disconnected', function(event, eventObject) {
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
-                vm.epCtrlAVConnected = false;
+            if ($scope.epCtrlActiveEndpointUUID == eventObject.endpoint.id)
+                $scope.epCtrlAVConnected = false;
         });
 
 
         $scope.$on('endpointActivated', function(event, endpointUUID) {
-            vm.epCtrlActiveEndpointUUID = endpointUUID;
-            vm.epCtrlAVConnected = RtcommService.isWebrtcConnected(endpointUUID);
+            $scope.epCtrlActiveEndpointUUID = endpointUUID;
+            $scope.epCtrlAVConnected = RtcommService.isWebrtcConnected(endpointUUID);
         });
 
         $scope.$on('noEndpointActivated', function(event) {
-            vm.epCtrlAVConnected = false;
+            $scope.epCtrlAVConnected = false;
         });
-        activate();
-
-        function activate() {
-
-        }
     }
 })();

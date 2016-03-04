@@ -153,14 +153,6 @@
                 vm.epCtrlRemoteEndpointID = null;
             }
         });
-
-
-
-    }
-    activate();
-
-    function activate() {
-
     }
 
 })();

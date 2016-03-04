@@ -33,10 +33,10 @@
         return directive;
     }
 
-    IFrameController.$inject = ['RtcommService', '$scope', '$log'];
+    IFrameController.$inject = ['RtcommService', '$sce', '$location', '$window','$scope', '$log'];
 
     /* @ngInject */
-    function IFrameController(RtcommService, $scope, $log) {
+    function IFrameController(RtcommService, $sce, $location, $window, $scope, $log) {
         var vm = this;
         vm.iframeActiveEndpointUUID = RtcommService.getActiveEndpoint();
         vm.iframeURL = null;
@@ -47,7 +47,7 @@
          * syncSourcing means you a providing the URL source but no UI. Typically used in
          * customer/agent scenarios.
          */
-        vm.init = function(syncSource) {
+        $scope.init = function(syncSource) {
             if (syncSource == true) {
                 vm.syncSource = true;
                 vm.initiframeURL = $location.absUrl(); // init to current URL
@@ -101,10 +101,5 @@
                 $window.open($sce.trustAsResourceUrl(url), '_blank');
             }
         });
-        activate();
-
-        function activate() {
-
-        }
     }
 })();
