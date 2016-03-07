@@ -40,7 +40,7 @@ module.exports = function(grunt) {
       },
       dist: {
 //        src: ['<%= dirs.src %>/*.js', '<%= dirs.src %>/**/*.js'],
-        src: ['<%= dirs.src %>/js/**/*.module.js', '<%= dirs.src %>/js/**/*.js'],
+        src: ['<%= dirs.src %>/js/**/*.module.js', '<%= dirs.src %>/js/**/*.js', '!**/*.spec.js'],
         dest: '<%= dirs.dest %>/<%= pkg.name %>.js'
       }
     },

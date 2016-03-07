@@ -1,4 +1,4 @@
-describe('Unit Testing: RtcommChat directive', function(){
+describe('Unit Testing: RtcommSessionManager directive', function(){
   var $compile, $rootScope;
   beforeEach(module("rtcomm.templates"));
 
@@ -11,8 +11,9 @@ describe('Unit Testing: RtcommChat directive', function(){
   ));
 
   it('chat directive should be available', function(){
-    var element = $compile('<rtcomm-alert></rtcomm-alert>')($rootScope);
+    var element = $compile('<rtcomm-session-manager></rtcomm-session-manager>')($rootScope);
     $rootScope.$digest();
-    expect(element.html()).to.include('alert in alerts');
+    // console.log(element[0]);
+    expect(element.html()).to.include('class="session-manager"');
   });
 })

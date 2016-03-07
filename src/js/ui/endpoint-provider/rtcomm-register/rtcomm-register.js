@@ -54,7 +54,6 @@
 
         vm.onRegClick = function() {
             if (vm.nextAction === 'Register' && !invalidCharacters.test(vm.reguserid)) {
-
                 $log.debug('Register: reguserid =' + vm.reguserid);
                 RtcommService.register(vm.reguserid);
             } else {
@@ -64,10 +63,9 @@
         };
 
         //Watch for changes in reguserid
-        $scope.$watch('registerVM.reguserid', function() {
+        $scope.$watch(function(){ return vm.reguserid}, function() {
 
             if (vm.reguserid.length < 1 || invalidCharacters.test(vm.reguserid)) {
-
                 vm.invalid = true;
             } else {
                 vm.invalid = false;
@@ -76,13 +74,12 @@
 
         $scope.$on('rtcomm::init', function(event, success, details) {
 
-            if (success == true) {
-                vm.nextAction = 'Unregister';
+            vm.nextAction = success ? 'Unregister' : 'Register';
+
+            if (success === true) {
                 vm.reguserid = details.userid;
             } else {
-                vm.nextAction = 'Register';
-
-                if (details == 'destroyed')
+                if (details === 'destroyed')
                     vm.reguserid = '';
                 else
                     vm.reguserid = 'Init failed:' + details;

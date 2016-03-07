@@ -18,16 +18,30 @@
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
-
-// (function() {
-//     'use strict';
-//
-//     angular
-//         .module('angular-rtcomm-ui', [
-//           'ui.bootstrap',
-//           'angular-rtcomm-service'
-//         ]);
-// })();
+/**
+ * (C) Copyright IBM Corporation 2016.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+(function() {
+  angular.module('angular-rtcomm', [
+    'ui.bootstrap',
+    'treeControl',
+    'angular-rtcomm-ui',
+    'angular-rtcomm-presence',
+    'angular-rtcomm-service'
+  ]);
+})();
 
 /**
  * (C) Copyright IBM Corporation 2016.
@@ -55,31 +69,6 @@ angular
     'ui.bootstrap',
     'angular-rtcomm-service']);
 
-})();
-
-/**
- * (C) Copyright IBM Corporation 2016.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-(function() {
-  angular.module('angular-rtcomm', [
-    'ui.bootstrap',
-    'treeControl',
-    'angular-rtcomm-ui',
-    'angular-rtcomm-presence',
-    'angular-rtcomm-service'
-  ]);
 })();
 
 /**
@@ -1088,7 +1077,6 @@ angular
   };
 
 })();
-
 /**
  * (C) Copyright IBM Corporation 2016.
  *
@@ -1171,11 +1159,6 @@ angular
                 $log.debug('RtcommConfigController: error accessing config: ' + status);
             });
         };
-        activate();
-
-        function activate() {
-
-        }
     }
 })();
 
@@ -1230,11 +1213,6 @@ angular
         $scope.$on('rtcomm::alert', function(event, eventObject) {
           vm.addAlert(eventObject);
         });
-        activate();
-
-        function activate() {
-
-        }
     }
 })();
 
@@ -1398,12 +1376,6 @@ angular
             }
         });
 
-
-        activate();
-
-        function activate() {
-
-        }
     }
 })();
 
@@ -1592,11 +1564,6 @@ angular
 
             vm.updatePresence();
         });
-        activate();
-
-        function activate() {
-
-        }
     }
 })();
 
@@ -1694,11 +1661,6 @@ angular
         $scope.$on('noEndpointActivated', function(event) {
             $scope.epCtrlAVConnected = false;
         });
-        activate();
-
-        function activate() {
-
-        }
     }
 })();
 
@@ -1981,14 +1943,6 @@ angular
                 vm.epCtrlRemoteEndpointID = null;
             }
         });
-
-
-
-    }
-    activate();
-
-    function activate() {
-
     }
 
 })();
@@ -2096,11 +2050,6 @@ angular
                 $window.open($sce.trustAsResourceUrl(url), '_blank');
             }
         });
-        activate();
-
-        function activate() {
-
-        }
     }
 })();
 
@@ -2394,11 +2343,7 @@ angular
         $scope.$on('session:stopped', function(event, eventObject) {
             vm.enableCallModel = true;
         });
-        activate();
 
-        function activate() {
-
-        }
     }
 
     function RtcommCallModalInstanceController($scope, $modalInstance, RtcommService) {
@@ -2417,7 +2362,7 @@ angular.module('angular-rtcomm-ui').run(['$templateCache', function($templateCac
   'use strict';
 
   $templateCache.put('templates/rtcomm/rtcomm-alert.html',
-    "<div class=\"row\"><alert ng-repeat=\"alert in alerts\" type=\"{{alert.type}}\" close=\"closeAlert($index)\">{{alert.msg}}</alert></div>"
+    "<div class=\"row\"><alert ng-repeat=\"alert in alertVM.alerts\" type=\"{{alert.type}}\" close=\"alertVM.closeAlert($index)\">{{alert.msg}}</alert></div>"
   );
 
 

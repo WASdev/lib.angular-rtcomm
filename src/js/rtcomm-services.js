@@ -58,7 +58,7 @@
       // Default to enabling audio and video. It must be disabled through config.
       var broadcastAudio = true;
       var broadcastVideo = true;
-      var rtcommDebug = "DEBUG";
+      var rtcommDebug = "INFO";
       var ringtone = null;
       var ringbacktone = null;
 

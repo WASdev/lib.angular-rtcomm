@@ -1,4 +1,4 @@
-describe('Unit Testing: Register directive', function(){
+describe('Unit Testing: RtcommChat directive', function(){
   var $compile, $rootScope;
   beforeEach(module("rtcomm.templates"));
 
@@ -10,13 +10,9 @@ describe('Unit Testing: Register directive', function(){
     }]
   ));
 
-  it('directive should compile', function(){
-    var element = $compile('<rtcomm-register></rtcomm-register>')($rootScope);
+  it('chat directive should be available', function(){
+    var element = $compile('<rtcomm-alert></rtcomm-alert>')($rootScope);
     $rootScope.$digest();
-    expect(element.html()).to.include('id="register-input"');
+    expect(element.html()).to.include('alert in alertVM.alerts');
   });
-
-  it('should register')
-
-
 })

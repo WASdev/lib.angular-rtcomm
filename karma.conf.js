@@ -10,7 +10,7 @@ module.exports = function(config) {
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
         frameworks: ['mocha', 'chai', 'sinon'],
-        reports: ['spec'],
+        reporters: ['spec'],
         // list of files / patterns to load in the browser
         files: [
             'bower_components/jquery/dist/jquery.js',
@@ -22,10 +22,10 @@ module.exports = function(config) {
             'bower_components/bower-mqttws/mqttws31.js',
             'bower_components/rtcomm/dist/rtcomm.js',
             'src/templates/**/*.html',
+            'src/js/**/*.spec.js',
             'src/js/**/*.module.js',
             'src/js/*.js',
             'src/js/ui/**/*.js',
-            'test/*.spec.js'
         ],
 
 
@@ -47,6 +47,8 @@ module.exports = function(config) {
 
         // web server port
         port: 9876,
+
+        // plugins: ["karma-spec-reporter"],
 
 
         // enable / disable colors in the output (reporters and logs)
