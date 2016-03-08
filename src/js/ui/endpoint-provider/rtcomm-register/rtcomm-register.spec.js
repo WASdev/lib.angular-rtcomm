@@ -1,3 +1,4 @@
+
 describe('Unit Testing: Register directive', function() {
     var $compile, _$rootScope, sandbox, scope, ctrl, element;
 
@@ -44,7 +45,7 @@ describe('Unit Testing: Register directive', function() {
     afterEach(function() {
         sandbox.restore();
 
-    })
+    });
 
     it('directive should compile', function() {
         expect(element.html()).to.include('id="register-input"');

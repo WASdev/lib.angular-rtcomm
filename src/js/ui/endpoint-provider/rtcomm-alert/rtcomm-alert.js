@@ -34,10 +34,10 @@
         return directive;
     }
 
-    AlertController.$inject = ['RtcommService', '$scope', '$log'];
+    AlertController.$inject = ['$scope', '$log'];
 
     /* @ngInject */
-    function AlertController(RtcommService, $scope, $log) {
+    function AlertController($scope, $log) {
         var vm = this;
         vm.alerts = [];
         vm.addAlert = function(alert) {

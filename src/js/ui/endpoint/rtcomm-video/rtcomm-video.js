@@ -46,18 +46,21 @@
         var vm = this;
         $log.debug('VideoController Starting');
         vm.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
-        $scope.init = function(selfView, remoteView) {
-            RtcommService.setViewSelector(selfView, remoteView);
-
-            var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
-            if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null)
-                RtcommService.setVideoView(videoActiveEndpointUUID);
-        };
+        // $scope.init = function(selfView, remoteView) {
+        //     RtcommService.setViewSelector(selfView, remoteView);
+        //
+        //     var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
+        //     if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null)
+        //         RtcommService.setVideoView(videoActiveEndpointUUID);
+        // };
 
         // Go ahead and initialize the local media here if an endpoint already exist.
         var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
-        if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null)
-            RtcommService.setVideoView(videoActiveEndpointUUID);
+        if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null){
+          console.log(videoActiveEndpointUUID);
+          RtcommService.setVideoView(videoActiveEndpointUUID);
+
+        }
 
         $scope.$on('endpointActivated', function(event, endpointUUID) {
             //	Not to do something here to show that this button is live.
@@ -65,19 +68,19 @@
             RtcommService.setVideoView(endpointUUID);
             vm.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
         });
+        // //
+        // $scope.$on('noEndpointActivated', function(event) {
+        //     vm.avConnected = false;
+        // });
         //
-        $scope.$on('noEndpointActivated', function(event) {
-            vm.avConnected = false;
-        });
-
-        $scope.$on('webrtc:connected', function(event, eventObject) {
-            if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
-                vm.avConnected = true;
-        });
-
-        $scope.$on('webrtc:disconnected', function(event, eventObject) {
-            if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
-                vm.avConnected = false;
-        });
+        // $scope.$on('webrtc:connected', function(event, eventObject) {
+        //     if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
+        //         vm.avConnected = true;
+        // });
+        //
+        // $scope.$on('webrtc:disconnected', function(event, eventObject) {
+        //     if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
+        //         vm.avConnected = false;
+        // });
     }
 })();

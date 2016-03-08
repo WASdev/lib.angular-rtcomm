@@ -47,10 +47,6 @@
         };
 
         return directive;
-
-        function linkFunc(scope, el, attr, ctrl) {
-
-        }
     }
 
     EndpointStatusController.$inject = ['RtcommService', '$scope', '$log'];
@@ -62,11 +58,11 @@
         vm.epCtrlRemoteEndpointID = RtcommService.getRemoteEndpoint(vm.epCtrlActiveEndpointUUID);
         vm.sessionState = RtcommService.getSessionState(vm.epCtrlActiveEndpointUUID);
         vm.failureReason = '';
-        vm.queueCount = 0; // FIX: Currently not implemented!
+        vm.queueCount = 0; //TODO FIX: Currently not implemented!
 
         $scope.$on('session:started', function(event, eventObject) {
             $log.debug('session:started received: endpointID = ' + eventObject.endpoint.id);
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
+            if (vm.epCtrlActiveEndpointUUID === eventObject.endpoint.id) {
                 vm.sessionState = 'session:started';
                 vm.epCtrlRemoteEndpointID = eventObject.endpoint.getRemoteEndpointID();
             }
