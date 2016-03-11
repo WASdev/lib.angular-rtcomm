@@ -1,7 +1,7 @@
 <div class="session-manager">
 	<div class="btn-group pull-left" style='padding: 10px'>
         <div>
-			<button class="session-manager-button" type="button" ng-switch on="session.activated" ng-class="{'btn btn-primary btn-sm': session.activated, 'btn btn-default btn-sm': !session.activated}" ng-repeat="session in sessions" ng-click="activateSession(session.endpointUUID)">
+			<button class="session-manager-button" type="button" ng-switch on="session.activated" ng-class="{'btn btn-primary btn-sm': session.activated, 'btn btn-default btn-sm': !session.activated}" ng-repeat="session in sessionMgrVM.sessions" ng-click="sessionMgrVM.activateSession(session.endpointUUID)">
 				<span class="glyphicon glyphicon-eye-open" aria-hidden="true" ng-switch-when=true></span>
 				<span class="glyphicon glyphicon-eye-close" aria-hidden="true" ng-switch-when=false></span>
 				{{session.remoteEndpointID}}

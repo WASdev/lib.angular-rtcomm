@@ -48,7 +48,7 @@
          * customer/agent scenarios.
          */
         $scope.init = function(syncSource) {
-            if (syncSource == true) {
+            if (syncSource === true) {
                 vm.syncSource = true;
                 vm.initiframeURL = $location.absUrl(); // init to current URL
             }
@@ -90,7 +90,7 @@
         });
 
         $scope.$on('rtcomm::iframeUpdate', function(eventType, endpointUUID, url) {
-            if (vm.syncSource == false) {
+            if (vm.syncSource === false) {
                 $log.debug('rtcomm::iframeUpdate: ' + url);
                 //	This is needed to prevent rtcomm from logging in when the page is loaded in the iFrame.
                 url = url + "?disableRtcomm=true";

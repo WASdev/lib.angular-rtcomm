@@ -10,7 +10,7 @@ module.exports = function(config) {
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
         frameworks: ['mocha', 'chai', 'sinon'],
-        reporters: ['spec'],
+        reporters: ['spec', 'coverage'],
         // list of files / patterns to load in the browser
         files: [
             'bower_components/jquery/dist/jquery.js',
@@ -37,8 +37,12 @@ module.exports = function(config) {
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
             'src/templates/**/*.html': ['ng-html2js'],
-
+            'src/js/**/!(*.spec).js' : ['coverage']
         },
+        coverageReporter: {
+   type : 'html',
+   dir : 'coverage/'
+ },
 
         ngHtml2JsPreprocessor: {
             stripPrefix: 'src/',

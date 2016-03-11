@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.3 - 2016-03-04
+ * @version v1.0.3 - 2016-03-08
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -278,7 +278,7 @@ angular
       // Default to enabling audio and video. It must be disabled through config.
       var broadcastAudio = true;
       var broadcastVideo = true;
-      var rtcommDebug = "DEBUG";
+      var rtcommDebug = "INFO";
       var ringtone = null;
       var ringbacktone = null;
 
@@ -913,7 +913,7 @@ angular
         //	Save this chat in the local session store
         var session = _createSession(endpointUUID);
         session.chats.push(chat);
-
+        
         myEndpointProvider.getRtcommEndpoint(endpointUUID).chat.send(chat.message);
       },
 
@@ -1198,10 +1198,10 @@ angular
         return directive;
     }
 
-    AlertController.$inject = ['RtcommService', '$scope', '$log'];
+    AlertController.$inject = ['$scope', '$log'];
 
     /* @ngInject */
-    function AlertController(RtcommService, $scope, $log) {
+    function AlertController($scope, $log) {
         var vm = this;
         vm.alerts = [];
         vm.addAlert = function(alert) {
@@ -1435,7 +1435,6 @@ angular
 
         vm.onRegClick = function() {
             if (vm.nextAction === 'Register' && !invalidCharacters.test(vm.reguserid)) {
-
                 $log.debug('Register: reguserid =' + vm.reguserid);
                 RtcommService.register(vm.reguserid);
             } else {
@@ -1445,10 +1444,9 @@ angular
         };
 
         //Watch for changes in reguserid
-        $scope.$watch('registerVM.reguserid', function() {
+        $scope.$watch(function(){ return vm.reguserid}, function() {
 
             if (vm.reguserid.length < 1 || invalidCharacters.test(vm.reguserid)) {
-
                 vm.invalid = true;
             } else {
                 vm.invalid = false;
@@ -1457,13 +1455,12 @@ angular
 
         $scope.$on('rtcomm::init', function(event, success, details) {
 
-            if (success == true) {
-                vm.nextAction = 'Unregister';
+            vm.nextAction = success ? 'Unregister' : 'Register';
+
+            if (success === true) {
                 vm.reguserid = details.userid;
             } else {
-                vm.nextAction = 'Register';
-
-                if (details == 'destroyed')
+                if (details === 'destroyed')
                     vm.reguserid = '';
                 else
                     vm.reguserid = 'Init failed:' + details;
@@ -1837,10 +1834,6 @@ angular
         };
 
         return directive;
-
-        function linkFunc(scope, el, attr, ctrl) {
-
-        }
     }
 
     EndpointStatusController.$inject = ['RtcommService', '$scope', '$log'];
@@ -1852,11 +1845,11 @@ angular
         vm.epCtrlRemoteEndpointID = RtcommService.getRemoteEndpoint(vm.epCtrlActiveEndpointUUID);
         vm.sessionState = RtcommService.getSessionState(vm.epCtrlActiveEndpointUUID);
         vm.failureReason = '';
-        vm.queueCount = 0; // FIX: Currently not implemented!
+        vm.queueCount = 0; //TODO FIX: Currently not implemented!
 
         $scope.$on('session:started', function(event, eventObject) {
             $log.debug('session:started received: endpointID = ' + eventObject.endpoint.id);
-            if (vm.epCtrlActiveEndpointUUID == eventObject.endpoint.id) {
+            if (vm.epCtrlActiveEndpointUUID === eventObject.endpoint.id) {
                 vm.sessionState = 'session:started';
                 vm.epCtrlRemoteEndpointID = eventObject.endpoint.getRemoteEndpointID();
             }
@@ -2101,18 +2094,20 @@ angular
         var vm = this;
         $log.debug('VideoController Starting');
         vm.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
-        $scope.init = function(selfView, remoteView) {
-            RtcommService.setViewSelector(selfView, remoteView);
-
-            var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
-            if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null)
-                RtcommService.setVideoView(videoActiveEndpointUUID);
-        };
+        // $scope.init = function(selfView, remoteView) {
+        //     RtcommService.setViewSelector(selfView, remoteView);
+        //
+        //     var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
+        //     if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null)
+        //         RtcommService.setVideoView(videoActiveEndpointUUID);
+        // };
 
         // Go ahead and initialize the local media here if an endpoint already exist.
         var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
-        if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null)
-            RtcommService.setVideoView(videoActiveEndpointUUID);
+        if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null){
+          RtcommService.setVideoView(videoActiveEndpointUUID);
+
+        }
 
         $scope.$on('endpointActivated', function(event, endpointUUID) {
             //	Not to do something here to show that this button is live.
@@ -2120,20 +2115,20 @@ angular
             RtcommService.setVideoView(endpointUUID);
             vm.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
         });
+        // //
+        // $scope.$on('noEndpointActivated', function(event) {
+        //     vm.avConnected = false;
+        // });
         //
-        $scope.$on('noEndpointActivated', function(event) {
-            vm.avConnected = false;
-        });
-
-        $scope.$on('webrtc:connected', function(event, eventObject) {
-            if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
-                vm.avConnected = true;
-        });
-
-        $scope.$on('webrtc:disconnected', function(event, eventObject) {
-            if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
-                vm.avConnected = false;
-        });
+        // $scope.$on('webrtc:connected', function(event, eventObject) {
+        //     if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
+        //         vm.avConnected = true;
+        // });
+        //
+        // $scope.$on('webrtc:disconnected', function(event, eventObject) {
+        //     if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
+        //         vm.avConnected = false;
+        // });
     }
 })();
 
@@ -2176,11 +2171,6 @@ angular
         vm.alertActiveEndpointUUID = RtcommService.getActiveEndpoint();
         vm.caller = null;
 
-        vm.init = function(autoAnswerNewMedia) {
-            $log.debug('rtcommAlert: autoAnswerNewMedia = ' + autoAnswerNewMedia);
-            vm.autoAnswerNewMedia = autoAnswerNewMedia;
-        };
-
         vm.showAlerting = function(size) {
 
             var modalInstance = $modal.open({
@@ -2216,6 +2206,11 @@ angular
                 });
         };
 
+        $scope.init = function(autoAnswerNewMedia) {
+            $log.debug('rtcommAlert: autoAnswerNewMedia = ' + autoAnswerNewMedia);
+            vm.autoAnswerNewMedia = autoAnswerNewMedia;
+        };
+
         $scope.$on('endpointActivated', function(event, endpointUUID) {
             vm.alertActiveEndpointUUID = endpointUUID;
         });
@@ -2233,11 +2228,7 @@ angular
                 eventObject.endpoint.accept();
             }
         });
-        activate();
 
-        function activate() {
-
-        }
     }
 
     RtcommAlertModalInstanceController.$inject = ['$scope', '$modalInstance', '$log', 'caller'];
@@ -2377,7 +2368,7 @@ angular.module('angular-rtcomm-ui').run(['$templateCache', function($templateCac
 
 
   $templateCache.put('templates/rtcomm/rtcomm-iframe.html',
-    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-link\"></span> URL Sharing</div><div class=\"rtcomm-iframe\"><iframe width=\"100%\" height=\"100%\" ng-src=\"{{iframeVM.iframeURL}}\"></iframe></div><div class=\"row\"><div class=\"col-lg-2\"><button id=\"btnBackward\" class=\"btn btn-primary\" ng-click=\"iframeVM.backward()\" focusinput=\"true\" ng-disabled=\"(iframeVM.iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-left\" aria-hidden=\"true\" aria-label=\"Backward\"></span> Backward</button></div><div class=\"col-lg-2\"><button id=\"btnForward\" class=\"btn btn-primary\" ng-click=\"iframeVM.forward()\" ng-disabled=\"(iframeVM.iframeVM.iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-right\" aria-hidden=\"true\" aria-label=\"Forward\"></span> Forward</button></div><div class=\"col-lg-8\"><div class=\"input-group\"><input id=\"setUrl\" type=\"text\" class=\"form-control\" type=\"text\" ng-model=\"iframeVM.newUrl\"><span class=\"input-group-btn\"><button class=\"btn btn-primary\" id=\"btn-send-url\" ng-click=\"iframeVM.setURL(newUrl)\" focusinput=\"true\">Set URL</button></span></div><!-- /input-group --></div></div></div></div>"
+    "<div><div class=\"panel panel-primary vertical-stretch\"><div class=\"panel-heading\"><span class=\"glyphicon glyphicon-link\"></span> URL Sharing</div><div class=\"rtcomm-iframe\"><iframe width=\"100%\" height=\"100%\" ng-src=\"{{iframeVM.iframeURL}}\"></iframe></div><div class=\"row\"><div class=\"col-lg-2\"><button id=\"btnBackward\" class=\"btn btn-primary\" ng-click=\"iframeVM.backward()\" focusinput=\"true\" ng-disabled=\"(iframeVM.iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-left\" aria-hidden=\"true\" aria-label=\"Backward\"></span> Backward</button></div><div class=\"col-lg-2\"><button id=\"btnForward\" class=\"btn btn-primary\" ng-click=\"iframeVM.forward()\" ng-disabled=\"(iframeVM.iframeUrl == null)\"><span class=\"glyphicon glyphicon-arrow-right\" aria-hidden=\"true\" aria-label=\"Forward\"></span> Forward</button></div><div class=\"col-lg-8\"><div class=\"input-group\"><input id=\"setUrl\" type=\"text\" class=\"form-control\" type=\"text\" ng-model=\"iframeVM.newUrl\"><span class=\"input-group-btn\"><button class=\"btn btn-primary\" id=\"btn-send-url\" ng-click=\"iframeVM.setURL(newUrl)\" focusinput=\"true\">Set URL</button></span></div><!-- /input-group --></div></div></div></div>"
   );
 
 

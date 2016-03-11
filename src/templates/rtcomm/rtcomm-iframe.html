@@ -14,7 +14,7 @@
 				</button>
 			</div>
 			<div class="col-lg-2">
-				<button id="btnForward" class='btn  btn-primary' ng-click="iframeVM.forward()" ng-disabled="(iframeVM.iframeVM.iframeUrl == null)">
+				<button id="btnForward" class='btn  btn-primary' ng-click="iframeVM.forward()" ng-disabled="(iframeVM.iframeUrl == null)">
 					<span class="glyphicon glyphicon-arrow-right" aria-hidden="true" aria-label="Forward"></span>
 					Forward
 				</button>
@@ -23,7 +23,7 @@
 				<div class="input-group">
 		  			<input id="setUrl" type="text" class="form-control" type="text" ng-model="iframeVM.newUrl"></input>
 					<span class="input-group-btn">
-						<button class="btn btn-primary" id="btn-send-url" ng-click="iframeVM.setURL(newUrl)" focusInput=true>Set URL</button>
+						<button class="btn btn-primary" id="btn-send-url" ng-click="iframeVM.setURL(iframeVM.newUrl)" focusInput=true>Set URL</button>
 					</span>
 	    		</div><!-- /input-group -->
 			</div>

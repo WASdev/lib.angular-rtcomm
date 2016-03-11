@@ -693,7 +693,7 @@
         //	Save this chat in the local session store
         var session = _createSession(endpointUUID);
         session.chats.push(chat);
-
+        
         myEndpointProvider.getRtcommEndpoint(endpointUUID).chat.send(chat.message);
       },
 

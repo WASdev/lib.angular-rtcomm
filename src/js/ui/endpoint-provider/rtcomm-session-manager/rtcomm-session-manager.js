@@ -33,7 +33,7 @@
             restrict: 'E',
             templateUrl: 'templates/rtcomm/rtcomm-sessionmgr.html',
             controller: SessionManagerController,
-            controllerAs: 'sessionVM',
+            controllerAs: 'sessionMgrVM',
             bindToController: true
         };
 
@@ -54,21 +54,21 @@
         vm.publishPresence = false;
         vm.sessionPresenceData = [];
 
-        vm.init = function(publishPresence) {
+        $scope.init = function(publishPresence) {
             vm.publishPresence = publishPresence;
             vm.updatePresence();
         };
 
         vm.activateSession = function(endpointUUID) {
             $log.debug('rtcommSessionmgr: activateEndpoint =' + endpointUUID);
-            if (vm.sessMgrActiveEndpointUUID != endpointUUID) {
+            if (vm.sessMgrActiveEndpointUUID !== endpointUUID) {
                 RtcommService.setActiveEndpoint(endpointUUID);
             }
         };
 
         vm.updatePresence = function() {
             //	Update the presence record if enabled
-            if (vm.publishPresence == true) {
+            if (vm.publishPresence === true) {
                 RtcommService.removeFromPresenceRecord(vm.sessionPresenceData, false);
 
                 vm.sessionPresenceData = [{

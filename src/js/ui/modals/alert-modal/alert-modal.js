@@ -37,11 +37,6 @@
         vm.alertActiveEndpointUUID = RtcommService.getActiveEndpoint();
         vm.caller = null;
 
-        vm.init = function(autoAnswerNewMedia) {
-            $log.debug('rtcommAlert: autoAnswerNewMedia = ' + autoAnswerNewMedia);
-            vm.autoAnswerNewMedia = autoAnswerNewMedia;
-        };
-
         vm.showAlerting = function(size) {
 
             var modalInstance = $modal.open({
@@ -77,6 +72,11 @@
                 });
         };
 
+        $scope.init = function(autoAnswerNewMedia) {
+            $log.debug('rtcommAlert: autoAnswerNewMedia = ' + autoAnswerNewMedia);
+            vm.autoAnswerNewMedia = autoAnswerNewMedia;
+        };
+
         $scope.$on('endpointActivated', function(event, endpointUUID) {
             vm.alertActiveEndpointUUID = endpointUUID;
         });
@@ -94,11 +94,7 @@
                 eventObject.endpoint.accept();
             }
         });
-        activate();
 
-        function activate() {
-
-        }
     }
 
     RtcommAlertModalInstanceController.$inject = ['$scope', '$modalInstance', '$log', 'caller'];

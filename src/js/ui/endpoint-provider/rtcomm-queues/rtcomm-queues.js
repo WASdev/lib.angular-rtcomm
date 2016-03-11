@@ -32,15 +32,12 @@
             restrict: 'E',
             templateUrl: 'templates/rtcomm/rtcomm-queues.html',
             controller: QueuesController,
-            controllerAs: 'queueVM',
+            controllerAs: 'queuesVM',
             bindToController: true
         };
 
         return directive;
 
-        function linkFunc(scope, el, attr, ctrl) {
-
-        }
     }
 
     QueuesController.$inject = ['RtcommService', '$scope', '$log'];
@@ -64,7 +61,6 @@
             $log.debug('rtcommQueues: autoJoinQueues = ' + autoJoinQueues);
             vm.autoJoinQueues = autoJoinQueues;
             vm.queuePublishPresence = queuePublishPresence;
-
             if (typeof queueFilter !== "undefined")
                 vm.queueFilter = queueFilter;
         };
@@ -132,7 +128,6 @@
 
         $scope.$on('queueupdate', function(event, queues) {
             $log.debug('rtcommQueues: scope queues', vm.rQueues);
-
             Object.keys(queues).forEach(function(key) {
                 $log.debug('rtcommQueues: Push queue: ' + queues[key]);
                 $log.debug('rtcommQueues: autoJoinQueues: ' + vm.autoJoinQueues);
@@ -140,7 +135,6 @@
                 //	Check to make sure queue is not filteres out before adding it.
                 if (vm.filterOutQueue(queues[key]) == false) {
                     vm.rQueues.push(queues[key]);
-
                     // If autoJoin we go ahead and join the queue as soon as we get the queue update.
                     if (vm.autoJoinQueues == true) {
                         vm.onQueueClick(queues[key]);

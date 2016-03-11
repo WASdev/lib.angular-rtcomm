@@ -1,3 +1,4 @@
+//TODO Finish Session manager Unit Test
 describe('Unit Testing: RtcommSessionManager directive', function(){
   var $compile, $rootScope;
   beforeEach(module("rtcomm.templates"));
@@ -10,7 +11,7 @@ describe('Unit Testing: RtcommSessionManager directive', function(){
     }]
   ));
 
-  it('chat directive should be available', function(){
+  it('session-manager directive should be available', function(){
     var element = $compile('<rtcomm-session-manager></rtcomm-session-manager>')($rootScope);
     $rootScope.$digest();
     // console.log(element[0]);

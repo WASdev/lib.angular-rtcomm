@@ -57,6 +57,7 @@
         };
 
         $scope.init = function(configURL, extendedConfig) {
+
             $log.debug('RtcommConfigController: initing configURL = ' + configURL);
             vm.configURL = configURL;
 

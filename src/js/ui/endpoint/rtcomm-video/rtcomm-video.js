@@ -25,7 +25,7 @@
     angular
         .module('angular-rtcomm-ui')
         .directive('rtcommVideo', rtcommVideo);
-
+        
     /* @ngInject */
     function rtcommVideo() {
         var directive = {
@@ -57,7 +57,6 @@
         // Go ahead and initialize the local media here if an endpoint already exist.
         var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
         if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null){
-          console.log(videoActiveEndpointUUID);
           RtcommService.setVideoView(videoActiveEndpointUUID);
 
         }
