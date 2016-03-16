@@ -3,123 +3,20 @@
  */
 
 (function() {
-  angular.module('angular-rtcomm-service', [])
+  angular.module('angular-rtcomm-service')
     /**
      * Set debugEnabled to true to enable the debug messages in this rtcomm angular module.
      */
     .config(function($logProvider){
 	     $logProvider.debugEnabled(true);
     })
-    /* This causes a problem in ionic/iosrtc
-    .config(function($locationProvider) {
-	      $locationProvider.html5Mode(  {enabled: true,
-		    requireBase: false});
-    }) */
-    .factory('RtcommConfigService', RtcommConfigService)
-    .factory('RtcommService', RtcommService);
-    /**
-     *
-     */
-    RtcommConfigService.$inject = ['$location', '$log', '$window'];
-    function RtcommConfigService($location, $log, $window) {
-      //	First we check to see if the URL includes the query string disableRtcomm=true.
-      //	This is typically done when a URL is being shared vian an iFrame that includes Rtcomm directives.
-      //	If it is set we just return without setting up Rtcomm.
-      $log.debug('RtcommConfigService: Abs URL: ' + $location.absUrl());
-      var _disableRtcomm = $location.search().disableRtcomm;
-      if (typeof _disableRtcomm === "undefined" || _disableRtcomm === null) {
-        _disableRtcomm = false;
-      } else if (_disableRtcomm === "true") {
-        _disableRtcomm = true;
-      } else {
-        _disableRtcomm = false;
-      }
-
-      $log.debug('RtcommConfigService: _disableRtcomm = ' + _disableRtcomm);
-
-      var providerConfig = {
-          server : $location.host(),
-          port : $location.port(),
-          rtcommTopicPath : "/rtcomm/",
-          createEndpoint : false,
-          appContext: 'default',
-          userid: "",
-          presence : {topic : ""}
-      };
-
-      $log.debug('providerConfig.server: ' + providerConfig.server);
-      $log.debug('providerConfig.port: ' + providerConfig.port);
-
-      var endpointConfig = {
-          chat: true,
-          webrtc: true
-      };
-
-      // Default to enabling audio and video. It must be disabled through config.
-      var broadcastAudio = true;
-      var broadcastVideo = true;
-      var rtcommDebug = "INFO";
-      var ringtone = null;
-      var ringbacktone = null;
-
-      var setConfig = function(config){
-        providerConfig.server = (typeof config.server !== "undefined")? config.server : providerConfig.server;
-        providerConfig.port = (typeof config.port !== "undefined")? config.port : providerConfig.port;
-        providerConfig.rtcommTopicPath = (typeof config.rtcommTopicPath !== "undefined")? config.rtcommTopicPath : providerConfig.rtcommTopicPath;
-        providerConfig.createEndpoint = (typeof config.createEndpoint !== "undefined")? config.createEndpoint : providerConfig.createEndpoint;
-        providerConfig.appContext = (typeof config.appContext !== "undefined")? config.appContext : providerConfig.appContext;
-        providerConfig.presence.topic = (typeof config.presenceTopic !== "undefined")? config.presenceTopic : providerConfig.presence.topic;
-
-        // We no longer need to set 'useSSL'  This will be set based on how page is served.
-//        providerConfig.useSSL = (typeof config.useSSL !== "undefined")? config.useSSL : providerConfig.useSSL;
-        //	Protocol related booleans
-        endpointConfig.chat= (typeof config.chat!== "undefined")? config.chat: endpointConfig.chat;
-        endpointConfig.webrtc = (typeof config.webrtc!== "undefined")? config.webrtc: endpointConfig.webrtc;
-
-        broadcastAudio = (typeof config.broadcastAudio !== "undefined")? config.broadcastAudio: broadcastAudio;
-        broadcastVideo = (typeof config.broadcastVideo !== "undefined")? config.broadcastVideo: broadcastVideo;
-
-        ringbacktone = (typeof config.ringbacktone !== "undefined")? config.ringbacktone: ringbacktone;
-        ringtone = (typeof config.ringtone !== "undefined")? config.ringtone : ringtone;
-
-        rtcommDebug = (typeof config.rtcommDebug !== "undefined")? config.rtcommDebug: rtcommDebug;
-
-        $log.debug('rtcommDebug from config is: ' + config.rtcommDebug);
-
-        if (typeof config.userid !== "undefined")
-          providerConfig.userid = config.userid;
-
-        $log.debug('providerConfig is now: ', providerConfig);
-
-      };
-
-      return {
-        setProviderConfig : function(config){setConfig(config);},
-
-        getProviderConfig : function(){return providerConfig;},
-
-        getWebRTCEnabled : function(){return endpointConfig.webrtc;},
-
-        getChatEnabled : function(){return endpointConfig.chat;},
-
-        getBroadcastAudio : function(){return broadcastAudio;},
-
-        getBroadcastVideo : function(){return broadcastVideo;},
-
-        getRingTone : function(){return ringtone;},
-
-        getRingBackTone : function(){return ringbacktone;},
-
-        getRtcommDebug: function(){return rtcommDebug;},
-
-        isRtcommDisabled : function(){return _disableRtcomm;}
-      };
-  };
-
-  RtcommService.$inject=['$rootScope', '$log', '$http', 'RtcommConfigService'];
-  function RtcommService($rootScope, $log, $http, RtcommConfigService) {
+.constant('rtcomm', rtcomm)
+.factory('RtcommService', RtcommService);
+  RtcommService.$inject=['$rootScope', '$log', '$http', 'RtcommConfigService', 'rtcomm'];
+  function RtcommService($rootScope, $log, $http, RtcommConfigService, rtcomm) {
       /** Setup the endpoint provider first **/
-    var myEndpointProvider = new rtcomm.EndpointProvider();
+
+	  var myEndpointProvider = new rtcomm.EndpointProvider();
     var endpointProviderInitialized = false;
     var queueList = null;
     var sessions = [];
@@ -542,30 +439,15 @@
           return;
         }
 
-
+	if(config.rtcommDebug === "INFO" || config.rtcommDebug === "DEBUG"){
+		myEndpointProvider.setLogLevel(config.rtcommDebug);
+	}
         $log.debug('rtcomm-services: setConfig: config: ', config);
 
         RtcommConfigService.setProviderConfig(config);
-        myEndpointProvider.setRtcommEndpointConfig(getMediaConfig());
+        myEndpointProvider.setRtcommEndpointConfig(RtcommConfigService.getMediaConfig());
 
         if (endpointProviderInitialized == false){
-          //	If an identityServlet is defined we will get the User ID from the servlet.
-          //	This is used when the user ID needs to be derived from an SSO token like LTPA.
-          if (typeof config.identityServlet !== "undefined" && config.identityServlet != null){
-            $http.get(config.identityServlet).success (function(data){
-
-              if (typeof data.userid !== "undefined"){
-                RtcommConfigService.setProviderConfig(data);
-                myEndpointProvider.init(RtcommConfigService.getProviderConfig(), initSuccess, initFailure);
-                endpointProviderInitialized = true;
-              }
-              else
-                $log.error('RtcommService: setConfig promise: Invalid JSON object return from identityServlet: ', data);
-            }).error(function(data, status, headers, config) {
-              $log.debug('RtcommService: setConfig promise: error accessing userid from identityServlet: ' + status);
-            });
-          }
-          else{
             // If the user does not specify a userid, that says one will never be specified so go ahead
             // and initialize the endpoint provider and let the provider assign a name. If a defined empty
             // string is passed in, that means to wait until the end user registers a name.
@@ -573,7 +455,6 @@
               myEndpointProvider.init(RtcommConfigService.getProviderConfig(), initSuccess, initFailure);
               endpointProviderInitialized = true;
             }
-          }
         }
       },
 
@@ -845,7 +726,7 @@
           endpoint = _getEndpoint(_getActiveEndpointUUID());
 
         if (endpoint != null){
-
+		$log.debug(endpoint);
           endpoint.webrtc.setLocalMedia(
               {
                 mediaOut: document.querySelector('#' + _selfView),

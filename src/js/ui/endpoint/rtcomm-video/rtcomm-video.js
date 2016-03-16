@@ -24,8 +24,8 @@
 
     angular
         .module('angular-rtcomm-ui')
-        .directive('rtcommVideo', rtcommVideo);
-        
+        .directive('rtcommVideo', rtcommVideo)
+	.controller('RtcommVideoController', VideoController);
     /* @ngInject */
     function rtcommVideo() {
         var directive = {

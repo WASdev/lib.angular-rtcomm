@@ -24,8 +24,7 @@ module.exports = function(config) {
             'src/templates/**/*.html',
             'src/js/**/*.spec.js',
             'src/js/**/*.module.js',
-            'src/js/*.js',
-            'src/js/ui/**/*.js',
+            'src/js/**/*.js',
         ],
 
 
