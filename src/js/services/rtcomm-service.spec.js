@@ -130,6 +130,42 @@ describe('Unit Testing: RtcommService', function(){
 
 	});
 	
+	it('should have the API defined for backward compability', function(){
+		
+		expect(RtcommService.alert).to.not.be.undefined;
+		expect(RtcommService.isInitialized).to.not.be.undefined;
+		expect(RtcommService.setConfig).to.not.be.undefined;
+		expect(RtcommService.getPresenceMonitor).to.not.be.undefined;
+		expect(RtcommService.publishPresence).to.not.be.undefined;
+		expect(RtcommService.addToPresenceRecord).to.not.be.undefined;
+		expect(RtcommService.removeFromPresenceRecord).to.not.be.undefined;
+		expect(RtcommService.setPresenceRecordState).to.not.be.undefined;
+		expect(RtcommService.getEndpoint).to.not.be.undefined;
+		expect(RtcommService.destroyEndpoint).to.not.be.undefined;
+		expect(RtcommService.register).to.not.be.undefined;
+		expect(RtcommService.unregister).to.not.be.undefined;
+		expect(RtcommService.joinQueue).to.not.be.undefined;
+		expect(RtcommService.leaveQueue).to.not.be.undefined;
+		expect(RtcommService.getQueues).to.not.be.undefined;
+		expect(RtcommService.sendChatMessage).to.not.be.undefined;
+		expect(RtcommService.getChats).to.not.be.undefined;
+		expect(RtcommService.isWebrtcConnected).to.not.be.undefined;
+		expect(RtcommService.getSessionState).to.not.be.undefined;
+		expect(RtcommService.setAlias).to.not.be.undefined;
+		expect(RtcommService.setUserID).to.not.be.undefined;
+		expect(RtcommService.setPresenceTopic).to.not.be.undefined;
+		expect(RtcommService.getIframeURL).to.not.be.undefined;
+		expect(RtcommService.putIframeURL).to.not.be.undefined;
+		expect(RtcommService.placeCall).to.not.be.undefined;
+		expect(RtcommService.getSessions).to.not.be.undefined;
+		expect(RtcommService.endCall).to.not.be.undefined;
+		expect(RtcommService.setActiveEndpoint).to.not.be.undefined;
+		expect(RtcommService.getActiveEndpoint).to.not.be.undefined;
+		expect(RtcommService.getRemoteEndpoint).to.not.be.undefined;
+		expect(RtcommService.setDefaultViewSelector).to.not.be.undefined;
+		expect(RtcommService.setViewSelector).to.not.be.undefined;
+		expect(RtcommService.setVideoView).to.not.be.undefined;
+	});
 	//Helper functions
 	function generateMockRtcomm(){
 		

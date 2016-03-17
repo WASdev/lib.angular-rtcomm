@@ -64,7 +64,7 @@
 		};
 
 		//Rtcomm Debug
-		var rtcommDebug = 'DEBUG';
+		var rtcommDebug = 'INFO';
 	
 		$log.debug('RtcommConfigService: Abs Url: ' + $location.absUrl());
 		$log.debug('providerConfig.server: ' + providerConfig.server);

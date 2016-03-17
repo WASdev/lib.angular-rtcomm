@@ -36,50 +36,50 @@
  */
 
 (function() {
-    'use strict';
+  'use strict';
 
-    angular
-        .module('angular-rtcomm-ui')
-        .controller('RtcommConfigController', RtcommConfigController);
+  angular
+    .module('angular-rtcomm-ui')
+    .controller('RtcommConfigController', RtcommConfigController);
 
-    RtcommConfigController.$inject = ['RtcommService', '$http', '$scope', '$log'];
+  RtcommConfigController.$inject = ['RtcommService', '$http', '$scope', '$log'];
 
-    /* @ngInject */
-    function RtcommConfigController(RtcommService, $http, $scope, $log) {
-        var vm = this;
-        vm.extendedConfig = null;
+  /* @ngInject */
+  function RtcommConfigController(RtcommService, $http, $scope, $log) {
+    var vm = this;
+    vm.extendedConfig = null;
 
-        $log.debug('RtcommConfigController: configURL = ' + vm.configURL);
+    $log.debug('RtcommConfigController: configURL = ' + vm.configURL);
 
-        vm.setConfig = function(data) {
-            $log.debug('RtcommConfigController: setting config data:' + data);
-            RtcommService.setConfig(data);
-        };
+    vm.setConfig = function(data) {
+      $log.debug('RtcommConfigController: setting config data:' + data);
+      RtcommService.setConfig(data);
+    };
 
-        $scope.init = function(configURL, extendedConfig) {
+    $scope.init = function(configURL, extendedConfig) {
 
-            $log.debug('RtcommConfigController: initing configURL = ' + configURL);
-            vm.configURL = configURL;
+      $log.debug('RtcommConfigController: initing configURL = ' + configURL);
+      vm.configURL = configURL;
 
-            if (typeof extendedConfig !== "undefined")
-                vm.extendedConfig = extendedConfig;
+      if (typeof extendedConfig !== 'undefined')
+        vm.extendedConfig = extendedConfig;
 
-            vm.getConfig();
-        };
+      vm.getConfig();
+    };
 
-        vm.getConfig = function() {
-            $http.get(vm.configURL).success(function(config) {
+    vm.getConfig = function() {
+      $http.get(vm.configURL).success(function(config) {
 
-                // Now we need to update the config with any extensions passed in on init.
-                if (vm.extendedConfig != null) {
-                    angular.extend(config, vm.extendedConfig);
-                    $log.debug('RtcommConfigController: extended config object: ' + config);
-                }
+        // Now we need to update the config with any extensions passed in on init.
+        if (vm.extendedConfig != null) {
+          angular.extend(config, vm.extendedConfig);
+          $log.debug('RtcommConfigController: extended config object: ' + config);
+        }
 
-                RtcommService.setConfig(config);
-            }).error(function(data, status, headers, config) {
-                $log.debug('RtcommConfigController: error accessing config: ' + status);
-            });
-        };
-    }
+        RtcommService.setConfig(config);
+      }).error(function(data, status, headers, config) {
+        $log.debug('RtcommConfigController: error accessing config: ' + status);
+      });
+    };
+  }
 })();

@@ -20,104 +20,105 @@
  * active endpoints.
  */
 (function() {
-    'use strict';
+  'use strict';
 
-    angular
-        .module('angular-rtcomm-ui')
-        .directive('rtcommChat', rtcommChat);
+  angular
+    .module('angular-rtcomm-ui')
+    .directive('rtcommChat', rtcommChat);
 
-    rtcommChat.$inject = ['RtcommService', '$log'];
+  rtcommChat.$inject = ['RtcommService', '$log'];
 
-    /* @ngInject */
-    function rtcommChat(RtcommService, $log) {
-        var directive = {
-            restrict: 'E',
-            templateUrl: 'templates/rtcomm/rtcomm-chat.html',
-            link: chatLink,
-            controller: ChatController,
-            controllerAs: 'chatVM',
-            bindToController: true
-        };
+  /* @ngInject */
+  function rtcommChat(RtcommService, $log) {
+    var directive = {
+      restrict: 'E',
+      templateUrl: 'templates/rtcomm/rtcomm-chat.html',
+      link: chatLink,
+      controller: ChatController,
+      controllerAs: 'chatVM',
+      bindToController: true
+    };
 
-        return directive;
+    return directive;
 
-        function chatLink(scope, element, attr, ctrl) {
-            var chatPanel = angular.element(element.find('.panel-body')[0]);
+    function chatLink(scope, element, attr, ctrl) {
+      var chatPanel = angular.element(element.find('.panel-body')[0]);
 
-            var bottom = true;
+      var bottom = true;
 
-            //Chooses if the scrollbar should be forced to the bottom on the next lifecycle
-            ctrl.scrollToBottom = function(flag) {
-                bottom = flag;
-                scope.bottom = flag;
+      //Chooses if the scrollbar should be forced to the bottom on the next lifecycle
+      ctrl.scrollToBottom = function(flag) {
+        bottom = flag;
+        scope.bottom = flag;
 
-            }
-		if(chatPanel.length > 0){
-            //Watch scroll events
-            chatPanel.bind('scroll', function() {
-                if (chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') == chatPanel.prop('scrollHeight')) {
-                    ctrl.scrollToBottom(true);
-                } else {
-                    ctrl.scrollToBottom(false);
-                }
-            });
-
-            //Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
-            scope.$watch(function() {
-                return ctrl.chats
-            }, function() {
-                $log.debug('rtcommChat - Link > $watch on chats called');
-                if (bottom) {
-                    chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
-                } else {
-                    //In this else, a notification could be sent
-                }
-            }, true);
-
-        }}
-
-    }
-
-    //Controller should be used to listen for events from Rtcmo
-    ChatController.$inject = ['$scope', 'RtcommService', '$log'];
-
-    /* @ngInject */
-    function ChatController($scope, RtcommService, $log) {
-        var vm = this;
-
-        vm.chatActiveEndpointUUID = RtcommService.getActiveEndpoint();
-        vm.chats = RtcommService.getChats(vm.chatActiveEndpointUUID);
-
-        vm.keySendMessage = function(keyEvent) {
-            if (keyEvent.which === 13)
-                vm.sendMessage();
-        };
-
-        vm.sendMessage = function() {
-            $log.debug('rtcommChat: sendMessage() -> ' + vm.message);
-            var chat = {
-                time: new Date(),
-                name: RtcommService.getEndpoint(vm.chatActiveEndpointUUID).getLocalEndpointID(),
-                message: angular.copy(vm.message)
-            };
-
-            vm.message = '';
-            vm.scrollToBottom(true);
-            $scope.bottom = true;
-            RtcommService.sendChatMessage(chat, vm.chatActiveEndpointUUID);
-        }
-
-        $scope.$on('endpointActivated', function(event, endpointUUID) {
-            $log.debug('rtcommChat: endpointActivated =' + endpointUUID);
-
-            //	The data model for the chat is maintained in the RtcommService.
-            vm.chats = RtcommService.getChats(endpointUUID);
-            vm.chatActiveEndpointUUID = endpointUUID;
+      }
+      if (chatPanel.length > 0) {
+        //Watch scroll events
+        chatPanel.bind('scroll', function() {
+          if (chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') == chatPanel.prop('scrollHeight')) {
+            ctrl.scrollToBottom(true);
+          } else {
+            ctrl.scrollToBottom(false);
+          }
         });
 
-        $scope.$on('noEndpointActivated', function(event) {
-            vm.chats = [];
-            vm.chatActiveEndpointUUID = null;
-        });
+        //Watch the chat messages, if the scroll bar is in the bottom keep it on the bottom so the user can view incoming chat messages, else possibly send a notification and don't scroll down
+        scope.$watch(function() {
+          return ctrl.chats
+        }, function() {
+          $log.debug('rtcommChat - Link > $watch on chats called');
+          if (bottom) {
+            chatPanel.scrollTop(chatPanel.prop('scrollHeight'));
+          } else {
+            //In this else, a notification could be sent
+          }
+        }, true);
+
+      }
     }
+
+  }
+
+  //Controller should be used to listen for events from Rtcmo
+  ChatController.$inject = ['$scope', 'RtcommService', '$log'];
+
+  /* @ngInject */
+  function ChatController($scope, RtcommService, $log) {
+    var vm = this;
+
+    vm.chatActiveEndpointUUID = RtcommService.getActiveEndpoint();
+    vm.chats = RtcommService.getChats(vm.chatActiveEndpointUUID);
+
+    vm.keySendMessage = function(keyEvent) {
+      if (keyEvent.which === 13)
+        vm.sendMessage();
+    };
+
+    vm.sendMessage = function() {
+      $log.debug('rtcommChat: sendMessage() -> ' + vm.message);
+      var chat = {
+        time: new Date(),
+        name: RtcommService.getEndpoint(vm.chatActiveEndpointUUID).getLocalEndpointID(),
+        message: angular.copy(vm.message)
+      };
+
+      vm.message = '';
+      vm.scrollToBottom(true);
+      $scope.bottom = true;
+      RtcommService.sendChatMessage(chat, vm.chatActiveEndpointUUID);
+    }
+
+    $scope.$on('endpointActivated', function(event, endpointUUID) {
+      $log.debug('rtcommChat: endpointActivated =' + endpointUUID);
+
+      //	The data model for the chat is maintained in the RtcommService.
+      vm.chats = RtcommService.getChats(endpointUUID);
+      vm.chatActiveEndpointUUID = endpointUUID;
+    });
+
+    $scope.$on('noEndpointActivated', function(event) {
+      vm.chats = [];
+      vm.chatActiveEndpointUUID = null;
+    });
+  }
 })();
