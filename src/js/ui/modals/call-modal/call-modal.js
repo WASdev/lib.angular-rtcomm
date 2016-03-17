@@ -28,7 +28,7 @@
     RtcommCallModalController.$inject = ['RtcommService', '$modal', '$scope', '$log'];
 
     /* @ngInject */
-    function RtcommCallModalController(dependencies) {
+    function RtcommCallModalController(RtcommService, $modal, $scope, $log){
         var vm = this;
         vm.calleeID = null;
         vm.callerID = null;
