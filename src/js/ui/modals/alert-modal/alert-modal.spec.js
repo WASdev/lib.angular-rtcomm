@@ -17,14 +17,14 @@
 
 
 describe('Controller Testing: Rtcomm Alert Modal', function() {
-    var $compile, $rootScope, $modal, element, sandbox, body;
+    var $compile, $rootScope, $uibModal, element, sandbox, body;
 
     beforeEach(module("rtcomm.templates"));
 
     beforeEach(module('angular-rtcomm-ui'));
 
     //Setup test environment
-    beforeEach(inject(function($compile, $rootScope, $modal, RtcommService, $window) {
+    beforeEach(inject(function($compile, $rootScope, $uibModal, RtcommService, $window) {
         sandbox = sinon.sandbox.create();
         _$rootScope = $rootScope;
         element = $compile('<div ng-controller="RtcommAlertModalController"></div>')(_$rootScope);
@@ -38,7 +38,7 @@ describe('Controller Testing: Rtcomm Alert Modal', function() {
     it('alert modal controller should be available', function() {
         expect(element.attr('ng-controller')).to.include('RtcommAlertModalController');
     })
-    it('should open on sesssion:alerting and accept', inject(function($modal, RtcommService) {
+    it('should open on sesssion:alerting and accept', inject(function($uibModal, RtcommService) {
 
         var mockModal = getMockModal();
 
@@ -48,7 +48,7 @@ describe('Controller Testing: Rtcomm Alert Modal', function() {
             }
         });
 
-        var modalSpy = sinon.stub($modal, 'open', function() {
+        var modalSpy = sinon.stub($uibModal, 'open', function() {
             return mockModal;
         });
 
@@ -70,7 +70,7 @@ describe('Controller Testing: Rtcomm Alert Modal', function() {
         modalSpy.restore();
     }));
 
-    it('should open on session:alerting and reject correctly', inject(function(RtcommService, $modal) {
+    it('should open on session:alerting and reject correctly', inject(function(RtcommService, $uibModal) {
         var mockModal = getMockModal();
 
         var rtcommServiceStub = sinon.stub(RtcommService, 'getEndpoint', function() {
@@ -79,7 +79,7 @@ describe('Controller Testing: Rtcomm Alert Modal', function() {
             }
         });
 
-        var modalSpy = sinon.stub($modal, 'open', function() {
+        var modalSpy = sinon.stub($uibModal, 'open', function() {
             return mockModal;
         });
 
@@ -119,7 +119,7 @@ describe('Controller Testing: Rtcomm Alert Modal', function() {
             scope = $rootScope.$new();
             ctrl = $controller('RtcommAlertModalInstanceController', {
                 $scope: scope,
-                $modalInstance: modalInstance,
+                $uibModalInstance: modalInstance,
                 $log: $log,
                 caller: 'MockUser'
             });

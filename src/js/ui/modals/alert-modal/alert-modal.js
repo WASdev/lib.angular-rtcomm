@@ -27,10 +27,10 @@
         .controller('RtcommAlertModalController', RtcommAlertModalController)
         .controller('RtcommAlertModalInstanceController', RtcommAlertModalInstanceController);
 
-    RtcommAlertModalController.$inject = ['RtcommService', '$modal', '$rootScope', '$scope', '$log'];
+    RtcommAlertModalController.$inject = ['RtcommService', '$uibModal', '$rootScope', '$scope', '$log'];
 
     /* @ngInject */
-    function RtcommAlertModalController(RtcommService, $modal, $rootScope, $scope, $log) {
+    function RtcommAlertModalController(RtcommService, $uibModal, $rootScope, $scope, $log) {
         var vm = this;
         vm.alertingEndpointUUID = null;
         vm.autoAnswerNewMedia = false;
@@ -39,7 +39,7 @@
 
         vm.showAlerting = function(size) {
 
-            var modalInstance = $modal.open({
+            var modalInstance = $uibModal.open({
                 templateUrl: 'templates/rtcomm/rtcomm-modal-alert.html',
                 controller: 'RtcommAlertModalInstanceController',
                 size: size,
@@ -97,18 +97,19 @@
 
     }
 
-    RtcommAlertModalInstanceController.$inject = ['$scope', '$modalInstance', '$log', 'caller'];
+    RtcommAlertModalInstanceController.$inject = ['$scope', '$uibModalInstance', '$log', 'caller'];
 
-    function RtcommAlertModalInstanceController($scope, $modalInstance, $log, caller) {
+    function RtcommAlertModalInstanceController($scope, $uibModalInstance, $log, caller) {
     	$scope.caller = caller;
     	$scope.ok = function () {
     		$log.debug('Accepting alerting call');
-    		$modalInstance.close();
+    		$uibModalInstance.close();
     	};
 
     	$scope.cancel = function () {
     		$log.debug('Rejecting alerting call');
-    		$modalInstance.dismiss('cancel');
+    		$uibModalInstance.dismiss('cancel');
+
     	};
     };
 })();

@@ -25,10 +25,10 @@
         .controller('RtcommCallModalController', RtcommCallModalController)
         .controller('RtcommCallModalInstanceController', RtcommCallModalInstanceController);
 
-    RtcommCallModalController.$inject = ['RtcommService', '$modal', '$scope', '$log'];
+    RtcommCallModalController.$inject = ['RtcommService', '$uibModal', '$scope', '$log'];
 
     /* @ngInject */
-    function RtcommCallModalController(RtcommService, $modal, $scope, $log){
+    function RtcommCallModalController(RtcommService, $uibModal, $scope, $log){
         var vm = this;
         vm.calleeID = null;
         vm.callerID = null;
@@ -45,7 +45,7 @@
 
         vm.placeCall = function(size) {
 
-            var modalInstance = $modal.open({
+            var modalInstance = $uibModal.open({
                 templateUrl: 'templates/rtcomm/rtcomm-modal-call.html',
                 controller: 'RtcommCallModalInstanceController',
                 size: size,
@@ -88,13 +88,13 @@
 
     }
 
-    function RtcommCallModalInstanceController($scope, $modalInstance, RtcommService) {
+    function RtcommCallModalInstanceController($scope, $uibModalInstance, RtcommService) {
         $scope.endpointAlias = '';
         $scope.ok = function() {
-            $modalInstance.close($scope.endpointAlias);
+            $uibModalInstance.close($scope.endpointAlias);
         };
         $scope.cancel = function() {
-            $modalInstance.dismiss('cancel');
+            $uibModalInstance.dismiss('cancel');
         };
     };
 

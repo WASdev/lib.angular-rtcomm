@@ -18,7 +18,7 @@
 
 describe('Unit Test: Call Modal', function(){
 	//Dependencies
-	var RtcommService, $modal, $rootScope;
+	var RtcommService, $uibModal, $rootScope;
 
 	//Sandbox
 	var sandbox;
@@ -26,10 +26,10 @@ describe('Unit Test: Call Modal', function(){
 	var RtcommCallDiv;
 	beforeEach(module('angular-rtcomm-ui'));
 
-	beforeEach(inject(['$modal', 'RtcommService', '$compile', '$rootScope',
-		function(_$modal_, _RtcommService_, _$compile_, _$rootScope_){
+	beforeEach(inject(['$uibModal', 'RtcommService', '$compile', '$rootScope',
+		function(_$uibModal_, _RtcommService_, _$compile_, _$rootScope_){
 			
-			$modal = _$modal_;
+			$uibModal = _$uibModal_;
 			RtcommService = _RtcommService_;
 			$compile = _$compile_;
 			$rootScope = _$rootScope_;
