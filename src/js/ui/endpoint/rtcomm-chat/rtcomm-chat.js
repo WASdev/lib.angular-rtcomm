@@ -1,5 +1,5 @@
 /**
- * (C) Copyright IBM Corporation 2016.
+ * (C) Copyright IBM Corporation 2015.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@
                 scope.bottom = flag;
 
             }
-
+		if(chatPanel.length > 0){
             //Watch scroll events
             chatPanel.bind('scroll', function() {
                 if (chatPanel.prop('scrollTop') + chatPanel.prop('clientHeight') == chatPanel.prop('scrollHeight')) {
@@ -74,7 +74,7 @@
                 }
             }, true);
 
-        }
+        }}
 
     }
 
