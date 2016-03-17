@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.3 - 2016-03-16
+ * @version v1.0.3 - 2016-03-17
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -2303,7 +2303,7 @@ angular
     RtcommCallModalController.$inject = ['RtcommService', '$modal', '$scope', '$log'];
 
     /* @ngInject */
-    function RtcommCallModalController(dependencies) {
+    function RtcommCallModalController(RtcommService, $modal, $scope, $log){
         var vm = this;
         vm.calleeID = null;
         vm.callerID = null;
