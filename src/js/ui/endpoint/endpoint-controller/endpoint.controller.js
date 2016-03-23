@@ -34,8 +34,8 @@
 
     $scope.disconnect = function() {
       $log.debug('Disconnecting call for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
-      var ep = getActiveEndpoint;
-      ep.disconnect();
+      RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).disconnect();
+
     };
 
     $scope.toggleAV = function() {
