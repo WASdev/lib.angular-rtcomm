@@ -572,17 +572,17 @@ angular
         'onetimemessage': function(eventObject) {
           $log.debug('<<------- rtcomm-service ----->> - Event: ' + eventObject);
 
-          if (event.onetimemessage.type !== 'undefined' && event.onetimemessage.type === 'iFrameURL') {
-            var id = event.endpoint.id;
+          if (eventObject.onetimemessage.type !== 'undefined' && eventObject.onetimemessage.type === 'iFrameURL') {
+            var id = eventObject.endpoint.id;
 
             var session = RtcommSessions.getSession(id);
             if (session === null) {
               session = RtcommSessions.createSession(id);
             }
-            session.iFrameURL = event.onetimemessage.iFrameURL;
+            session.iFrameURL = eventObject.onetimemessage.iFrameURL;
             $rootScope.$evalAsync(
               function() {
-                $rootScope.$broadcast('rtcomm::iframeUpdate', event.endpoint.id, event.onetimemessage.iFrameURL);
+                $rootScope.$broadcast('rtcomm::iframeUpdate', eventObject.endpoint.id, eventObject.onetimemessage.iFrameURL);
               }
             );
           }
@@ -590,7 +590,7 @@ angular
         'session:started': function(eventObject) {
           $log.debug('<<------rtcomm-service------>> - Event: ' + eventObject.eventName + ' remoteEndpointID: ' + eventObject.endpoint.getRemoteEndpointID());
           var id = eventObject.endpoint.id;
-          var endoint = eventObject.endpoint;
+          var endpoint = eventObject.endpoint;
           var session = RtcommSessions.getSession(id);
 
           if (session === null) $log.error('Session:started but a previous session hasn\'t been created!');
@@ -662,7 +662,7 @@ angular
 
           var session = RtcommSessions.getSession(eventObject.endpoint.id);
 
-          if(session !== null) {
+          if (session !== null) {
             session.chats.push(chat);
             broadcastRtcommEvent(eventObject);
           }
@@ -734,19 +734,18 @@ angular
 
     function _setActiveEndpoint(endpointID) {
 
-      //base case
-
-      // First get the old active endpoint
       var activeEndpoint = _getActiveEndpointUUID();
+
       if ((activeEndpoint !== null) && (activeEndpoint !== endpointID)) {
         var session = RtcommSessions.getSession(activeEndpoint);
-        if (typeof session !== 'undefined')
+        if (session !== null)
           session.activated = false;
-      } else {
-
-        var session = RtcommSessions.createSession(endpointID);
-        session.activated = true;
       }
+      var session = RtcommSessions.getSession(endpointID);
+
+      if (session === null) session = RtcommSessions.createSession(endpointID);
+      session.activated = true;
+
 
       $rootScope.$broadcast('endpointActivated', endpointID);
     };
@@ -926,11 +925,9 @@ angular
 
       var session;
       //	Save this chat in the local session store
-      if (sessionExists(endpointUUID)) {
-        session = RtcommSessions.getSession(endpointUUID);
-      } else {
-        session = RtcommSessions.createSession(endpointUUID);
-      }
+      session = RtcommSessions.getSession(endpointUUID);
+      if (session === null) session = RtcommSessions.createSession(endpointUUID);
+
       session.chats.push(chat);
 
       myEndpointProvider.getRtcommEndpoint(endpointUUID).chat.send(chat.message);
@@ -941,7 +938,7 @@ angular
 
       if (typeof endpointUUID !== 'undefined' && endpointUUID != null) {
         var session = RtcommSessions.getSession(endpointUUID);
-        if (typeof session !== 'undefined')
+        if (session !== null)
           return (session.chats);
         else
           return (null);
@@ -1016,8 +1013,9 @@ angular
       var endpoint = myEndpointProvider.getRtcommEndpoint(endpointUUID);
 
       if (endpoint != null) {
+	var session = RtcommSessions.getSession(endpointUUID);
 
-        var session = RtcommSessions.createSession(endpointUUID);
+        if(session === null)  session = RtcommSessions.createSession(endpointUUID);
         session.iFrameURL = newUrl;
 
         var message = {
@@ -1131,7 +1129,7 @@ angular
       createSession: createSession,
       getSession: getSession,
       updateSession: updateSession,
-removeSession: removeSession
+      removeSession: removeSession
 
     };
 
@@ -1216,15 +1214,15 @@ removeSession: removeSession
 
         if (session.endpointUUID === endpointUUID) {
           sessions.splice(i, 1);
+
           $log.debug('Session with endpointUUID === ' + endpointUUID + 'has been removed');
           break;
         }
       }
 
-      if (typeof session === 'undefined') {
+      if (session === null) {
         $log.debug('Unable to destroy session due to it not existing');
       }
-
       return session;
 
     }
