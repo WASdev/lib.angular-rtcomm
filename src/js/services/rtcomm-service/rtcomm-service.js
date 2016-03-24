@@ -328,7 +328,13 @@
     function _getEndpoint(uuid) {
       var endpoint = null;
 
-      endpoint = myEndpointProvider.getRtcommEndpoint(uuid);
+      if (typeof uuid === 'undefined' || uuid === null) {
+        $log.debug('getEndpoint: create new endpoint');
+        endpoint = myEndpointProvider.createRtcommEndpoint();
+      } else {
+        $log.debug('getEndpoint: get an endpoint with id -> ' + uuid);
+        endpoint = myEndpointProvider.getRtcommEndpoint(uuid);
+      }
 
       return (endpoint);
     };
@@ -614,9 +620,9 @@
       var endpoint = myEndpointProvider.getRtcommEndpoint(endpointUUID);
 
       if (endpoint != null) {
-	var session = RtcommSessions.getSession(endpointUUID);
+        var session = RtcommSessions.getSession(endpointUUID);
 
-        if(session === null)  session = RtcommSessions.createSession(endpointUUID);
+        if (session === null) session = RtcommSessions.createSession(endpointUUID);
         session.iFrameURL = newUrl;
 
         var message = {

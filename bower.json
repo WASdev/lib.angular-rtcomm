@@ -4,9 +4,7 @@
   "description": "Angular module for Rtcomm",
   "main": [
     "dist/angular-rtcomm.js",
-    "dist/angular-rtcomm.min.js",
-    "dist/css/angular-rtcomm.css",
-    "dist/css/angular-rtcomm.min.css"
+    "dist/css/angular-rtcomm.css"
   ],
   "keywords": [
     "webrtc",

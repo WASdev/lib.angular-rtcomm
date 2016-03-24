@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.3 - 2016-03-23
+ * @version v1.0.3 - 2016-03-24
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -727,7 +727,13 @@ angular
     function _getEndpoint(uuid) {
       var endpoint = null;
 
-      endpoint = myEndpointProvider.getRtcommEndpoint(uuid);
+      if (typeof uuid === 'undefined' || uuid === null) {
+        $log.debug('getEndpoint: create new endpoint');
+        endpoint = myEndpointProvider.createRtcommEndpoint();
+      } else {
+        $log.debug('getEndpoint: get an endpoint with id -> ' + uuid);
+        endpoint = myEndpointProvider.getRtcommEndpoint(uuid);
+      }
 
       return (endpoint);
     };
@@ -1013,9 +1019,9 @@ angular
       var endpoint = myEndpointProvider.getRtcommEndpoint(endpointUUID);
 
       if (endpoint != null) {
-	var session = RtcommSessions.getSession(endpointUUID);
+        var session = RtcommSessions.getSession(endpointUUID);
 
-        if(session === null)  session = RtcommSessions.createSession(endpointUUID);
+        if (session === null) session = RtcommSessions.createSession(endpointUUID);
         session.iFrameURL = newUrl;
 
         var message = {

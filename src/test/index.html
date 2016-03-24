@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+
+
+<html>
+
+
+<head >
+    <meta charset="utf-8">
+    <title>E2E: rtcomm-video</title>
+
+
+    <link rel="stylesheet" href="../../../bower_components/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- bower:css -->
+    <link rel="stylesheet" href="../../bower_components/angular-tree-control/css/tree-control.css" />
+    <!-- endbower -->
+
+    <!-- bower:js -->
+    <script src="../../bower_components/jquery/dist/jquery.js"></script>
+    <script src="../../bower_components/angular/angular.js"></script>
+    <script src="../../bower_components/angular-tree-control/angular-tree-control.js"></script>
+    <script src="../../bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="../../bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+    <script src="../../bower_components/bower-mqttws/mqttws31.js"></script>
+    <script src="../../bower_components/webrtc-adapter/adapter.js"></script>
+    <script src="../../bower_components/rtcomm/dist/rtcomm.js"></script>
+    <!-- endbower -->
+
+    <link href="/dist/css/angular-rtcomm.css" rel="stylesheet">
+
+    <script src="/dist/angular-rtcomm.js"></script>
+
+    <script src="script.js"></script>
+
+</head>
+
+<body ng-app="app">
+	<br/>
+	<div class="row">
+
+	<div class="col-md-3">
+		<rtcomm-chat></rtcomm-chat>
+	
+	</div>
+
+	<div class="col-md-6" ng-controller="MyController as vm">	
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<rtcomm-video></rtcomm-video>
+			</div>
+
+		</div>
+		
+		<hr>
+		<rtcomm-register></rtcomm-register>
+		<div class="input-group">
+			<input type="text" class="form-control" placeholder="Callee name" ng-model="vm.callee"/>
+
+			<span class="input-group-btn">
+				<button class="btn btn-default" ng-click="vm.call()" id="place-call-btn" type="button">Call</button>
+			</span>
+		</div>
+	</div>
+
+	</div>
+
+	<div ng-controller="RtcommAlertModalController"></div>
+</body>
+
+</html>

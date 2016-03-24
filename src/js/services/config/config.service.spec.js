@@ -123,7 +123,7 @@ describe('Unit Testing: Rtcomm Config Service', function() {
         });
 
         it('rtcomm debug should be on level INFO', function() {
-            expect(RtcommConfigService.getRtcommDebug()).to.equal('INFO');
+            expect(RtcommConfigService.getRtcommDebug()).to.equal('DEBUG');
         });
 
         it('rtcommdisabled should false', function() {

@@ -8,25 +8,25 @@ module.exports = function(grunt) {
 
     meta: {
       banner: '/**\n' +
-      ' * Copyright 2014 IBM Corp.\n' +
-      ' *\n' +
-      ' * Licensed under the Apache License, Version 2.0 (the "License");\n' +
-      ' * you may not use this file except in compliance with the License.\n' +
-      ' * You may obtain a copy of the License at\n' +
-      ' *\n' +
-      ' * http://www.apache.org/licenses/LICENSE-2.0\n' +
-      ' *\n' +
-      ' * Unless required by applicable law or agreed to in writing, software\n' +
-      ' * distributed under the License is distributed on an "AS IS" BASIS,\n' +
-      ' * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n' +
-      ' * See the License for the specific language governing permissions and\n' +
-      ' * limitations under the License.\n' +
-      ' *\n' +
-      ' * <%= pkg.description %>\n' +
-      ' * @version v<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd") %>\n' +
-      ' * @link <%= pkg.homepage %>\n' +
-      ' * @author <%= pkg.author %>\n' +
-      ' */\n'
+        ' * Copyright 2014 IBM Corp.\n' +
+        ' *\n' +
+        ' * Licensed under the Apache License, Version 2.0 (the "License");\n' +
+        ' * you may not use this file except in compliance with the License.\n' +
+        ' * You may obtain a copy of the License at\n' +
+        ' *\n' +
+        ' * http://www.apache.org/licenses/LICENSE-2.0\n' +
+        ' *\n' +
+        ' * Unless required by applicable law or agreed to in writing, software\n' +
+        ' * distributed under the License is distributed on an "AS IS" BASIS,\n' +
+        ' * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n' +
+        ' * See the License for the specific language governing permissions and\n' +
+        ' * limitations under the License.\n' +
+        ' *\n' +
+        ' * <%= pkg.description %>\n' +
+        ' * @version v<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd") %>\n' +
+        ' * @link <%= pkg.homepage %>\n' +
+        ' * @author <%= pkg.author %>\n' +
+        ' */\n'
     },
 
     dirs: {
@@ -39,40 +39,40 @@ module.exports = function(grunt) {
         banner: '<%= meta.banner %>'
       },
       dist: {
-//        src: ['<%= dirs.src %>/*.js', '<%= dirs.src %>/**/*.js'],
+        //        src: ['<%= dirs.src %>/*.js', '<%= dirs.src %>/**/*.js'],
         src: ['<%= dirs.src %>/js/**/*.module.js', '<%= dirs.src %>/js/**/*.js', '!**/*.spec.js'],
         dest: '<%= dirs.dest %>/<%= pkg.name %>.js'
       }
     },
 
     copy: {
-    	main: {
-    		expand: true,
-    		cwd: '<%= dirs.src %>',
-    		src: ['css/*.css'],
-    		dest: '<%= dirs.dest %>',
-    	}
+      main: {
+        expand: true,
+        cwd: '<%= dirs.src %>',
+        src: ['css/*.css'],
+        dest: '<%= dirs.dest %>',
+      }
     },
 
     cssmin: {
-    	  my_target: {
-    	    files: [{
-    	      expand: true,
-    	      cwd: '<%= dirs.src %>',
-    	      src: ['css/*.css'],
-    	      dest: '<%= dirs.dest %>',
-    	      ext: '.min.css'
-    	    }]
-    	  }
+      my_target: {
+        files: [{
+          expand: true,
+          cwd: '<%= dirs.src %>',
+          src: ['css/*.css'],
+          dest: '<%= dirs.dest %>',
+          ext: '.min.css'
+        }]
+      }
     },
 
     ngAnnotate: {
-        dist: {
-          files: {
-            '<%= dirs.dest %>/<%= pkg.name %>.js': ['<%= dirs.dest %>/<%= pkg.name %>.js']
-          }
+      dist: {
+        files: {
+          '<%= dirs.dest %>/<%= pkg.name %>.js': ['<%= dirs.dest %>/<%= pkg.name %>.js']
         }
-      },
+      }
+    },
 
     uglify: {
       options: {
@@ -108,34 +108,49 @@ module.exports = function(grunt) {
       }
     },
 
-     watch: {
+    watch: {
       dev: {
         files: ['<%= dirs.src %>/**'],
         tasks: ['build']
       },
     },
+    wiredep: {
+      task: {
+        src: ['<%= dirs.src %>/test/**/*.html']
+      },
+      options:{
+	ignorePath: '../../..'
+	}
+    },
+    ngtemplates: {
+      'angular-rtcomm-ui': {
+        cwd: '<%= dirs.src %>',
+        src: ['templates/rtcomm/**.html', '!templates/rtcomm/rtcomm-presence.html'],
+        dest: '<%= dirs.dest %>/<%= pkg.name %>.js',
+        options: {
+          htmlmin: {
+            collapseWhitespace: true,
+            collapseBooleanAttributes: true
+          },
+          append: 'true'
+        }
+      },
+      'angular-rtcomm-presence': {
+        cwd: '<%= dirs.src %>',
+        src: 'templates/rtcomm/rtcomm-presence.html',
+        dest: '<%= dirs.dest %>/<%= pkg.name %>.js',
+        options: {
+          htmlmin: {
+            collapseWhitespace: true,
+            collapseBooleanAttributes: true
+          },
+          append: 'true'
+        }
 
-    ngtemplates:  {
-        'angular-rtcomm-ui': {
-    	    cwd:      '<%= dirs.src %>',
-    	    src:      ['templates/rtcomm/**.html', '!templates/rtcomm/rtcomm-presence.html'],
-    	    dest:     '<%= dirs.dest %>/<%= pkg.name %>.js',
-	        options:    {
-	            htmlmin:  { collapseWhitespace: true, collapseBooleanAttributes: true },
-	            append: 'true'
-	          }
-        },
-        'angular-rtcomm-presence': {
-    	    cwd:      '<%= dirs.src %>',
-    	    src:      'templates/rtcomm/rtcomm-presence.html',
-    	    dest:     '<%= dirs.dest %>/<%= pkg.name %>.js',
-	        options:    {
-	            htmlmin:  { collapseWhitespace: true, collapseBooleanAttributes: true },
-	            append: 'true'
-	          }
+      }
+    },
 
-    	  }
-    	}
+
   });
 
   // Build task.
