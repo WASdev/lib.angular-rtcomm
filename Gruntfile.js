@@ -107,7 +107,16 @@ module.exports = function(grunt) {
         }
       }
     },
+    karma: {
+      unit: {
+        configFile: 'karma.conf.js',
+	singleRun: true
+      },
+      watch :{
+	configFile: 'karma.conf.js'
+      }
 
+    },
     watch: {
       dev: {
         files: ['<%= dirs.src %>/**'],
@@ -118,9 +127,9 @@ module.exports = function(grunt) {
       task: {
         src: ['<%= dirs.src %>/test/**/*.html']
       },
-      options:{
-	ignorePath: '../../..'
-	}
+      options: {
+        ignorePath: '../../..'
+      }
     },
     ngtemplates: {
       'angular-rtcomm-ui': {
@@ -154,7 +163,7 @@ module.exports = function(grunt) {
   });
 
   // Build task.
-  grunt.registerTask('build', ['jshint', 'concat', 'ngtemplates', 'ngAnnotate', 'uglify', 'copy', 'cssmin']);
+  grunt.registerTask('build', ['karma:unit', 'jshint', 'concat', 'ngtemplates', 'ngAnnotate', 'uglify', 'copy', 'cssmin']);
 
   // Default task.
   //grunt.registerTask('default', ['build', 'watch']);

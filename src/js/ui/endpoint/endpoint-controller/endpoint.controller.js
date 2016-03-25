@@ -28,10 +28,6 @@
     $scope.epCtrlAVConnected = RtcommService.isWebrtcConnected($scope.epCtrlActiveEndpointUUID);
     $scope.sessionState = RtcommService.getSessionState($scope.epCtrlActiveEndpointUUID);
 
-    function getActiveEndpoint() {
-      return RtcommService.getEndpoint(RtcommService.getActiveEndpoint());
-    }
-
     $scope.disconnect = function() {
       $log.debug('Disconnecting call for endpoint: ' + $scope.epCtrlActiveEndpointUUID);
       RtcommService.getEndpoint($scope.epCtrlActiveEndpointUUID).disconnect();

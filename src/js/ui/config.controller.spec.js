@@ -19,7 +19,8 @@ describe('Unit Testing: RtcommConfigController', function() {
 
   var sandbox;
 
-  var $rootScope, RtcommService, $compile, $httpBackend, rtcommConfigGET, rtcommConfig;
+  var $rootScope, RtcommService, $compile, $httpBackend, rtcommConfigGET, rtcommConfig, $log;
+
   beforeEach(module('rtcomm.templates'));
 
   beforeEach(module('angular-rtcomm-ui'));
@@ -32,7 +33,7 @@ describe('Unit Testing: RtcommConfigController', function() {
       RtcommService = $injector.get('RtcommService');
       $compile = $injector.get('$compile');
       $httpBackend = $injector.get('$httpBackend');
-
+	$log = $injector.get('$log');
       rtcommConfig = {
         'rtcommTopicPath': '/rtcomm/',
         'createEndpoint': true,
@@ -81,6 +82,17 @@ describe('Unit Testing: RtcommConfigController', function() {
 
     $httpBackend.flush();
 
+  });
+
+  it('should display an error on accessing the config', function() {
+    rtcommConfigGET.respond(404, '');
+    sandbox.spy($log, 'error');
+
+    var rtcommConfigDiv = compileRtcommConfigController({});
+
+    $httpBackend.flush();
+
+    expect($log.calledOnce);
   });
 
   function compileRtcommConfigController(extendedConfig) {

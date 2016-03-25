@@ -51,11 +51,6 @@
 
     $log.debug('RtcommConfigController: configURL = ' + vm.configURL);
 
-    vm.setConfig = function(data) {
-      $log.debug('RtcommConfigController: setting config data:' + data);
-      RtcommService.setConfig(data);
-    };
-
     $scope.init = function(configURL, extendedConfig) {
 
       $log.debug('RtcommConfigController: initing configURL = ' + configURL);
