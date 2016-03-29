@@ -9,44 +9,49 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jasmine', 'mocha', 'chai'],
-
+    frameworks: ['mocha', 'chai', 'sinon'],
+    reporters: ['progress', 'coverage'],
     // list of files / patterns to load in the browser
     files: [
-      'node_modules/angular/angular.js',
-      'node_modules/angular-mocks/angular-mocks.js',
       'bower_components/jquery/dist/jquery.js',
+      'bower_components/bootstrap/dist/js/bootstrap.js',
+      'bower_components/angular/angular.js',
+      'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
-      'bower_components/angular-modal-service/dst/angular-modal-service.js',
       'bower_components/angular-tree-control/angular-tree-control.js',
       'bower_components/bower-mqttws/mqttws31.js',
       'bower_components/rtcomm/dist/rtcomm.js',
-      'src/js/rtcomm-services.js',
-      'src/js/rtcomm-directives.js',
-      'test/*Spec.js'
+      'src/templates/**/*.html',
+      'src/js/**/*.spec.js',
+      'src/js/**/*.module.js',
+      'src/js/**/*.js',
     ],
 
 
     // list of files to exclude
-    exclude: [
-    ],
+    exclude: [],
 
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-    	'src/templates/*.html': 'ng-html2js'
+      'src/templates/**/*.html': ['ng-html2js'],
+      'src/js/**/!(*.spec).js': ['coverage']
+    },
+    coverageReporter: {
+      type: 'html',
+      dir: 'coverage/'
     },
 
-
-    // test results reporter to use
-    // possible values: 'dots', 'progress'
-    // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
-
+    ngHtml2JsPreprocessor: {
+      stripPrefix: 'src/',
+      moduleName: 'rtcomm.templates'
+    },
 
     // web server port
     port: 9876,
+
+    // plugins: ["karma-spec-reporter"],
 
 
     // enable / disable colors in the output (reporters and logs)
@@ -55,21 +60,21 @@ module.exports = function(config) {
 
     // level of logging
     // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_DEBUG,
+    logLevel: config.LOG_INFO,
 
 
     // enable / disable watching file and executing tests whenever any file changes
-    autoWatch: false,
+    autoWatch: true,
 
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
     //browsers: ['Chrome', 'Firefox'],
-    browsers: ['Chrome'],
+    browsers: ['Chrome', 'Firefox'],
 
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: true
+    singleRun: false
   });
 };
