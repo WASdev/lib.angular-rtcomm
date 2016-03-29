@@ -4,7 +4,8 @@
   "description": "Angular module for Rtcomm",
   "main": "Gruntfile.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node test/server.js",
+    "test": "node_modules/.bin/protractor protractor.conf.js"
   },
   "repository": {
     "type": "git",
@@ -50,6 +51,7 @@
     "karma-spec-reporter": "0.0.24",
     "load-grunt-tasks": "^1.0.0",
     "mocha": "^2.0.1",
+    "mosca": "^1.1.2",
     "protractor": "^3.1.1",
     "q": "^1.4.1"
   }

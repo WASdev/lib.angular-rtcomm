@@ -4,52 +4,37 @@ var chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 var expect = chai.expect;
 var q = require('q');
-var RtcommHelper = require('./lib/browser-config-generator.js');
+var RtcommHelper = require('./test/lib/browser-config-generator.js');
 
 ///Define the users in the session
 var session = [{
   browserName: process.env.BROWSER || 'chrome',
   caller: true
-}, {
-  browserName: process.env.BROWSER || 'chrome',
-  callee: true
 }];
 
+
 function establishSessionMeta(capabilities) {
-  var USERS = [];
   var promises = [];
-  // var defer = q.defer();
 
   capabilities.forEach(function(cap) {
-
-    cap.USERS = USERS;
-    USERS.push(cap.userName);
-
     promises.push(RtcommHelper.generateBrowserProfile(cap));
-
   });
   return q.all(promises);
 }
 
 exports.config = {
-  directConnect: true,
-  specs: ['**/*.spec.js'],
+  seleniumAddress: process.env.SELENIUM_ADDRESS || 'http://localhost:4444/wd/hub',
+  specs: ['test/**/*.spec.js'],
+  baseUrl: process.env.BASE_URL || 'http://localhost:8083/test/',
   getMultiCapabilities: function() {
     return establishSessionMeta(session);
   },
   onPrepare: function() {
+
     global.EC = protractor.ExpectedConditions;
     global.expect = expect;
-    // browser.driver.manage().window().maximize();
+    browser.driver.manage().window().maximize();
 
-    return browser.getProcessedConfig().then(function(config) {
-browser.driver.manage().window().maximize();
-
-    browser.caller = config.capabilities.caller;
-      browser.callee = config.capabilities.callee;
-      browser.userName = config.capabilities.userName;
-      browser.USERS = config.capabilities.USERS;
-    });
   },
 
   framework: 'mocha',

@@ -20,7 +20,7 @@
 
 	vm.call = function(){
 		$log.debug('Calling: ' + vm.callee);
-		RtcommService.placeCall(vm.callee, ['webrtc']);
+		RtcommService.placeCall(vm.callee, ['chat']);
 		
 	}
 

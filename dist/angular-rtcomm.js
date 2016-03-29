@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.3 - 2016-03-25
+ * @version v1.0.3 - 2016-03-29
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -518,7 +518,7 @@ angular
     function activate() {
       myEndpointProvider = new rtcomm.EndpointProvider();
 
-//      myEndpointProvider.setLogLevel(RtcommConfigService.getRtcommDebug());
+      myEndpointProvider.setLogLevel(RtcommConfigService.getRtcommDebug());
 
       $log.debug('rtcomm-service - endpointProvider log level is: ' + myEndpointProvider.getLogLevel());
       $log.debug('rtcomm-service - endpointProvider log level should be: ' + RtcommConfigService.getRtcommDebug());
