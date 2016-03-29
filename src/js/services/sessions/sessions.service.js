@@ -100,14 +100,16 @@
 
           $log.debug('Session with endpointUUID === ' + endpointUUID + 'has been removed');
           break;
-        }
+        
+				
+	}
       }
 
       if (session === null) {
         $log.debug('Unable to destroy session due to it not existing');
       }
-      return session;
 
+      return session; 
     }
 
 

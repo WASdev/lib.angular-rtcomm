@@ -614,7 +614,7 @@ angular
 
         'session:failed': function(eventObject) {
 
-          RtcommSessions.removeSession(eventObject.endpoint.id);
+          removeSession(eventObject.endpoint.id);
           broadcastRtcommEvent(eventObject);
         },
 
@@ -623,7 +623,7 @@ angular
          */
         'session:stopped': function(eventObject) {
           //Remove the session
-          RtcommSessions.removeSession(eventObject.endpoint.id);
+          removeSession(eventObject.endpoint.id);
 
           broadcastRtcommEvent(eventObject);
         },
@@ -684,6 +684,22 @@ angular
           $rootScope.$broadcast(eventObject.eventName, eventObject);
         }
       );
+    }
+
+    function removeSession(endpointUUID) {
+
+      RtcommSessions.removeSession(endpointUUID);
+
+      var endpoint = _getEndpoint(endpointUUID);
+
+      if (endpoint !== null) endpoint.destroy();
+
+      var sessions = RtcommSessions.getAllSessions();
+
+      if (sessions.length === 0) $rootScope.$broadcast('noEndpointActivated');
+
+      else
+        _setActiveEndpoint(sessions[0].endpointUUID);
     }
 
     function getPresenceRecord() {
@@ -1226,14 +1242,16 @@ angular
 
           $log.debug('Session with endpointUUID === ' + endpointUUID + 'has been removed');
           break;
-        }
+        
+				
+	}
       }
 
       if (session === null) {
         $log.debug('Unable to destroy session due to it not existing');
       }
-      return session;
 
+      return session; 
     }
 
 
