@@ -23,7 +23,8 @@ function establishSessionMeta(capabilities) {
 }
 
 exports.config = {
-  seleniumAddress: process.env.SELENIUM_ADDRESS || 'http://localhost:4444/wd/hub',
+  //  seleniumAddress: process.env.SELENIUM_ADDRESS || 'http://localhost:4444/wd/hub',
+
   specs: ['test/**/*.spec.js'],
   baseUrl: process.env.BASE_URL || 'http://localhost:8083/test/',
   getMultiCapabilities: function() {

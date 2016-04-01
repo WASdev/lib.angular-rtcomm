@@ -30,21 +30,13 @@ To run Unit Tests against this project:
 ```
 karma start karma.conf.js
 ```
-
-Integration Testing requires more previous configuration. First you'll want to update and start a Selenium Webdriver server on your machine:
-
-```
-$ node_modules/.bin/webdriver-manager update
-$ node_modules/.bin/webdriver-manager start
-```
-
-Once that is setup you can simply start the MQTT broker + Static Server combo:
+For integration/End to End testing, start the MQTT broker + Static Server combo:
 
 ```
 npm start
 ```
 
-And finally, run the integration test:
+And run the test:
 ```
 npm test
 ```
