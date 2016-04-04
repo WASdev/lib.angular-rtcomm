@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.3 - 2016-03-29
+ * @version v1.0.3 - 2016-04-05
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -268,6 +268,7 @@ angular
 
   /* @ngInject */
   function RtcommConfigService($location, $log, $window) {
+
     var service = {
       setProviderConfig: setProviderConfig,
       getProviderConfig: getProviderConfig,
@@ -390,7 +391,8 @@ angular
     }
 
     function isRtcommDisabled() {
-      return false;
+      //If locations are different then it is probably inside an iframe so it must be false
+      return $window.location !== $window.parent.location;
     }
 
     function getMediaConfig() {
@@ -517,7 +519,6 @@ angular
 
     function activate() {
       myEndpointProvider = new rtcomm.EndpointProvider();
-
       myEndpointProvider.setLogLevel(RtcommConfigService.getRtcommDebug());
 
       $log.debug('rtcomm-service - endpointProvider log level is: ' + myEndpointProvider.getLogLevel());
@@ -604,6 +605,8 @@ angular
             broadcastRtcommEvent(eventObject);
           }
         },
+        'session:connecting': sessionEstablishmentCallback,
+
         'session:alerting': sessionEstablishmentCallback,
 
         'session:trying': sessionEstablishmentCallback,
@@ -2209,7 +2212,6 @@ angular
             if (vm.syncSource === false) {
                 $log.debug('rtcomm::iframeUpdate: ' + url);
                 //	This is needed to prevent rtcomm from logging in when the page is loaded in the iFrame.
-                url = url + "?disableRtcomm=true";
                 vm.iframeURL = $sce.trustAsResourceUrl(url);
             } else {
                 $log.debug('rtcomm::iframeUpdate: load this url in a new tab: ' + url);
@@ -2242,68 +2244,80 @@ angular
  */
 
 (function() {
-    'use strict';
+  'use strict';
 
-    angular
-        .module('angular-rtcomm-ui')
-        .directive('rtcommVideo', rtcommVideo)
-	.controller('RtcommVideoController', VideoController);
-    /* @ngInject */
-    function rtcommVideo() {
-        var directive = {
-            restrict: 'E',
-            templateUrl: 'templates/rtcomm/rtcomm-video.html',
-            controller: VideoController,
-            controllerAs: 'videoVM',
-            bindToController: true
-        };
+  angular
+    .module('angular-rtcomm-ui')
+    .directive('rtcommVideo', rtcommVideo)
+    .controller('RtcommVideoController', VideoController);
+  /* @ngInject */
+  function rtcommVideo() {
+    var directive = {
+      restrict: 'E',
+      templateUrl: 'templates/rtcomm/rtcomm-video.html',
+      controller: VideoController,
+      controllerAs: 'videoVM',
+      bindToController: true
+    };
 
-        return directive;
+    return directive;
+  }
+
+  VideoController.$inject = ['RtcommService', '$scope', '$log'];
+
+  // /* @ngInject */
+  function VideoController(RtcommService, $scope, $log) {
+    var vm = this;
+    $log.debug('VideoController Starting');
+    vm.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
+    //Backwards compability
+    $scope.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
+
+
+    $scope.init = function(selfView, remoteView) {
+      RtcommService.setViewSelector(selfView, remoteView);
+      //
+      var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
+      if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null)
+        RtcommService.setVideoView(videoActiveEndpointUUID);
+    };
+
+    // Go ahead and initialize the local media here if an endpoint already exist.
+    var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
+    if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null) {
+      RtcommService.setVideoView(videoActiveEndpointUUID);
+
     }
 
-    VideoController.$inject = ['RtcommService', '$scope', '$log'];
+    $scope.$on('endpointActivated', function(event, endpointUUID) {
+      //	Not to do something here to show that this button is live.
+      $log.debug('rtcommVideo: endpointActivated =' + endpointUUID);
+      RtcommService.setVideoView(endpointUUID);
+      vm.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
+      $scope.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
+    });
+    // //
+    $scope.$on('noEndpointActivated', function(event) {
+      vm.avConnected = false;
 
-    // /* @ngInject */
-    function VideoController(RtcommService, $scope, $log) {
-        var vm = this;
-        $log.debug('VideoController Starting');
-        vm.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
-        // $scope.init = function(selfView, remoteView) {
-        //     RtcommService.setViewSelector(selfView, remoteView);
-        //
-        //     var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
-        //     if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null)
-        //         RtcommService.setVideoView(videoActiveEndpointUUID);
-        // };
+      $scope.avConnected = false;
+    });
 
-        // Go ahead and initialize the local media here if an endpoint already exist.
-        var videoActiveEndpointUUID = RtcommService.getActiveEndpoint();
-        if (typeof videoActiveEndpointUUID !== "undefined" && videoActiveEndpointUUID != null){
-          RtcommService.setVideoView(videoActiveEndpointUUID);
+    $scope.$on('webrtc:connected', function(event, eventObject) {
+      if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id) {
+        vm.avConnected = true;
 
-        }
-
-        $scope.$on('endpointActivated', function(event, endpointUUID) {
-            //	Not to do something here to show that this button is live.
-            $log.debug('rtcommVideo: endpointActivated =' + endpointUUID);
-            RtcommService.setVideoView(endpointUUID);
-            vm.avConnected = RtcommService.isWebrtcConnected(RtcommService.getActiveEndpoint());
-        });
-        // //
-        // $scope.$on('noEndpointActivated', function(event) {
-        //     vm.avConnected = false;
-        // });
-        //
-        // $scope.$on('webrtc:connected', function(event, eventObject) {
-        //     if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
-        //         vm.avConnected = true;
-        // });
-        //
-        // $scope.$on('webrtc:disconnected', function(event, eventObject) {
-        //     if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id)
-        //         vm.avConnected = false;
-        // });
-    }
+        $scope.avConnected = true;
+      }
+    });
+    //
+    $scope.$on('webrtc:disconnected', function(event, eventObject) {
+      if (RtcommService.getActiveEndpoint() == eventObject.endpoint.id) {
+        vm.avConnected = false;
+        $scope.avConnected = false;
+      }
+    });
+  }
 })();
 
 /**

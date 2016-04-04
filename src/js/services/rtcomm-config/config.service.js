@@ -23,6 +23,7 @@
 
   /* @ngInject */
   function RtcommConfigService($location, $log, $window) {
+
     var service = {
       setProviderConfig: setProviderConfig,
       getProviderConfig: getProviderConfig,
@@ -145,7 +146,8 @@
     }
 
     function isRtcommDisabled() {
-      return false;
+      //If locations are different then it is probably inside an iframe so it must be false
+      return $window.location !== $window.parent.location;
     }
 
     function getMediaConfig() {

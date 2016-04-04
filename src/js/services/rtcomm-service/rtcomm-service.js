@@ -115,7 +115,6 @@
 
     function activate() {
       myEndpointProvider = new rtcomm.EndpointProvider();
-
       myEndpointProvider.setLogLevel(RtcommConfigService.getRtcommDebug());
 
       $log.debug('rtcomm-service - endpointProvider log level is: ' + myEndpointProvider.getLogLevel());
@@ -202,6 +201,8 @@
             broadcastRtcommEvent(eventObject);
           }
         },
+        'session:connecting': sessionEstablishmentCallback,
+
         'session:alerting': sessionEstablishmentCallback,
 
         'session:trying': sessionEstablishmentCallback,

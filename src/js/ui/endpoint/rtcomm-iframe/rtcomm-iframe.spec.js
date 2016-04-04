@@ -148,7 +148,7 @@ describe('Unit Testing: RtcommIFrame directive', function() {
       // $rootScope.$digest();
 
       expect($sce.trustAsResourceUrl.calledOnce).to.be.true;
-      expect($sce.trustAsResourceUrl.calledWith('https://wasdev.net/webrtc?disableRtcomm=true')).to.be.true;
+      expect($sce.trustAsResourceUrl.calledWith('https://wasdev.net/webrtc')).to.be.true;
 
     });
 
