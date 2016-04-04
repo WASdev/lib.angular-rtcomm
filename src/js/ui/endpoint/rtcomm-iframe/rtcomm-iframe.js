@@ -93,7 +93,6 @@
             if (vm.syncSource === false) {
                 $log.debug('rtcomm::iframeUpdate: ' + url);
                 //	This is needed to prevent rtcomm from logging in when the page is loaded in the iFrame.
-                url = url + "?disableRtcomm=true";
                 vm.iframeURL = $sce.trustAsResourceUrl(url);
             } else {
                 $log.debug('rtcomm::iframeUpdate: load this url in a new tab: ' + url);
