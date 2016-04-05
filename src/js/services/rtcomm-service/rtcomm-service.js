@@ -291,7 +291,7 @@
 
       var endpoint = _getEndpoint(endpointUUID);
 
-      if (endpoint !== null) endpoint.destroy();
+      if (typeof endpoint !== 'undefined' && endpoint !== null) endpoint.destroy();
 
       var sessions = RtcommSessions.getAllSessions();
 
