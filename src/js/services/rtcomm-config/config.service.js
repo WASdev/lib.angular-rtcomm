@@ -53,6 +53,7 @@
 
     //Rtcomm Endpoint Config Defaults
     var mediaConfig = {
+      autoEnable: true,
       chat: true,
       webrtc: true,
       webrtcConfig: {

@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.3 - 2016-04-05
+ * @version v1.0.3 - 2016-04-11
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -298,6 +298,7 @@ angular
 
     //Rtcomm Endpoint Config Defaults
     var mediaConfig = {
+      autoEnable: true,
       chat: true,
       webrtc: true,
       webrtcConfig: {

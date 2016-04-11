@@ -42,12 +42,13 @@ describe('E2E Integration: rtcomm-chat directive with RtcommService', function()
 
     browser.driver.sleep(500);
 
+    browser.pause();
     userOne.rtcommChat.getChatMessages().then(function(messages) {
 
       expect(messages[0].message).to.equal('Hello World!', 'Should\' received a message in the chat');
     });
 
-
+browser.pause();
     userOne.rtcommChat.sendChatMessage('How are you doing!?');
 
     userTwo.rtcommChat.sendChatMessage('Pretty good and you?');

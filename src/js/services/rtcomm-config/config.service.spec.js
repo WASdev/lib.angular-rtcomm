@@ -83,7 +83,7 @@ describe('Unit Testing: Rtcomm Config Service', function() {
   };
 
   var defaultMediaConfig = {
-
+	autoEnable: true,
     chat: true,
     webrtc: true,
     webrtcConfig: {

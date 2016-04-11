@@ -33,7 +33,7 @@
     "bootstrap": "~3.3.6",
     "angular": "~1.4.0",
     "angular-bootstrap": "1.2.x",
-    "rtcomm": "^1.0.0"
+    "rtcomm": "https://github.com/WASdev/lib.rtcomm.clientjs.git#develop"
   },
   "devDependencies": {
     "angular-mocks": "~1.4.0"
