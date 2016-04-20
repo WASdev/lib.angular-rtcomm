@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+
+
+<html>
+
+
+<head>
+    <meta charset="utf-8">
+    <title>E2E: Sample Angular-Rtcomm</title>
+
+
+    <link rel="stylesheet" href="../../../bower_components/bootstrap/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="/bower_components/angular-tree-control/css/tree-control-attribute.css"/>
+    
+
+    <!-- bower:js -->
+    <script src="/bower_components/jquery/dist/jquery.js"></script>
+    <script src="/bower_components/angular/angular.js"></script>
+    <script src="/bower_components/angular-tree-control/angular-tree-control.js"></script>
+    <script src="/bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="/bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+    <script src="/bower_components/bower-mqttws/mqttws31.js"></script>
+    <script src="/bower_components/webrtc-adapter/adapter.js"></script>
+    <script src="/bower_components/rtcomm/dist/rtcomm.js"></script>
+    <!-- endbower -->
+
+    <link href="/dist/css/angular-rtcomm.css" rel="stylesheet">
+
+    <script src="/dist/angular-rtcomm.js"></script>
+
+
+</head>
+
+<body ng-app="angular-rtcomm">
+   <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <!-- button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+			                <span class="sr-only">Toggle navigation</span>
+					            <span class="icon-bar"></span>
+						                <span class="icon-bar"></span>
+								            <span class="icon-bar"></span>
+									              </button -->
+            <a class="navbar-brand" href="#">angular-rtcomm Sample</a>
+        </div>
+    </div>
+    </div>
+
+    <div ng-controller="RtcommConfigController" ng-init="init('sampleConfig.json')"></div>
+    <div ng-controller="RtcommAlertModalController"></div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-9">
+                <!-- init'ing to true means active session count will be reported to presence if presence is active. -->
+                <rtcomm-sessionmgr ng-init="init(true)"></rtcomm-sessionmgr>
+            </div>
+            <div class="col-md-3">
+                <rtcomm-endpoint-status></rtcomm-endpoint-status>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-md-3">
+                <rtcomm-register></rtcomm-register>
+                <rtcomm-chat></rtcomm-chat>
+            	<rtcomm-endpoint-status></rtcomm-endpoint-status>
+	    </div>
+            <div class="col-md-6">
+                <rtcomm-alert></rtcomm-alert>
+                <rtcomm-iframe></rtcomm-iframe>
+            </div>
+            <div class="col-md-3">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <span class="glyphicon glyphicon-facetime-video"></span> Video
+                    </div>
+                    <div class="video-panel">
+                        <rtcomm-video></rtcomm-video>
+                    </div>
+                </div>
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <span class="glyphicon glyphicon-user"></span> Presence
+                    </div>
+                    <div class="panel-body" style="height:200px; position:relative; overflow-y: scroll; overflow-x: auto">
+                        <rtcomm-presence ng-init="monitorTopics=['sampleRoom']"></rtcomm-presence>
+                    </div>
+                </div>
+
+                <div class="btn-group-sm pull-left" style='padding: 10px'>
+                    <div ng-controller="RtcommEndpointController">
+                        <button id="btnDisconnectEndpoint" class='btn  btn-primary' ng-click="disconnect()"
+                        ng-disabled="(sessionState == 'session:stopped' || sessionState == 'session:failed')">
+                            <span aria-hidden="true" aria-label="Disconnect"></span>
+                            Disconnect
+                        </button>
+                        <button id="btnEnableAV" class='btn  btn-primary' ng-click="toggleAV()" focusInput=true
+                        ng-disabled="(sessionState == 'session:stopped' || sessionState == 'session:failed')">
+                            <span aria-hidden="true" aria-label="Enable A/V"></span>
+                            {{epCtrlAVConnected ? 'Disable A/V' : 'Enable A/V'}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

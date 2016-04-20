@@ -1,9 +1,0 @@
-{
- "server" : "messagesight.demos.ibm.com",
-	"port" : 1884,
-	"rtcommTopicPath" : "/rtcommAngularSample/",
-  "userid" : "",
-	"broadcastAudio" : true,
-	"broadcastVideo" : true,
-	"presenceTopic" : "sampleRoom"
-}

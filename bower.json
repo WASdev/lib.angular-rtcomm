@@ -1,40 +1,41 @@
 {
-  "name": "angular-rtcomm",
-  "version": "1.0.3",
-  "description": "Angular module for Rtcomm",
-  "main": [
-    "dist/angular-rtcomm.js",
-    "dist/angular-rtcomm.min.js",
-    "dist/css/angular-rtcomm.css",
-    "dist/css/angular-rtcomm.min.css"
-  ],
-  "keywords": [
-    "webrtc",
-    "rtcomm",
-    "angularjs"
-  ],
-  "authors": [
-    "Brian Pulito",
-    "Scott Graham"
-  ],
-  "license": "Apache",
-  "homepage": "https://developer.ibm.com/wasdev/docs/webrtc/",
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "test",
-    "tests",
-    "src",
-    "Gruntfile.js",
-    "package.json"
-  ],
-  "dependencies": {
-    "jquery": "~2.1.1",
-    "angular-tree-control": "~0.2.7",
-    "bootstrap": "~3.3.1",
-    "angular": "^1.4.6",
-    "angular-bootstrap": "~0.13.0",
-    "rtcomm": "^1.0.0"
-  }
+    "name": "angular-rtcomm",
+    "version": "1.0.4",
+    "description": "Angular module for Rtcomm",
+    "main": [
+        "dist/angular-rtcomm.js",
+        "dist/css/angular-rtcomm.css"
+    ],
+    "keywords": [
+        "webrtc",
+        "rtcomm",
+        "angularjs"
+    ],
+    "authors": [
+        "Brian Pulito",
+        "Scott Graham"
+    ],
+    "license": "Apache",
+    "homepage": "https://developer.ibm.com/wasdev/docs/webrtc/",
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "test",
+        "tests",
+        "src",
+        "Gruntfile.js",
+        "package.json"
+    ],
+    "dependencies": {
+        "jquery": "~2.2.x",
+        "angular-tree-control": "~0.2.x",
+        "bootstrap": "~3.3.6",
+        "angular": "~1.4.0",
+        "angular-bootstrap": "1.2.x",
+        "rtcomm": "~1.0.x"
+    },
+    "devDependencies": {
+        "angular-mocks": "~1.4.0"
+    }
 }

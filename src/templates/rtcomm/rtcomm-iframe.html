@@ -4,29 +4,29 @@
 			<span class="glyphicon glyphicon-link"></span> URL Sharing
 		</div>
 		<div class="rtcomm-iframe">
-		    <iframe width="100%" height="100%" ng-src="{{iframeURL}}"></iframe>
+		    <iframe width="100%" height="100%" ng-src="{{iframeVM.iframeURL}}"></iframe>
 		</div>
 		<div class="row">
 			<div class="col-lg-2">
-				<button id="btnBackward" class='btn  btn-primary' ng-click="backward()" focusInput=true ng-disabled="(iframeUrl == null)">
+				<button id="btnBackward" class='btn  btn-primary' ng-click="iframeVM.backward()" focusInput=true ng-disabled="(iframeVM.iframeUrl == null)">
 					<span class="glyphicon glyphicon-arrow-left" aria-hidden="true" aria-label="Backward"></span>
 					Backward
 				</button>
 			</div>
 			<div class="col-lg-2">
-				<button id="btnForward" class='btn  btn-primary' ng-click="forward()" ng-disabled="(iframeUrl == null)">
+				<button id="btnForward" class='btn  btn-primary' ng-click="iframeVM.forward()" ng-disabled="(iframeVM.iframeUrl == null)">
 					<span class="glyphicon glyphicon-arrow-right" aria-hidden="true" aria-label="Forward"></span>
 					Forward
 				</button>
 			</div>
 			<div class="col-lg-8">
 				<div class="input-group">
-		  			<input id="setUrl" type="text" class="form-control" type="text" ng-model="newUrl"></input>
+		  			<input id="setUrl" type="text" class="form-control" type="text" ng-model="iframeVM.newUrl"></input>
 					<span class="input-group-btn">
-						<button class="btn btn-primary" id="btn-send-url" ng-click="setURL(newUrl)" focusInput=true>Set URL</button>
+						<button class="btn btn-primary" id="btn-send-url" ng-click="iframeVM.setURL(iframeVM.newUrl)" focusInput=true>Set URL</button>
 					</span>
 	    		</div><!-- /input-group -->
 			</div>
 		</div>
 	</div>
-</div> 
+</div>
