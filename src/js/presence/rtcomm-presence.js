@@ -94,21 +94,19 @@
         };
 
         $scope.onCallClick = function(calleeEndpointID){
-          var endpoint = RtcommService.getEndpoint();
-          RtcommService.setActiveEndpoint(endpoint.id);
+     //     var endpoint = RtcommService.getEndpoint();
+    //      RtcommService.setActiveEndpoint(endpoint.id);
+		var protocolList = $scope.protocolList;
+		var mediaToEnable = [];
 
-          if ($scope.protocolList.chat == true)
-            endpoint.chat.enable();
+		for(var protocol in protocolList){
+			if(protocolList[protocol] === true){
+				mediaToEnable.push(protocol);
+			}
+		}
 
-          if ($scope.protocolList.webrtc == true){
-            endpoint.webrtc.enable(function(value, message) {
-              if (!value) {
-                RtcommService.alert({type: 'danger', msg: message});
-              }
-            });
-          }
-
-          endpoint.connect(calleeEndpointID);
+	$log.debug(mediaToEnable);
+	RtcommService.placeCall(calleeEndpointID, mediaToEnable); 
           $rootScope.$broadcast('rtcomm::presence-click');
         };
 

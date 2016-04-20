@@ -53,7 +53,7 @@
 
     //Rtcomm Endpoint Config Defaults
     var mediaConfig = {
-      autoEnable: true,
+      autoEnable: false,
       chat: true,
       webrtc: true,
       webrtcConfig: {
@@ -94,8 +94,9 @@
 
       //Media Configuration
       mediaConfig = {
+        autoEnable: (typeof config.autoEnable !== 'undefined') ? config.autoEnable : mediaConfig.autoEnable,
         chat: (typeof config.chat !== 'undefined') ? config.chat : mediaConfig.chat,
-        webrtc: (typeof config.video !== 'undefined') ? config.webrtc : mediaConfig.webrtc,
+        webrtc: (typeof config.webrtc !== 'undefined') ? config.webrtc : mediaConfig.webrtc,
         webrtcConfig: {
           broadcast: {
             video: typeof config.broadcastVideo !== 'undefined' ? config.broadcastVideo : mediaConfig.webrtcConfig.broadcast.video,

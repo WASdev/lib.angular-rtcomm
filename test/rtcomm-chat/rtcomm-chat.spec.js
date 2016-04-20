@@ -18,8 +18,8 @@ describe('E2E Integration: rtcomm-chat directive with RtcommService', function()
     userTwo = createUser(newBrowser);
   });
 
-  afterEach(function(){
-	newBrowser.quit();
+  afterEach(function() {
+    newBrowser.quit();
   });
   it('should maintain a chat session between users', function() {
     //Register User one
@@ -40,15 +40,13 @@ describe('E2E Integration: rtcomm-chat directive with RtcommService', function()
     //Send a message to user one
     userTwo.rtcommChat.sendChatMessage('Hello World!');
 
-    browser.driver.sleep(500);
+    browser.driver.sleep(1000);
 
-    browser.pause();
     userOne.rtcommChat.getChatMessages().then(function(messages) {
 
-      expect(messages[0].message).to.equal('Hello World!', 'Should\' received a message in the chat');
+      expect(messages.pop().message).to.equal('Hello World!', 'Should\' received a message in the chat');
     });
 
-browser.pause();
     userOne.rtcommChat.sendChatMessage('How are you doing!?');
 
     userTwo.rtcommChat.sendChatMessage('Pretty good and you?');
@@ -71,7 +69,7 @@ browser.pause();
 
     //Verify that both sides of the chats appear
     userOne.rtcommChat.getChatMessages().then(function(messages) {
-      messages.forEach(function(message, index) {
+	    messages.forEach(function(message, index) {
         expect(message.name).to.equal(conversation[index].name, 'Incorrect user match in chat');
         expect(message.message).to.equal(conversation[index].message, 'Incorrect message sent in chat');
       });

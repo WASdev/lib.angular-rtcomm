@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * Angular module for Rtcomm
- * @version v1.0.3 - 2016-04-11
+ * @version v1.0.3 - 2016-04-20
  * @link https://github.com/WASdev/lib.angular-rtcomm
  * @author Brian Pulito <brian_pulito@us.ibm.com> (https://github.com/bpulito)
  */
@@ -192,21 +192,19 @@ angular
         };
 
         $scope.onCallClick = function(calleeEndpointID){
-          var endpoint = RtcommService.getEndpoint();
-          RtcommService.setActiveEndpoint(endpoint.id);
+     //     var endpoint = RtcommService.getEndpoint();
+    //      RtcommService.setActiveEndpoint(endpoint.id);
+		var protocolList = $scope.protocolList;
+		var mediaToEnable = [];
 
-          if ($scope.protocolList.chat == true)
-            endpoint.chat.enable();
+		for(var protocol in protocolList){
+			if(protocolList[protocol] === true){
+				mediaToEnable.push(protocol);
+			}
+		}
 
-          if ($scope.protocolList.webrtc == true){
-            endpoint.webrtc.enable(function(value, message) {
-              if (!value) {
-                RtcommService.alert({type: 'danger', msg: message});
-              }
-            });
-          }
-
-          endpoint.connect(calleeEndpointID);
+	$log.debug(mediaToEnable);
+	RtcommService.placeCall(calleeEndpointID, mediaToEnable); 
           $rootScope.$broadcast('rtcomm::presence-click');
         };
 
@@ -298,7 +296,7 @@ angular
 
     //Rtcomm Endpoint Config Defaults
     var mediaConfig = {
-      autoEnable: true,
+      autoEnable: false,
       chat: true,
       webrtc: true,
       webrtcConfig: {
@@ -339,8 +337,9 @@ angular
 
       //Media Configuration
       mediaConfig = {
+        autoEnable: (typeof config.autoEnable !== 'undefined') ? config.autoEnable : mediaConfig.autoEnable,
         chat: (typeof config.chat !== 'undefined') ? config.chat : mediaConfig.chat,
-        webrtc: (typeof config.video !== 'undefined') ? config.webrtc : mediaConfig.webrtc,
+        webrtc: (typeof config.webrtc !== 'undefined') ? config.webrtc : mediaConfig.webrtc,
         webrtcConfig: {
           broadcast: {
             video: typeof config.broadcastVideo !== 'undefined' ? config.broadcastVideo : mediaConfig.webrtcConfig.broadcast.video,

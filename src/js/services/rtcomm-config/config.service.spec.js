@@ -83,7 +83,7 @@ describe('Unit Testing: Rtcomm Config Service', function() {
   };
 
   var defaultMediaConfig = {
-	autoEnable: true,
+	autoEnable: false,
     chat: true,
     webrtc: true,
     webrtcConfig: {
@@ -200,6 +200,14 @@ describe('Unit Testing: Rtcomm Config Service', function() {
       expect(rtcommConfig.port).to.equal(config.port);
     });
 
+    it('should set the webrtc value correctly', function(){
+	var config = { webrtc: false};
+
+	RtcommConfigService.setProviderConfig(config);
+
+	expect(RtcommConfigService.getMediaConfig().webrtc).to.equal(false);
+
+    });
     it('should correctly set broadcastAudio and broadcastVideo property', function() {
       var config = {
         broadcastAudio: false,

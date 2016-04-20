@@ -76,7 +76,7 @@ function RtcommChat(browser) {
   this.send = element(by.id('btn-chat'));
   this.input = element(by.model('chatVM.message'));
   this.sendChatMessage = function(msg) {
-    expect(this.send.isEnabled()).to.eventually.be.true;
+  //  expect(this.send.isEnabled()).to.eventually.be.true;
 
     this.input.sendKeys(msg);
     this.send.click();
@@ -85,7 +85,15 @@ function RtcommChat(browser) {
   this.getChatMessages = function() {
     this.chatElements = element.all(by.css('ul.chat > li'));
 
-    var chats = this.chatElements.map(function(chatMessage, index) {
+    //Filter out the initiation message
+    //
+    //
+    var filteredChatElements = this.chatElements.filter(function(chatMessage, index) {
+      return chatMessage.element(by.css('p.ng-binding')).getText().then(function(message) {
+        return message.indexOf('initiated') === -1;
+      })
+    });
+    var chats = filteredChatElements.map(function(chatMessage, index) {
 
       return {
         name: chatMessage.element(by.css('strong.ng-binding')).getText(),
@@ -125,61 +133,62 @@ function RtcommAlertModal(_browser) {
  * Represents the rtcomm-presence directive
  */
 function RtcommPresence(_browser) {
-  var browser = _browser;
-  var element = browser.element;
+    var browser = _browser;
+    var element = browser.element;
 
-  this.call = function(name) {
+    this.call = function(name) {
 
-    browser.wait(EC.visibilityOf(element(by.css('div[treecontrol]'))), 5000, 
-		    'Rtcomm-presence tree structure not found -> Possibly not initialized correctly');
+      browser.wait(EC.visibilityOf(element(by.css('div[treecontrol]'))), 5000,
+        'Rtcomm-presence tree structure not found -> Possibly not initialized correctly');
 
-    //Expand the presence tree
-    expandPresenceTree();
+      //Expand the presence tree
+      expandPresenceTree();
 
-    function clickNodeToCall() {
-      var nodes = element.all(by.css('div.tree-label'));
+      function clickNodeToCall() {
+        var nodes = element.all(by.css('div.tree-label'));
 
-      var calleeNode = nodes.filter(function(node, index) {
-        var span = node.element(by.css('span.ng-binding'));
-        return span.getText().then(function(text) {
-          return text.indexOf(name) > -1;
+        var calleeNode = nodes.filter(function(node, index) {
+          var span = node.element(by.css('span.ng-binding'));
+          return span.getText().then(function(text) {
+            return text.indexOf(name) > -1;
+          });
+
         });
 
-      });
+        calleeNode.first().element(by.css('button')).click();
+      }
 
-      calleeNode.first().element(by.css('button')).click();
-    }
-
-    function expandPresenceTree() {
-      //Find collapsed elements
-      var collapsedElements = element.all(by.css('.tree-collapsed > i.tree-branch-head'));
+      function expandPresenceTree() {
+        //Find collapsed elements
+        var collapsedElements = element.all(by.css('.tree-collapsed > i.tree-branch-head'));
 
 
-      collapsedElements.count().then(function(count) {
+        collapsedElements.count().then(function(count) {
 
-        //If no more collapsed elements exist, you can click on the node to call
-        if (count === 0) {
+          //If no more collapsed elements exist, you can click on the node to call
+          if (count === 0) {
 
-          clickNodeToCall();
-        }
-        //Expand the collapsed nodes found
-        else {
+            clickNodeToCall();
+          }
+          //Expand the collapsed nodes found
+          else {
 
 
-          collapsedElements.each(function(element, index) {
-            element.click();
-            if (index === count - 1) {
-              expandPresenceTree();
-            }
-          });
-        }
-      });
-    }
-  };
-}
-/**
- * Represents the RtcommEndpointController
- */
+            collapsedElements.each(function(element, index) {
+              element.click();
+              if (index === count - 1) {
+                expandPresenceTree();
+              }
+            });
+          }
+        });
+      }
+    };
+  }
+  /**
+   * Represents the RtcommEndpointController
+   */
+
 function RtcommEndpointController(_browser) {
 
   var browser = _browser;
