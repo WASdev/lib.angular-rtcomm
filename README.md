@@ -5,7 +5,7 @@ This module is built on the [rtcomm.js](https://github.com/WASdev/lib.rtcomm.cli
 signaling and a number of advanced real-time communications capabilities like presence and chat.
 
 ##Requirements
-Rtcomm utilizes MQTT for call signaling so at a minimum you will need an MQTT message broker that supports web sockets. There are many open source and productized versions of MQTT message brokers available. A great option is to download the WebSphere Liberty Server which includes an embedded MQTT broker and a number of backend Rtcomm services such as call queueing. The WebSphere Liberty server is free for development and the beta version that includes support for MQTT can be downloaded from [here](https://developer.ibm.com/wasdev/downloads/liberty-profile-beta/).
+Rtcomm utilizes MQTT for call signaling so at a minimum you will need an MQTT message broker that supports web sockets. There are many open source and productized versions of MQTT message brokers available. 
 
 ##Install
 To install the angular-rtcomm module for use in an AngularJS application, you can use bower:
